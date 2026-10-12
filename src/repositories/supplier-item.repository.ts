@@ -14,9 +14,19 @@ export interface LatestSupplierItemResult {
   supplierCurrency: CurrencyCode;
 }
 
+export interface SupplierItemSummary {
+  id: string;
+  supplierId: string;
+  stockItemId: string;
+  quotedUnitPriceNet: Decimal;
+  priceUpdatedAt: string;
+  active: boolean;
+}
+
 export interface ISupplierItemRepository {
   getLatestSupplierItem(stockItemId: string): Promise<LatestSupplierItemResult | null>;
   getCurrentUsdExchangeRate(): Promise<Decimal | null>;
+  listBySupplier(supplierId: string): Promise<SupplierItemSummary[]>;
 }
 
 export class SupplierItemRepository extends BaseSupabaseRepository implements ISupplierItemRepository {
@@ -88,5 +98,27 @@ export class SupplierItemRepository extends BaseSupabaseRepository implements IS
     }
 
     return new Decimal((data as any)[0].rate_to_ars);
+  }
+
+  async listBySupplier(supplierId: string): Promise<SupplierItemSummary[]> {
+    const { data, error } = await this.client
+      .from('supplier_items')
+      .select('id, supplier_id, stock_item_id, quoted_unit_price_net, price_updated_at, active')
+      .eq('supplier_id', supplierId)
+      .eq('active', true)
+      .order('price_updated_at', { ascending: false });
+
+    if (error) {
+      throw new DomainError(`Error obteniendo ítems del proveedor ${supplierId}: ${error.message}`);
+    }
+
+    return (data || []).map((row) => ({
+      id: row.id,
+      supplierId: row.supplier_id,
+      stockItemId: row.stock_item_id,
+      quotedUnitPriceNet: new Decimal(row.quoted_unit_price_net),
+      priceUpdatedAt: row.price_updated_at,
+      active: row.active,
+    }));
   }
 }

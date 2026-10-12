@@ -26,6 +26,8 @@ import { PatrimonyRepository } from '@/repositories/patrimony.repository';
 import { PatrimonyDomainService } from '@/services/patrimony.service';
 import { FactoryRepository } from '@/repositories/factory.repository';
 import { FactoryDomainService } from '@/services/factory.service';
+import { PurchaseRepository } from '@/repositories/purchase.repository';
+import { PurchaseDomainService } from '@/services/purchase.service';
 
 /**
  * Composition Root para instanciación controlada y unificada de servicios
@@ -197,5 +199,36 @@ export function getFactoryService(): FactoryDomainService {
   }
   return factoryServiceInstance;
 }
+
+let purchaseRepoInstance: PurchaseRepository | null = null;
+let purchaseServiceInstance: PurchaseDomainService | null = null;
+
+export function getPurchaseRepository(): PurchaseRepository {
+  if (!purchaseRepoInstance) {
+    purchaseRepoInstance = new PurchaseRepository(serverSupabase);
+  }
+  return purchaseRepoInstance;
+}
+
+export function getPurchaseService(): PurchaseDomainService {
+  if (!purchaseServiceInstance) {
+    const purchaseRepo = getPurchaseRepository();
+    const supplierRepo = new SupplierRepository(serverSupabase);
+    const supplierItemRepo = getSupplierItemRepository();
+    const stockRepo = new StockRepository(serverSupabase);
+    const masterItemRepo = new MasterItemRepository(serverSupabase);
+    const costEngineService = getCostEngineService();
+    purchaseServiceInstance = new PurchaseDomainService(
+      purchaseRepo,
+      supplierRepo,
+      supplierItemRepo,
+      stockRepo,
+      masterItemRepo,
+      costEngineService
+    );
+  }
+  return purchaseServiceInstance;
+}
+
 
 

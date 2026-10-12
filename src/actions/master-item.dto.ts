@@ -135,3 +135,12 @@ export interface ActionResult<T> {
   data?: T;
   error?: string;
 }
+
+export interface CreatedMasterItemResultDTO {
+  id: string;
+  code: string;
+  name: string;
+  itemType: 'MPR' | 'COM';
+  unitType: 'KG' | 'UNIT';
+  quotedUnitPriceNet: string;
+}

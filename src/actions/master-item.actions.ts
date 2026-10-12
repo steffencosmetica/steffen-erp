@@ -4,14 +4,15 @@ import { revalidatePath } from 'next/cache';
 import { requireAuthenticatedUser } from '@/auth/guard';
 import { getMasterItemService, getSupplierService } from '@/services/composition';
 import { DomainError } from '@/domain/errors';
-import { Decimal } from '@/domain/decimal';
+import { Decimal, toNumericString } from '@/domain/decimal';
 import {
   type RawMaterialDTO,
   type ComponentDTO,
   type ActionResult,
+  type CreatedMasterItemResultDTO,
 } from './master-item.dto';
 
-export type { RawMaterialDTO, ComponentDTO, ActionResult };
+export type { RawMaterialDTO, ComponentDTO, ActionResult, CreatedMasterItemResultDTO };
 
 export async function createRawMaterialAction(formData: {
   name: string;
@@ -20,7 +21,7 @@ export async function createRawMaterialAction(formData: {
   initialStockKg?: string | null;
   initialSupplierId: string;
   initialQuotedPriceNet: string;
-}): Promise<ActionResult<void>> {
+}): Promise<ActionResult<CreatedMasterItemResultDTO>> {
   try {
     await requireAuthenticatedUser();
     const service = getMasterItemService();
@@ -51,7 +52,7 @@ export async function createRawMaterialAction(formData: {
       return { success: false, error: 'El stock inicial no puede ser negativo.' };
     }
 
-    await service.createRawMaterial({
+    const item = await service.createRawMaterial({
       name: formData.name.trim(),
       inci: formData.inci ? formData.inci.trim() : null,
       stockMinimum: minStock,
@@ -61,7 +62,17 @@ export async function createRawMaterialAction(formData: {
     });
 
     revalidatePath('/stock');
-    return { success: true };
+    return {
+      success: true,
+      data: {
+        id: item.id,
+        code: item.code,
+        name: item.name,
+        itemType: item.itemType as 'MPR',
+        unitType: item.unitType as 'KG',
+        quotedUnitPriceNet: toNumericString(initialPrice),
+      },
+    };
   } catch (err: unknown) {
     const message = err instanceof DomainError ? err.message : err instanceof Error ? err.message : 'Error al crear materia prima';
     return { success: false, error: message };
@@ -159,7 +170,7 @@ export async function createComponentAction(formData: {
   initialStockUnits?: number | string | null;
   initialSupplierId: string;
   initialQuotedPriceNet: string;
-}): Promise<ActionResult<void>> {
+}): Promise<ActionResult<CreatedMasterItemResultDTO>> {
   try {
     await requireAuthenticatedUser();
     const service = getMasterItemService();
@@ -203,7 +214,7 @@ export async function createComponentAction(formData: {
       }
     }
 
-    await service.createComponent({
+    const item = await service.createComponent({
       name: formData.name.trim(),
       stockMinimum: minStock.toNumber(),
       initialStock: initialStock.toNumber(),
@@ -212,7 +223,17 @@ export async function createComponentAction(formData: {
     });
 
     revalidatePath('/stock');
-    return { success: true };
+    return {
+      success: true,
+      data: {
+        id: item.id,
+        code: item.code,
+        name: item.name,
+        itemType: item.itemType as 'COM',
+        unitType: item.unitType as 'UNIT',
+        quotedUnitPriceNet: toNumericString(initialPrice),
+      },
+    };
   } catch (err: unknown) {
     const message =
       err instanceof DomainError

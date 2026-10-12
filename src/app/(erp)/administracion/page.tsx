@@ -5,6 +5,7 @@ import {
   getSupplierService,
   getPatrimonyService,
   getSupplierItemRepository,
+  getPurchaseService,
 } from '@/services/composition';
 import { AdministracionView } from '@/ui/views/AdministracionView';
 import { type AdministracionDashboardDTO } from '@/actions/administracion.dto';
@@ -29,14 +30,16 @@ export default async function AdministracionPage() {
   const supplierService = getSupplierService();
   const patrimonyService = getPatrimonyService();
   const supplierItemRepo = getSupplierItemRepository();
+  const purchaseService = getPurchaseService();
 
-  const [customerRecords, supplierRecords, financialAccounts, recentMovements, usdRate] =
+  const [customerRecords, supplierRecords, financialAccounts, recentMovements, usdRate, purchases] =
     await Promise.all([
       customerService.listCustomers(true).catch(() => []),
       supplierService.listSuppliers(true).catch(() => []),
       patrimonyService.listAccounts().catch(() => []),
       patrimonyService.listRecentMovements(10).catch(() => []),
       supplierItemRepo.getCurrentUsdExchangeRate().catch(() => null),
+      purchaseService.listPurchases({ limit: 100 }).catch(() => []),
     ]);
 
   // 3. Cálculos patrimoniales y balances exactos con Decimal
@@ -65,6 +68,13 @@ export default async function AdministracionPage() {
     .plus(totalCustomerReceivable)
     .minus(totalSupplierPayable);
 
+  const lastPurchaseBySupplier = new Map<string, string>();
+  for (const p of purchases) {
+    if (!lastPurchaseBySupplier.has(p.supplierId)) {
+      lastPurchaseBySupplier.set(p.supplierId, p.businessDate);
+    }
+  }
+
   // 4. Mapeo a DTOs JSON-safe para Client Component
   const dashboardDTO: AdministracionDashboardDTO = {
     currentUsdRate: usdRate ? toNumericString(usdRate) : null,
@@ -84,7 +94,7 @@ export default async function AdministracionPage() {
       name: s.name,
       balanceArs: toNumericString(s.balance),
       lastPaymentDate: null,
-      lastPurchaseDate: null,
+      lastPurchaseDate: lastPurchaseBySupplier.get(s.id) || null,
     })),
     recentMovements: recentMovements.map((m) => ({
       id: m.id,

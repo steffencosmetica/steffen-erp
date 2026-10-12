@@ -1,4 +1,4 @@
-
+﻿
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
@@ -1430,6 +1430,9 @@ isOneToOne: false
 "create_price_list":
 { Args: { "p_name": string }; Returns: Json
                            },
+"create_purchase_atomic":
+{ Args: { "p_business_date": string,"p_exchange_rate_used": number,"p_items": Json,"p_observations": string,"p_payment_mode": string,"p_supplier_id": string }; Returns: Json
+                           },
 "create_supplier_with_account":
 { Args: { "p_created_date"?: string,"p_currency_code": string,"p_name": string,"p_phone"?: string,"p_salesperson"?: string }; Returns: Json
                            },
@@ -1453,6 +1456,9 @@ isOneToOne: false
                            },
 "update_price_list":
 { Args: { "p_active"?: boolean,"p_name"?: string,"p_price_list_id": string }; Returns: Json
+                           },
+"update_purchase_atomic":
+{ Args: { "p_business_date": string,"p_exchange_rate_used": number,"p_items": Json,"p_observations": string,"p_payment_mode": string,"p_purchase_id": string }; Returns: Json
                            }
           }
           Enums: {

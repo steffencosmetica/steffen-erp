@@ -5,7 +5,18 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button, ConfirmDialog } from '../components/UIComponents';
 import { SupplierModal } from '../modals/SupplierModal';
+import { RegistrarCompraModal } from '../modals/RegistrarCompraModal';
 import { toggleSupplierActiveAction, type SupplierDTO } from '@/actions/supplier.actions';
+import {
+  listPurchasesAction,
+  getPurchaseAction,
+  getSupplierPurchaseCatalogAction,
+} from '@/actions/purchase.actions';
+import type {
+  PurchaseSummaryDTO,
+  PurchaseDetailDTO,
+  AvailableSupplierItemDTO,
+} from '@/actions/purchase.dto';
 import {
   ChevronLeft,
   ChevronDown,
@@ -15,6 +26,7 @@ import {
   Search,
   List,
   Building2,
+  Loader2,
 } from 'lucide-react';
 
 interface SuppliersViewProps {
@@ -37,9 +49,18 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ initialSuppliers }
   const [showInactive, setShowInactive] = useState(false);
   const [currencyFilter, setCurrencyFilter] = useState<'ALL' | 'ARS' | 'USD'>('ALL');
 
-  // Modal State
+  // Modal State (Supplier)
   const [modalOpen, setModalOpen] = useState(false);
   const [modalSupplier, setModalSupplier] = useState<SupplierDTO | null>(null);
+
+  // Modal State (Purchase)
+  const [compraModalOpen, setCompraModalOpen] = useState(false);
+  const [purchaseToEdit, setPurchaseToEdit] = useState<PurchaseDetailDTO | null>(null);
+
+  // Datos específicos del proveedor seleccionado en ficha
+  const [supplierPurchases, setSupplierPurchases] = useState<PurchaseSummaryDTO[]>([]);
+  const [supplierCatalogItems, setSupplierCatalogItems] = useState<AvailableSupplierItemDTO[]>([]);
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
   // Confirm Dialog for deactivating
   const [confirmDialogSupplier, setConfirmDialogSupplier] = useState<SupplierDTO | null>(null);
@@ -47,6 +68,47 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ initialSuppliers }
 
   const selectedSupplier =
     initialSuppliers.find((s) => s.id === selectedSupplierId) || initialSuppliers[0] || null;
+
+  // Carga de compras e insumos del proveedor seleccionado
+  const fetchSupplierDetails = React.useCallback(async (supplierId: string) => {
+    if (!supplierId) return;
+    setLoadingDetails(true);
+    try {
+      const [purchasesRes, catalogRes] = await Promise.all([
+        listPurchasesAction({ supplierId, limit: 30 }),
+        getSupplierPurchaseCatalogAction(supplierId),
+      ]);
+
+      if (purchasesRes.success && purchasesRes.data) {
+        setSupplierPurchases(purchasesRes.data);
+      }
+      if (catalogRes.success && catalogRes.data) {
+        setSupplierCatalogItems(catalogRes.data.items.filter((it) => it.isAssociated));
+      }
+    } catch (err) {
+      console.error('Error fetching supplier details:', err);
+    } finally {
+      setLoadingDetails(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (selectedSupplierId && viewMode === 'ficha') {
+      fetchSupplierDetails(selectedSupplierId);
+    }
+  }, [selectedSupplierId, viewMode, fetchSupplierDetails]);
+
+  const handleEditPurchase = async (purchaseId: string) => {
+    startTransition(async () => {
+      const res = await getPurchaseAction(purchaseId);
+      if (res.success && res.data) {
+        setPurchaseToEdit(res.data);
+        setCompraModalOpen(true);
+      } else {
+        setActionError(res.error || 'Error al cargar compra para edición');
+      }
+    });
+  };
 
   // Filtrado de proveedores para el listado
   const filteredSuppliers = initialSuppliers.filter((s) => {
@@ -202,13 +264,16 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ initialSuppliers }
             </button>
           </div>
 
-          {/* Botones a la derecha: Refrescar y Nueva Cuenta (Azul Figma) */}
+          {/* Botones a la derecha: Refrescar, Nueva Compra y Nueva Cuenta (Azul Figma) */}
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => {
                 startTransition(() => {
                   router.refresh();
+                  if (selectedSupplierId) {
+                    fetchSupplierDetails(selectedSupplierId);
+                  }
                 });
               }}
               disabled={isPending}
@@ -217,6 +282,17 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ initialSuppliers }
             >
               <RefreshCw className={`w-4 h-4 ${isPending ? 'animate-spin' : ''}`} />
             </button>
+
+            <Button
+              variant="azul"
+              onClick={() => {
+                setPurchaseToEdit(null);
+                setCompraModalOpen(true);
+              }}
+              className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider"
+            >
+              NUEVA COMPRA
+            </Button>
 
             <Button
               variant="azul"
@@ -302,17 +378,41 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ initialSuppliers }
                     <thead>
                       <tr className="bg-[#D9D9D9] text-black font-bold text-left uppercase">
                         <th className="py-2 px-2">CODIGO</th>
-                        <th className="py-2 px-2">MP</th>
-                        <th className="py-2 px-2">INCI</th>
-                        <th className="py-2 px-2 text-center"></th>
+                        <th className="py-2 px-2">MP / COMP</th>
+                        <th className="py-2 px-2">TIPO</th>
+                        <th className="py-2 px-2 text-right">PRECIO REF.</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#E5E5E5]">
-                      <tr>
-                        <td colSpan={4} className="py-6 text-center text-gray-400 font-medium">
-                          Insumos asociados a este proveedor en el maestro de compras y catálogo.
-                        </td>
-                      </tr>
+                      {loadingDetails ? (
+                        <tr>
+                          <td colSpan={4} className="py-6 text-center text-gray-400">
+                            <Loader2 className="w-4 h-4 animate-spin inline mr-2 text-[#0E50A0]" />
+                            Cargando insumos...
+                          </td>
+                        </tr>
+                      ) : supplierCatalogItems.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="py-6 text-center text-gray-400 font-medium">
+                            No hay insumos asociados aún a este proveedor.
+                          </td>
+                        </tr>
+                      ) : (
+                        supplierCatalogItems.map((item) => (
+                          <tr key={item.id} className="hover:bg-gray-50/50">
+                            <td className="py-2 px-2 font-mono font-bold text-black">{item.code}</td>
+                            <td className="py-2 px-2 text-black">{item.name}</td>
+                            <td className="py-2 px-2 text-gray-500 font-mono">{item.itemType}</td>
+                            <td className="py-2 px-2 text-right font-mono font-semibold text-gray-700">
+                              {item.quotedUnitPriceNet
+                                ? selectedSupplier.currencyCode === 'USD'
+                                  ? `U$S ${item.quotedUnitPriceNet}`
+                                  : `$ ${item.quotedUnitPriceNet}`
+                                : '—'}
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -348,11 +448,65 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ initialSuppliers }
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#E5E5E5]">
-                      <tr>
-                        <td colSpan={6} className="py-6 text-center text-gray-400 font-medium">
-                          Historial de compras, remitos y órdenes de pago en cuenta corriente.
-                        </td>
-                      </tr>
+                      {loadingDetails ? (
+                        <tr>
+                          <td colSpan={6} className="py-6 text-center text-gray-400">
+                            <Loader2 className="w-4 h-4 animate-spin inline mr-2 text-[#0E50A0]" />
+                            Cargando compras y movimientos...
+                          </td>
+                        </tr>
+                      ) : supplierPurchases.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="py-6 text-center text-gray-400 font-medium">
+                            No hay compras registradas para este proveedor.
+                          </td>
+                        </tr>
+                      ) : (
+                        supplierPurchases.map((p) => {
+                          const grossNumber = parseFloat(p.totalGrossArs) || 0;
+                          return (
+                            <tr key={p.id} className="hover:bg-gray-50/50">
+                              <td className="py-2 px-2 font-mono">{p.businessDate}</td>
+                              <td className="py-2 px-2">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-bold font-mono text-black">{p.code}</span>
+                                  <span
+                                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                      p.paymentMode === 'PAID'
+                                        ? 'bg-green-100 text-green-800'
+                                        : 'bg-amber-100 text-amber-800'
+                                    }`}
+                                  >
+                                    {p.paymentMode === 'PAID' ? 'PAGA' : 'A DEUDA'}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-2 px-2 text-gray-400 font-mono">—</td>
+                              <td className="py-2 px-2 text-gray-600">
+                                {p.paymentMode === 'PAID' ? 'Contado' : 'Cta. Cte.'}
+                              </td>
+                              <td className="py-2 px-2 text-right font-mono font-bold text-black">
+                                $ {grossNumber.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                {p.currencyCodeSnapshot === 'USD' && (
+                                  <span className="block text-[10px] text-gray-500 font-normal">
+                                    (U$S {parseFloat(p.totalNetSourceCurrency).toFixed(2)})
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-2 px-2 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => handleEditPurchase(p.id)}
+                                  title="Editar Compra"
+                                  className="p-1 rounded text-gray-500 hover:text-[#0E50A0] transition-colors cursor-pointer"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
 
                       {/* Fila de SALDO ACTUALIZADO con fondo salmón si tiene deuda según Figma */}
                       {(() => {
@@ -564,6 +718,32 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ initialSuppliers }
           onCancel={() => setConfirmDialogSupplier(null)}
         />
       )}
+
+      {/* Modal de Compra y Edición */}
+      <RegistrarCompraModal
+        isOpen={compraModalOpen}
+        onClose={() => {
+          setCompraModalOpen(false);
+          setPurchaseToEdit(null);
+        }}
+        onSuccess={() => {
+          startTransition(() => {
+            router.refresh();
+            if (selectedSupplierId) {
+              fetchSupplierDetails(selectedSupplierId);
+            }
+          });
+        }}
+        suppliers={initialSuppliers.map((s) => ({
+          id: s.id,
+          code: s.code,
+          name: s.name,
+          currencyCode: s.currencyCode,
+          active: s.active,
+        }))}
+        initialSupplierId={selectedSupplier?.id}
+        purchaseToEdit={purchaseToEdit}
+      />
 
     </div>
   );

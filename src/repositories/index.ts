@@ -2,11 +2,14 @@ export * from './base.repository';
 export * from './code-sequence.repository';
 export * from './customer.repository';
 export * from './discount-profile.repository';
+export * from './factory.repository';
 export * from './formula.repository';
 export * from './master-item.repository';
 export * from './patrimony.repository';
 export * from './price-list.repository';
 export * from './product.repository';
+export * from './purchase.repository';
 export * from './stock.repository';
 export * from './supplier-item.repository';
 export * from './supplier.repository';
+

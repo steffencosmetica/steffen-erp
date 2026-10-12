@@ -6,9 +6,15 @@ import {
   getCustomerService,
   getSupplierService,
   getMasterItemService,
+  getFormulaService,
+  getProductService,
+  getFactoryService,
 } from '@/services/composition';
-import { Decimal } from '@/domain/decimal';
-import { Button } from '@/ui/components/UIComponents';
+import { Decimal, toNumericString } from '@/domain/decimal';
+import { serializeBulkLot } from '@/actions/factory.dto';
+import type { BaseProductOption } from '@/ui/modals/RegistrarFabricacionModal';
+import type { PackagingProductOption } from '@/ui/modals/RegistrarEnvasadoModal';
+import { DashboardQuickAccess } from '@/ui/components/DashboardQuickAccess';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,10 +30,20 @@ export default async function ErpHomePage() {
   }
 
   // Carga de datos reales sin mocks para el Dashboard
-  const [mprItems, customers, suppliers] = await Promise.all([
+  const [
+    mprItems,
+    customers,
+    suppliers,
+    baseProductRecords,
+    productRecords,
+    openLotsRecords,
+  ] = await Promise.all([
     getMasterItemService().listMasterItems('MPR').catch(() => []),
     getCustomerService().listCustomers().catch(() => []),
     getSupplierService().listSuppliers().catch(() => []),
+    getFormulaService().listBaseProducts(true).catch(() => []),
+    getProductService().listProducts(false).catch(() => []),
+    getFactoryService().listOpenBulkLots().catch(() => []),
   ]);
 
   // Filtrar insumos críticos reales (por debajo del mínimo)
@@ -54,6 +70,35 @@ export default async function ErpHomePage() {
     const num = Math.round(dec.toNumber());
     return `$ ${num.toLocaleString('es-AR')}`;
   };
+
+  const supplierOptions = suppliers.map((s) => ({
+    id: s.id,
+    code: s.code,
+    name: s.name,
+    currencyCode: s.currencyCode as 'ARS' | 'USD',
+    active: s.active,
+  }));
+
+  const bulkLotsDTO = openLotsRecords.map(serializeBulkLot);
+
+  const baseProductsForFabrication: BaseProductOption[] = baseProductRecords
+    .filter((bp) => bp.active && bp.currentFormulaBreakdown)
+    .map((bp) => ({
+      id: bp.id,
+      name: bp.name,
+      code: bp.code,
+    }));
+
+  const productsForPackaging: PackagingProductOption[] = productRecords
+    .filter((p) => p.active)
+    .map((p) => ({
+      productId: p.productId,
+      code: p.code,
+      name: p.name,
+      baseProductId: p.baseProductId,
+      presentation: p.presentation,
+      weightKg: toNumericString(p.weightKg),
+    }));
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -125,61 +170,12 @@ export default async function ErpHomePage() {
             <div className="flex-1 h-[2px] bg-[#D2AB68]/60"></div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-[#D9D9D9] p-4 shadow-xs">
-            <div className="grid grid-cols-2 gap-3">
-              
-              {/* Fila 1 */}
-              <button
-                type="button"
-                disabled
-                title="Módulo de Compras (CMP) próximo en Fase 4"
-                className="h-[52px] bg-[#0E50A0] hover:bg-[#0c4386] text-white font-bold text-sm rounded-[2px] flex items-center justify-center transition-colors cursor-not-allowed opacity-80"
-              >
-                Compra
-              </button>
-              <button
-                type="button"
-                disabled
-                title="Módulo de Pedidos (PED) próximo en Fase 4"
-                className="h-[52px] bg-[#0E50A0] hover:bg-[#0c4386] text-white font-bold text-sm rounded-[2px] flex items-center justify-center transition-colors cursor-not-allowed opacity-80"
-              >
-                Nuevo pedido
-              </button>
-
-              {/* Fila 2 */}
-              <button
-                type="button"
-                disabled
-                title="Módulo de Envasado (ENV) próximo en Fase 4"
-                className="h-[52px] bg-[#0E50A0] hover:bg-[#0c4386] text-white font-bold text-sm rounded-[2px] flex items-center justify-center transition-colors cursor-not-allowed opacity-80"
-              >
-                Envasado
-              </button>
-              <button
-                type="button"
-                disabled
-                title="Módulo de Fabricación (FAB) próximo en Fase 4"
-                className="h-[52px] bg-[#0E50A0] hover:bg-[#0c4386] text-white font-bold text-sm rounded-[2px] flex items-center justify-center transition-colors cursor-not-allowed opacity-80"
-              >
-                Fabricación
-              </button>
-
-              {/* Fila 3 (Verde Sólido Figma) */}
-              <Link
-                href="/clientes"
-                className="h-[52px] bg-[#008102] hover:bg-[#015C02] text-white font-bold text-sm rounded-[2px] flex items-center justify-center transition-colors shadow-xs"
-              >
-                Pago Clientes
-              </Link>
-              <Link
-                href="/proveedores"
-                className="h-[52px] bg-[#008102] hover:bg-[#015C02] text-white font-bold text-sm rounded-[2px] flex items-center justify-center transition-colors shadow-xs"
-              >
-                Pago Proveedor
-              </Link>
-
-            </div>
-          </div>
+          <DashboardQuickAccess
+            suppliers={supplierOptions}
+            baseProducts={baseProductsForFabrication}
+            bulkLots={bulkLotsDTO}
+            packagingProducts={productsForPackaging}
+          />
         </div>
 
         {/* 3. ALERTA STOCK MP/COMP & SIMULAR COMPRA con borde rojo según Figma */}
@@ -375,13 +371,14 @@ export default async function ErpHomePage() {
             </table>
 
             <div className="flex justify-end pt-1">
-              <Button
-                variant="rojo"
-                onClick={() => alert('Módulo de retiro de caja disponible en Administración')}
-                className="w-36 text-xs uppercase font-bold"
+              <button
+                type="button"
+                disabled
+                title="Módulo de Retiro de Caja próximo en Administración (Fase 9)"
+                className="h-[38px] px-4 inline-flex items-center justify-center font-semibold rounded-[2px] opacity-80 cursor-not-allowed bg-[#DD0000] text-white border border-[#DD0000] w-36 text-xs uppercase font-bold shadow-xs"
               >
                 RETIRO CAJA
-              </Button>
+              </button>
             </div>
           </div>
         </div>
