@@ -9,12 +9,14 @@ import {
   getFormulaService,
   getProductService,
   getFactoryService,
+  getPatrimonyService,
 } from '@/services/composition';
 import { Decimal, toNumericString } from '@/domain/decimal';
 import { serializeBulkLot } from '@/actions/factory.dto';
 import type { BaseProductOption } from '@/ui/modals/RegistrarFabricacionModal';
 import type { PackagingProductOption } from '@/ui/modals/RegistrarEnvasadoModal';
 import { DashboardQuickAccess } from '@/ui/components/DashboardQuickAccess';
+import { DashboardCuentasCard } from '@/ui/components/DashboardCuentasCard';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,6 +39,7 @@ export default async function ErpHomePage() {
     baseProductRecords,
     productRecords,
     openLotsRecords,
+    patrimonialSummary,
   ] = await Promise.all([
     getMasterItemService().listMasterItems('MPR').catch(() => []),
     getCustomerService().listCustomers().catch(() => []),
@@ -44,6 +47,13 @@ export default async function ErpHomePage() {
     getFormulaService().listBaseProducts(true).catch(() => []),
     getProductService().listProducts(false).catch(() => []),
     getFactoryService().listOpenBulkLots().catch(() => []),
+    getPatrimonyService().getSummary().catch(() => ({
+      cajaSteffen: new Decimal(0),
+      cajaMercadoLibre: new Decimal(0),
+      deudasClientes: new Decimal(0),
+      deudasProveedores: new Decimal(0),
+      neto: new Decimal(0),
+    })),
   ]);
 
   // Filtrar insumos críticos reales (por debajo del mínimo)
@@ -334,53 +344,13 @@ export default async function ErpHomePage() {
             <div className="flex-1 h-[2px] bg-[#D2AB68]/60"></div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-[#D9D9D9] p-4 shadow-xs space-y-4">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="bg-[#D9D9D9] text-black font-bold uppercase text-left">
-                  <th className="py-2 px-3">CUENTA</th>
-                  <th className="py-2 px-3 text-right">TOTAL</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 text-xs">
-                <tr>
-                  <td className="py-2.5 px-3 font-semibold text-black">CAJA STEFFEN</td>
-                  <td className="py-2.5 px-3 text-right font-mono font-bold text-[#008102]">
-                    $ 600.000
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-2.5 px-3 font-semibold text-black">DEUDAS CLIENTES</td>
-                  <td className="py-2.5 px-3 text-right font-mono font-bold text-[#008102]">
-                    {formatArs(totalCustomerDebt)}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-2.5 px-3 font-semibold text-black">DEUDAS PROVEEDORES</td>
-                  <td className="py-2.5 px-3 text-right font-mono font-bold text-[#DD0000]">
-                    -{formatArs(totalSupplierDebt)}
-                  </td>
-                </tr>
-                <tr className="border-t-2 border-black font-bold">
-                  <td className="py-2.5 px-3 text-black uppercase">NETO</td>
-                  <td className="py-2.5 px-3 text-right font-mono text-sm text-black">
-                    {formatArs(totalCustomerDebt.minus(totalSupplierDebt))}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            <div className="flex justify-end pt-1">
-              <button
-                type="button"
-                disabled
-                title="Módulo de Retiro de Caja próximo en Administración (Fase 9)"
-                className="h-[38px] px-4 inline-flex items-center justify-center font-semibold rounded-[2px] opacity-80 cursor-not-allowed bg-[#DD0000] text-white border border-[#DD0000] w-36 text-xs uppercase font-bold shadow-xs"
-              >
-                RETIRO CAJA
-              </button>
-            </div>
-          </div>
+          <DashboardCuentasCard
+            cajaSteffen={toNumericString(patrimonialSummary.cajaSteffen)}
+            cajaMercadoLibre={toNumericString(patrimonialSummary.cajaMercadoLibre)}
+            deudasClientes={toNumericString(patrimonialSummary.deudasClientes)}
+            deudasProveedores={toNumericString(patrimonialSummary.deudasProveedores)}
+            neto={toNumericString(patrimonialSummary.neto)}
+          />
         </div>
 
       </div>

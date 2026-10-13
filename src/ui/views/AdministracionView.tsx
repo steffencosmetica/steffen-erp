@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   FileText,
   ArrowRight,
@@ -11,14 +12,24 @@ import {
   type AdministracionDashboardDTO,
   formatArsInteger,
 } from '@/actions/administracion.dto';
+import { GastoOperativoModal } from '@/ui/modals/GastoOperativoModal';
+import { RetiroCajaModal } from '@/ui/modals/RetiroCajaModal';
+import { RegistrarPagoClienteModal } from '@/ui/modals/RegistrarPagoClienteModal';
+import { RegistrarPagoProveedorModal } from '@/ui/modals/RegistrarPagoProveedorModal';
 
 interface AdministracionViewProps {
   data: AdministracionDashboardDTO;
 }
 
 export const AdministracionView: React.FC<AdministracionViewProps> = ({ data }) => {
+  const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState('2026-10');
   const [usdInput, setUsdInput] = useState(data.currentUsdRate || '1350');
+
+  const [isGastoOperativoOpen, setIsGastoOperativoOpen] = useState(false);
+  const [isRetiroCajaOpen, setIsRetiroCajaOpen] = useState(false);
+  const [isPagoClienteOpen, setIsPagoClienteOpen] = useState(false);
+  const [isPagoProveedorOpen, setIsPagoProveedorOpen] = useState(false);
 
   return (
     <div className="max-w-[1600px] mx-auto pb-16 space-y-5">
@@ -91,9 +102,8 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({ data }) 
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
-              className="h-12 bg-[#0E50A0] opacity-80 cursor-not-allowed text-white rounded-[5px] font-bold text-xs uppercase tracking-wider flex items-center justify-center transition-colors"
-              title="Módulo de Gasto Operativo próximo en Fase 4"
-              disabled
+              onClick={() => setIsGastoOperativoOpen(true)}
+              className="h-12 bg-[#0E50A0] hover:bg-[#0c4386] text-white rounded-[5px] font-bold text-xs uppercase tracking-wider flex items-center justify-center transition-colors cursor-pointer"
             >
               GASTO OPERATIVO
             </button>
@@ -151,6 +161,12 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({ data }) 
                   </td>
                 </tr>
                 <tr>
+                  <td className="py-2 px-3 font-semibold text-black">CAJA MERCADO LIBRE</td>
+                  <td className="py-2 px-3 text-right font-mono font-bold text-[#008102]">
+                    {formatArsInteger(data.cajaMercadoLibreArs)}
+                  </td>
+                </tr>
+                <tr>
                   <td className="py-2 px-3 font-semibold text-black">DEUDAS CLIENTES</td>
                   <td className="py-2 px-3 text-right font-mono font-bold text-[#008102]">
                     {formatArsInteger(data.deudasClientesArs)}
@@ -176,9 +192,8 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({ data }) 
             <div className="flex justify-end">
               <button
                 type="button"
-                className="h-7 px-3 bg-[#DD0000] opacity-80 cursor-not-allowed text-white text-xs font-bold uppercase tracking-wider rounded-[5px] transition-colors"
-                title="Módulo de Retiro de Caja próximo en Fase 4"
-                disabled
+                onClick={() => setIsRetiroCajaOpen(true)}
+                className="h-7 px-3 bg-[#DD0000] hover:bg-[#b00000] text-white text-xs font-bold uppercase tracking-wider rounded-[5px] transition-colors cursor-pointer"
               >
                 RETIRO CAJA
               </button>
@@ -198,9 +213,8 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({ data }) 
               </h2>
               <button
                 type="button"
-                className="h-8 px-3 bg-[#008102] opacity-80 cursor-not-allowed text-white text-[11px] font-bold uppercase tracking-wider rounded-[5px]"
-                title="Módulo de Cobranzas/Pagos próximo en Fase 4"
-                disabled
+                onClick={() => setIsPagoClienteOpen(true)}
+                className="h-8 px-3 bg-[#008102] hover:bg-[#007002] text-white text-[11px] font-bold uppercase tracking-wider rounded-[5px] cursor-pointer"
               >
                 REGISTRAR PAGO
               </button>
@@ -279,9 +293,8 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({ data }) 
               </h2>
               <button
                 type="button"
-                className="h-8 px-3 bg-[#008102] opacity-80 cursor-not-allowed text-white text-[11px] font-bold uppercase tracking-wider rounded-[5px]"
-                title="Módulo de Pagos a Proveedores próximo en Fase 4"
-                disabled
+                onClick={() => setIsPagoProveedorOpen(true)}
+                className="h-8 px-3 bg-[#008102] hover:bg-[#007002] text-white text-[11px] font-bold uppercase tracking-wider rounded-[5px] cursor-pointer"
               >
                 REGISTRAR PAGO
               </button>
@@ -316,8 +329,8 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({ data }) 
                           {s.lastPurchaseDate || '—'}
                         </td>
                         <td className="py-2.5 px-3 text-center">
-                          <Link href={`/proveedores`} title="Ver proveedor">
-                            <FileText className="w-4 h-4 text-gray-600 inline-block hover:text-black" />
+                          <Link href={`/proveedores?supplierId=${s.id}`} title="Ver cuenta del proveedor">
+                            <FileText className="w-4 h-4 text-gray-600 inline-block hover:text-[#0E50A0] transition-colors cursor-pointer" />
                           </Link>
                         </td>
                       </tr>
@@ -338,7 +351,7 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({ data }) 
             <div className="flex items-center gap-4">
               <span className="font-bold uppercase tracking-wider text-black">TOTAL</span>
               <span className="font-bold font-mono text-[#DD0000]">
-                {formatArsInteger(data.deudasProveedoresArs)}
+                {formatArsInteger(data.totalDeudasProveedoresTablaArs || data.deudasProveedoresArs)}
               </span>
             </div>
             <Link
@@ -405,14 +418,13 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({ data }) 
         </div>
 
         <div className="flex justify-end pt-3 mt-3 border-t border-[#E5E5E5]">
-          <button
-            type="button"
-            className="text-xs font-bold text-[#0E50A0] opacity-80 cursor-not-allowed inline-flex items-center gap-1"
-            title="Módulo de Movimientos próximo en Fase 4"
+          <Link
+            href="/movimientos"
+            className="text-xs font-bold text-[#0E50A0] hover:underline inline-flex items-center gap-1 cursor-pointer"
           >
             <span>IR A MOVIMIENTOS</span>
             <ArrowRight className="w-3 h-3" />
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -427,6 +439,43 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({ data }) 
           <span>Auditoría Técnica y Estado del Sistema</span>
         </Link>
       </div>
+
+      {/* Modales de Administración */}
+      <GastoOperativoModal
+        isOpen={isGastoOperativoOpen}
+        onClose={() => setIsGastoOperativoOpen(false)}
+        onSuccess={() => {
+          setIsGastoOperativoOpen(false);
+          router.refresh();
+        }}
+      />
+
+      <RetiroCajaModal
+        isOpen={isRetiroCajaOpen}
+        onClose={() => setIsRetiroCajaOpen(false)}
+        onSuccess={() => {
+          setIsRetiroCajaOpen(false);
+          router.refresh();
+        }}
+      />
+
+      <RegistrarPagoClienteModal
+        isOpen={isPagoClienteOpen}
+        onClose={() => setIsPagoClienteOpen(false)}
+        onSuccess={() => {
+          setIsPagoClienteOpen(false);
+          router.refresh();
+        }}
+      />
+
+      <RegistrarPagoProveedorModal
+        isOpen={isPagoProveedorOpen}
+        onClose={() => setIsPagoProveedorOpen(false)}
+        onSuccess={() => {
+          setIsPagoProveedorOpen(false);
+          router.refresh();
+        }}
+      />
     </div>
   );
 };

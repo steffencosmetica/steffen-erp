@@ -1354,13 +1354,17 @@ Saldo proveedor:
 - `= 0` → cuenta saldada;
 - `< 0` → Steffen tiene saldo a favor.
 
-Pago superior a deuda:
+Pago superior a deuda a proveedor:
 
-- permitido.
+- PROHIBIDO (no se permite sobrepago a proveedor).
+- El importe debe ser > 0 y <= deuda actual (current_balance).
+- Se permiten pagos parciales o cancelación total.
+- Si importe > deuda actual, la operación es rechazada autoritativamente en backend / PostgreSQL ("El importe no puede superar la deuda actual del proveedor.").
 
 Selector Pago Proveedor:
 
-- solo proveedores con deuda positiva.
+- solo proveedores con deuda positiva (> 0).
+- muestra DEUDA siempre en ARS ($).
 
 ---
 

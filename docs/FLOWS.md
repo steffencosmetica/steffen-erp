@@ -1183,7 +1183,11 @@ Mostrar solo Proveedores con:
 8. crear financial entries;
 9. confirmar.
 
-Se permite sobrepago.
+NO se permite sobrepago a proveedor:
+- importe > 0;
+- saldo > 0;
+- importe <= saldo actual;
+- si importe > saldo actual -> transacción rechazada con excepción ("El importe no puede superar la deuda actual del proveedor.").
 
 ---
 

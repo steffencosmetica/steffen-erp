@@ -162,9 +162,18 @@ export function getSupplierItemRepository(): SupplierItemRepository {
   return supplierItemRepoInstance;
 }
 
+let patrimonyRepoInstance: PatrimonyRepository | null = null;
+
+export function getPatrimonyRepository(): PatrimonyRepository {
+  if (!patrimonyRepoInstance) {
+    patrimonyRepoInstance = new PatrimonyRepository(serverSupabase);
+  }
+  return patrimonyRepoInstance;
+}
+
 export function getPatrimonyService(): PatrimonyDomainService {
   if (!patrimonyServiceInstance) {
-    const patrimonyRepo = new PatrimonyRepository(serverSupabase);
+    const patrimonyRepo = getPatrimonyRepository();
     patrimonyServiceInstance = new PatrimonyDomainService(patrimonyRepo);
   }
   return patrimonyServiceInstance;

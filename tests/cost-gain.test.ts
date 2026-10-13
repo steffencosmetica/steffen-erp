@@ -218,8 +218,7 @@ test('Costo-Ganancia (Fase 4) — Motor analítico, descuentos sucesivos con Dec
 
     for (const supId of createdSupplierIds) {
       await serverClient.from('supplier_items').delete().eq('supplier_id', supId);
-      await serverClient.from('financial_entries').delete().eq('source_id', supId);
-      await serverClient.from('financial_accounts').delete().eq('entity_id', supId);
+      await serverClient.from('financial_accounts').delete().eq('supplier_id', supId);
       await serverClient.from('suppliers').delete().eq('id', supId);
     }
   });

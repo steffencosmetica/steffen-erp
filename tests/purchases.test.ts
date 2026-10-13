@@ -204,7 +204,39 @@ test('FASE 8 — COMPRAS: Pruebas integrales de flujo real, ledger MST, patrimon
     }
 
     for (const supId of createdSuppliers) {
+      // 1. Eliminar compras remanentes vinculadas a estos proveedores de prueba
+      const { data: remPurchases } = await supabase
+        .from('purchases')
+        .select('id, operation_id')
+        .eq('supplier_id', supId);
+
+      if (remPurchases && remPurchases.length > 0) {
+        const purIds = remPurchases.map((p) => p.id);
+        const opIds = remPurchases.map((p) => p.operation_id).filter(Boolean);
+
+        await supabase.from('purchase_items').delete().in('purchase_id', purIds);
+        await supabase.from('purchases').delete().in('id', purIds);
+
+        if (opIds.length > 0) {
+          const { data: movs } = await supabase
+            .from('patrimonial_movements')
+            .select('id')
+            .in('operation_id', opIds);
+
+          if (movs && movs.length > 0) {
+            await supabase
+              .from('financial_entries')
+              .delete()
+              .in('patrimonial_movement_id', movs.map((m) => m.id));
+          }
+          await supabase.from('patrimonial_movements').delete().in('operation_id', opIds);
+          await supabase.from('stock_movements').delete().in('operation_id', opIds);
+          await supabase.from('business_operations').delete().in('id', opIds);
+        }
+      }
+
       await supabase.from('supplier_items').delete().eq('supplier_id', supId);
+      await supabase.from('financial_accounts').delete().eq('supplier_id', supId);
       await supabase.from('suppliers').delete().eq('id', supId);
     }
   });

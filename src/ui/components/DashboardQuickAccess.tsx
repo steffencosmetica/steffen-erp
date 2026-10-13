@@ -7,6 +7,9 @@ import { RegistrarFabricacionModal, type BaseProductOption } from '@/ui/modals/R
 import { RegistrarEnvasadoModal, type PackagingProductOption } from '@/ui/modals/RegistrarEnvasadoModal';
 import type { BulkLotDTO } from '@/actions/factory.dto';
 
+import { RegistrarPagoClienteModal } from '@/ui/modals/RegistrarPagoClienteModal';
+import { RegistrarPagoProveedorModal } from '@/ui/modals/RegistrarPagoProveedorModal';
+
 interface DashboardQuickAccessProps {
   suppliers: SupplierOption[];
   baseProducts: BaseProductOption[];
@@ -25,18 +28,17 @@ export const DashboardQuickAccess: React.FC<DashboardQuickAccessProps> = ({
     | 'purchase'
     | 'manufacturing'
     | 'packaging'
-    | 'cash-withdrawal'
     | 'customer-payment'
     | 'supplier-payment'
     | null
   >(null);
 
   const handleCustomerPayment = () => {
-    alert('Módulo de cobro/pago de clientes se activará en el bloque de Administración (Fase 9).');
+    setActiveModal('customer-payment');
   };
 
   const handleSupplierPayment = () => {
-    alert('Módulo de registro de pagos a proveedores se activará en Administración (Fase 9).');
+    setActiveModal('supplier-payment');
   };
 
   return (
@@ -57,7 +59,7 @@ export const DashboardQuickAccess: React.FC<DashboardQuickAccessProps> = ({
           <button
             type="button"
             disabled
-            title="Módulo de Pedidos (PED) próximo en Fase 9"
+            title="Módulo de Pedidos (PED) próximo en Fase 10"
             className="h-[52px] bg-[#0E50A0] hover:bg-[#0c4386] text-white font-bold text-sm rounded-[2px] flex items-center justify-center transition-colors cursor-not-allowed opacity-80"
           >
             Nuevo pedido
@@ -136,6 +138,26 @@ export const DashboardQuickAccess: React.FC<DashboardQuickAccessProps> = ({
         }}
         bulkLots={bulkLots}
         products={packagingProducts}
+      />
+
+      {/* Modal Pago Clientes */}
+      <RegistrarPagoClienteModal
+        isOpen={activeModal === 'customer-payment'}
+        onClose={() => setActiveModal(null)}
+        onSuccess={() => {
+          setActiveModal(null);
+          router.refresh();
+        }}
+      />
+
+      {/* Modal Pago Proveedor */}
+      <RegistrarPagoProveedorModal
+        isOpen={activeModal === 'supplier-payment'}
+        onClose={() => setActiveModal(null)}
+        onSuccess={() => {
+          setActiveModal(null);
+          router.refresh();
+        }}
       />
     </>
   );

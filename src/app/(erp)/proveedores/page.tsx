@@ -11,7 +11,11 @@ export const metadata = {
   description: 'Gestión y administración de proveedores de insumos de Steffen Cosmética Capilar.',
 };
 
-export default async function ProveedoresPage() {
+export default async function ProveedoresPage(props: {
+  searchParams: Promise<{ supplierId?: string }>;
+}) {
+  const searchParams = await props.searchParams;
+
   // 1. Guard obligatorio de servidor: valida sesión activa del usuario
   const user = await getAuthenticatedUser();
   if (!user || !isUserAuthorized(user)) {
@@ -25,5 +29,10 @@ export default async function ProveedoresPage() {
   // 3. Serialización estricta a DTO JSON-safe: Decimal convertido a string exacto, nunca a Number
   const initialSuppliers = supplierRecords.map(serializeSupplier);
 
-  return <SuppliersView initialSuppliers={initialSuppliers} />;
+  return (
+    <SuppliersView
+      initialSuppliers={initialSuppliers}
+      initialSelectedSupplierId={searchParams?.supplierId}
+    />
+  );
 }

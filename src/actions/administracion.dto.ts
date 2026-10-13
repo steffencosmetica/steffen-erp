@@ -29,8 +29,10 @@ export interface AdminPatrimonialMovementRowDTO {
 export interface AdministracionDashboardDTO {
   currentUsdRate: string | null;
   cajaSteffenArs: string;
+  cajaMercadoLibreArs: string;
   deudasClientesArs: string;
   deudasProveedoresArs: string;
+  totalDeudasProveedoresTablaArs: string;
   netoArs: string;
   customerRows: AdminCustomerRowDTO[];
   supplierRows: AdminSupplierRowDTO[];

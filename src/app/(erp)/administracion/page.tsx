@@ -2,10 +2,8 @@ import { redirect } from 'next/navigation';
 import { getAuthenticatedUser, isUserAuthorized } from '@/auth/guard';
 import {
   getCustomerService,
-  getSupplierService,
   getPatrimonyService,
   getSupplierItemRepository,
-  getPurchaseService,
 } from '@/services/composition';
 import { AdministracionView } from '@/ui/views/AdministracionView';
 import { type AdministracionDashboardDTO } from '@/actions/administracion.dto';
@@ -27,61 +25,39 @@ export default async function AdministracionPage() {
 
   // 2. Consulta en paralelo a los servicios y repositorios del backend real
   const customerService = getCustomerService();
-  const supplierService = getSupplierService();
   const patrimonyService = getPatrimonyService();
   const supplierItemRepo = getSupplierItemRepository();
-  const purchaseService = getPurchaseService();
 
-  const [customerRecords, supplierRecords, financialAccounts, recentMovements, usdRate, purchases] =
+  const [customerRecords, supplierDebts, summary, recentMovements, usdRate] =
     await Promise.all([
       customerService.listCustomers(true).catch(() => []),
-      supplierService.listSuppliers(true).catch(() => []),
-      patrimonyService.listAccounts().catch(() => []),
+      patrimonyService.listSupplierDebtsWithActivity().catch(() => []),
+      patrimonyService.getSummary().catch(() => ({
+        cajaSteffen: new Decimal(0),
+        cajaMercadoLibre: new Decimal(0),
+        deudasClientes: new Decimal(0),
+        deudasProveedores: new Decimal(0),
+        neto: new Decimal(0),
+      })),
       patrimonyService.listRecentMovements(10).catch(() => []),
       supplierItemRepo.getCurrentUsdExchangeRate().catch(() => null),
-      purchaseService.listPurchases({ limit: 100 }).catch(() => []),
     ]);
 
-  // 3. Cálculos patrimoniales y balances exactos con Decimal
-  let totalCustomerReceivable = new Decimal(0);
-  for (const c of customerRecords) {
-    if (c.balanceArs) {
-      totalCustomerReceivable = totalCustomerReceivable.plus(c.balanceArs);
-    }
-  }
-
-  let totalSupplierPayable = new Decimal(0);
-  for (const s of supplierRecords) {
-    if (s.balance) {
-      totalSupplierPayable = totalSupplierPayable.plus(s.balance);
-    }
-  }
-
-  // Caja Steffen
-  const cajaSteffenAccount = financialAccounts.find(
-    (acc) => acc.accountType === 'CASH_STEFFEN' || acc.name.toLowerCase().includes('steffen')
+  // Total de la tabla Deudas Proveedores: suma únicamente los saldos > 0 mostrados
+  const totalTablaProveedores = supplierDebts.reduce(
+    (acc, s) => acc.plus(s.balanceArs),
+    new Decimal(0)
   );
-  const cajaSteffenBalance = cajaSteffenAccount ? cajaSteffenAccount.currentBalance : new Decimal(0);
-
-  // Neto = Caja + Deudas Clientes - Deudas Proveedores
-  const netoBalance = cajaSteffenBalance
-    .plus(totalCustomerReceivable)
-    .minus(totalSupplierPayable);
-
-  const lastPurchaseBySupplier = new Map<string, string>();
-  for (const p of purchases) {
-    if (!lastPurchaseBySupplier.has(p.supplierId)) {
-      lastPurchaseBySupplier.set(p.supplierId, p.businessDate);
-    }
-  }
 
   // 4. Mapeo a DTOs JSON-safe para Client Component
   const dashboardDTO: AdministracionDashboardDTO = {
     currentUsdRate: usdRate ? toNumericString(usdRate) : null,
-    cajaSteffenArs: toNumericString(cajaSteffenBalance),
-    deudasClientesArs: toNumericString(totalCustomerReceivable),
-    deudasProveedoresArs: toNumericString(totalSupplierPayable),
-    netoArs: toNumericString(netoBalance),
+    cajaSteffenArs: toNumericString(summary.cajaSteffen),
+    cajaMercadoLibreArs: toNumericString(summary.cajaMercadoLibre),
+    deudasClientesArs: toNumericString(summary.deudasClientes),
+    deudasProveedoresArs: toNumericString(summary.deudasProveedores),
+    totalDeudasProveedoresTablaArs: toNumericString(totalTablaProveedores),
+    netoArs: toNumericString(summary.neto),
     customerRows: customerRecords.map((c) => ({
       id: c.id,
       name: c.name,
@@ -89,21 +65,21 @@ export default async function AdministracionPage() {
       lastPaymentDate: null,
       lastPurchaseDate: null,
     })),
-    supplierRows: supplierRecords.map((s) => ({
-      id: s.id,
+    supplierRows: supplierDebts.map((s) => ({
+      id: s.supplierId,
       name: s.name,
-      balanceArs: toNumericString(s.balance),
-      lastPaymentDate: null,
-      lastPurchaseDate: lastPurchaseBySupplier.get(s.id) || null,
+      balanceArs: toNumericString(s.balanceArs),
+      lastPaymentDate: s.lastPaymentDate,
+      lastPurchaseDate: s.lastPurchaseDate,
     })),
     recentMovements: recentMovements.map((m) => ({
       id: m.id,
       code: m.code,
-      date: m.createdAt ? m.createdAt.split('T')[0] : '—',
+      date: m.businessDate || (m.createdAt ? m.createdAt.split('T')[0] : '—'),
       type: m.movementType,
       description: m.description,
       amountArs: toNumericString(m.amountArs),
-      patrimonialVariation: '',
+      patrimonialVariation: m.patrimonialVariation || '',
     })),
   };
 

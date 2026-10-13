@@ -29,11 +29,21 @@ import {
   Loader2,
 } from 'lucide-react';
 
+import { RegistrarPagoProveedorModal } from '@/ui/modals/RegistrarPagoProveedorModal';
+import { EditarPagoModal } from '@/ui/modals/EditarPagoModal';
+import { getSupplierMovementsAction } from '@/actions/patrimony.actions';
+import type { AccountMovementDTO } from '@/actions/patrimony.dto';
+import { formatArsInteger } from '@/actions/administracion.dto';
+
 interface SuppliersViewProps {
   initialSuppliers: SupplierDTO[];
+  initialSelectedSupplierId?: string;
 }
 
-export const SuppliersView: React.FC<SuppliersViewProps> = ({ initialSuppliers }) => {
+export const SuppliersView: React.FC<SuppliersViewProps> = ({
+  initialSuppliers,
+  initialSelectedSupplierId,
+}) => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -41,9 +51,13 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ initialSuppliers }
   const [viewMode, setViewMode] = useState<'ficha' | 'listado'>('ficha');
 
   // Proveedor seleccionado para la Ficha
-  const [selectedSupplierId, setSelectedSupplierId] = useState<string>(
-    initialSuppliers[0]?.id || ''
-  );
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string>(() => {
+    if (initialSelectedSupplierId) {
+      const match = initialSuppliers.find((s) => s.id === initialSelectedSupplierId);
+      if (match) return match.id;
+    }
+    return initialSuppliers[0]?.id || '';
+  });
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showInactive, setShowInactive] = useState(false);
@@ -57,8 +71,13 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ initialSuppliers }
   const [compraModalOpen, setCompraModalOpen] = useState(false);
   const [purchaseToEdit, setPurchaseToEdit] = useState<PurchaseDetailDTO | null>(null);
 
+  // Modal State (Payment)
+  const [isPagoModalOpen, setIsPagoModalOpen] = useState(false);
+  const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
+
   // Datos específicos del proveedor seleccionado en ficha
   const [supplierPurchases, setSupplierPurchases] = useState<PurchaseSummaryDTO[]>([]);
+  const [supplierMovements, setSupplierMovements] = useState<AccountMovementDTO[]>([]);
   const [supplierCatalogItems, setSupplierCatalogItems] = useState<AvailableSupplierItemDTO[]>([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
@@ -74,9 +93,10 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ initialSuppliers }
     if (!supplierId) return;
     setLoadingDetails(true);
     try {
-      const [purchasesRes, catalogRes] = await Promise.all([
+      const [purchasesRes, catalogRes, movementsRes] = await Promise.all([
         listPurchasesAction({ supplierId, limit: 30 }),
         getSupplierPurchaseCatalogAction(supplierId),
+        getSupplierMovementsAction(supplierId),
       ]);
 
       if (purchasesRes.success && purchasesRes.data) {
@@ -84,6 +104,9 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ initialSuppliers }
       }
       if (catalogRes.success && catalogRes.data) {
         setSupplierCatalogItems(catalogRes.data.items.filter((it) => it.isAssociated));
+      }
+      if (movementsRes.success && movementsRes.data) {
+        setSupplierMovements(movementsRes.data);
       }
     } catch (err) {
       console.error('Error fetching supplier details:', err);
@@ -97,6 +120,16 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ initialSuppliers }
       fetchSupplierDetails(selectedSupplierId);
     }
   }, [selectedSupplierId, viewMode, fetchSupplierDetails]);
+
+  React.useEffect(() => {
+    if (initialSelectedSupplierId) {
+      const match = initialSuppliers.find((s) => s.id === initialSelectedSupplierId);
+      if (match) {
+        setSelectedSupplierId(match.id);
+        setViewMode('ficha');
+      }
+    }
+  }, [initialSelectedSupplierId, initialSuppliers]);
 
   const handleEditPurchase = async (purchaseId: string) => {
     startTransition(async () => {
@@ -157,15 +190,13 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ initialSuppliers }
     });
   };
 
-  const formatBalance = (balanceStr: string, currency: 'ARS' | 'USD') => {
+  // Normativa Fase 9: Todo saldo patrimonial se expresa en Pesos Argentinos (ARS)
+  const formatBalance = (balanceStr: string) => {
     const num = parseFloat(balanceStr) || 0;
-    const isUsd = currency === 'USD';
-    const formatted = isUsd
-      ? num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-      : Math.round(num).toLocaleString('es-AR');
+    const formatted = Math.round(num).toLocaleString('es-AR');
 
     return {
-      text: isUsd ? `US$ ${formatted}` : `$ ${formatted}`,
+      text: `$ ${formatted}`,
       hasDebt: num > 0,
       hasCredit: num < 0,
       amount: num,
@@ -455,53 +486,72 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ initialSuppliers }
                             Cargando compras y movimientos...
                           </td>
                         </tr>
-                      ) : supplierPurchases.length === 0 ? (
+                      ) : supplierMovements.length === 0 ? (
                         <tr>
                           <td colSpan={6} className="py-6 text-center text-gray-400 font-medium">
-                            No hay compras registradas para este proveedor.
+                            No hay compras ni pagos registrados para este proveedor.
                           </td>
                         </tr>
                       ) : (
-                        supplierPurchases.map((p) => {
-                          const grossNumber = parseFloat(p.totalGrossArs) || 0;
+                        supplierMovements.map((m) => {
+                          const grossNumber = parseFloat(m.amountArs) || 0;
+                          if (m.isPayment) {
+                            return (
+                              <tr key={m.id} className="hover:bg-gray-50/50">
+                                <td className="py-2 px-2 font-mono">{m.date}</td>
+                                <td className="py-2 px-2 text-gray-400 font-mono">—</td>
+                                <td className="py-2 px-2 text-gray-400 font-mono">—</td>
+                                <td className="py-2 px-2 text-right font-mono font-bold text-[#008102]">
+                                  {formatArsInteger(m.amountArs)}
+                                </td>
+                                <td className="py-2 px-2 text-right font-mono font-bold text-black">
+                                  {formatArsInteger(m.amountArs)}
+                                </td>
+                                <td className="py-2 px-2 text-center">
+                                  {m.paymentId && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditingPaymentId(m.paymentId!)}
+                                      title="Editar Pago"
+                                      className="p-1 rounded text-gray-500 hover:text-[#0E50A0] transition-colors cursor-pointer"
+                                    >
+                                      <Edit3 className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          }
+                          // Compra
                           return (
-                            <tr key={p.id} className="hover:bg-gray-50/50">
-                              <td className="py-2 px-2 font-mono">{p.businessDate}</td>
-                              <td className="py-2 px-2">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="font-bold font-mono text-black">{p.code}</span>
-                                  <span
-                                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                                      p.paymentMode === 'PAID'
-                                        ? 'bg-green-100 text-green-800'
-                                        : 'bg-amber-100 text-amber-800'
-                                    }`}
-                                  >
-                                    {p.paymentMode === 'PAID' ? 'PAGA' : 'A DEUDA'}
-                                  </span>
-                                </div>
+                            <tr key={m.id} className="hover:bg-gray-50/50">
+                              <td className="py-2 px-2 font-mono">{m.date}</td>
+                              <td className="py-2 px-2 text-right font-mono font-bold text-black">
+                                {formatArsInteger(m.amountArs)}
+                              </td>
+                              <td className="py-2 px-2 font-mono text-gray-700">
+                                {m.documentCode || '—'}
                               </td>
                               <td className="py-2 px-2 text-gray-400 font-mono">—</td>
-                              <td className="py-2 px-2 text-gray-600">
-                                {p.paymentMode === 'PAID' ? 'Contado' : 'Cta. Cte.'}
-                              </td>
                               <td className="py-2 px-2 text-right font-mono font-bold text-black">
                                 $ {grossNumber.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                {p.currencyCodeSnapshot === 'USD' && (
+                                {m.currencyCodeSnapshot === 'USD' && m.totalNetSourceCurrency && (
                                   <span className="block text-[10px] text-gray-500 font-normal">
-                                    (U$S {parseFloat(p.totalNetSourceCurrency).toFixed(2)})
+                                    (U$S {parseFloat(m.totalNetSourceCurrency).toFixed(2)})
                                   </span>
                                 )}
                               </td>
                               <td className="py-2 px-2 text-center">
-                                <button
-                                  type="button"
-                                  onClick={() => handleEditPurchase(p.id)}
-                                  title="Editar Compra"
-                                  className="p-1 rounded text-gray-500 hover:text-[#0E50A0] transition-colors cursor-pointer"
-                                >
-                                  <Edit3 className="w-3.5 h-3.5" />
-                                </button>
+                                {m.purchaseId && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleEditPurchase(m.purchaseId!)}
+                                    title="Editar Compra"
+                                    className="p-1 rounded text-gray-500 hover:text-[#0E50A0] transition-colors cursor-pointer"
+                                  >
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
                               </td>
                             </tr>
                           );
@@ -510,7 +560,7 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ initialSuppliers }
 
                       {/* Fila de SALDO ACTUALIZADO con fondo salmón si tiene deuda según Figma */}
                       {(() => {
-                        const bal = formatBalance(selectedSupplier.balance, selectedSupplier.currencyCode);
+                        const bal = formatBalance(selectedSupplier.balance);
                         return (
                           <tr
                             className={`font-bold text-sm ${
@@ -537,8 +587,8 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ initialSuppliers }
                 <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                   <Button
                     variant="verde"
-                    onClick={() => alert('Módulo de registro de pagos a proveedores se activará en Administración')}
-                    className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider"
+                    onClick={() => setIsPagoModalOpen(true)}
+                    className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider cursor-pointer"
                   >
                     REGISTRAR PAGO
                   </Button>
@@ -617,7 +667,7 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ initialSuppliers }
                 </thead>
                 <tbody className="divide-y divide-[#E5E5E5]">
                   {filteredSuppliers.map((s) => {
-                    const bal = formatBalance(s.balance, s.currencyCode);
+                    const bal = formatBalance(s.balance);
                     return (
                       <tr
                         key={s.id}
@@ -743,6 +793,32 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ initialSuppliers }
         }))}
         initialSupplierId={selectedSupplier?.id}
         purchaseToEdit={purchaseToEdit}
+      />
+
+      {/* Modal Registrar Pago Proveedor */}
+      <RegistrarPagoProveedorModal
+        isOpen={isPagoModalOpen}
+        onClose={() => setIsPagoModalOpen(false)}
+        initialSupplierId={selectedSupplier?.id}
+        onSuccess={() => {
+          if (selectedSupplierId) {
+            fetchSupplierDetails(selectedSupplierId);
+          }
+          router.refresh();
+        }}
+      />
+
+      {/* Modal Editar Pago */}
+      <EditarPagoModal
+        isOpen={!!editingPaymentId}
+        onClose={() => setEditingPaymentId(null)}
+        paymentId={editingPaymentId || ''}
+        onSuccess={() => {
+          if (selectedSupplierId) {
+            fetchSupplierDetails(selectedSupplierId);
+          }
+          router.refresh();
+        }}
       />
 
     </div>

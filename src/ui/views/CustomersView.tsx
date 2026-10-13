@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useEffect, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button, ConfirmDialog } from '../components/UIComponents';
@@ -16,6 +16,11 @@ import {
   List,
   UserCheck,
 } from 'lucide-react';
+import { RegistrarPagoClienteModal } from '@/ui/modals/RegistrarPagoClienteModal';
+import { EditarPagoModal } from '@/ui/modals/EditarPagoModal';
+import { getCustomerMovementsAction } from '@/actions/patrimony.actions';
+import type { AccountMovementDTO } from '@/actions/patrimony.dto';
+import { formatArsInteger } from '@/actions/administracion.dto';
 
 interface CustomersViewProps {
   initialCustomers: CustomerDTO[];
@@ -40,12 +45,31 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ initialCustomers }
   const [modalOpen, setModalOpen] = useState(false);
   const [modalCustomer, setModalCustomer] = useState<CustomerDTO | null>(null);
 
+  // Payment Modals State
+  const [isPagoModalOpen, setIsPagoModalOpen] = useState(false);
+  const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
+  const [customerMovements, setCustomerMovements] = useState<AccountMovementDTO[]>([]);
+
   // Confirm Dialog for deactivating
   const [confirmDialogCustomer, setConfirmDialogCustomer] = useState<CustomerDTO | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const selectedCustomer =
     initialCustomers.find((c) => c.id === selectedCustomerId) || initialCustomers[0] || null;
+
+  // Cargar movimientos del cliente seleccionado
+  const loadMovements = () => {
+    if (!selectedCustomer?.id) return;
+    getCustomerMovementsAction(selectedCustomer.id).then((res) => {
+      if (res.success && res.data) {
+        setCustomerMovements(res.data);
+      }
+    });
+  };
+
+  useEffect(() => {
+    loadMovements();
+  }, [selectedCustomer?.id]);
 
   // Filtrado de clientes para listado
   const filteredCustomers = initialCustomers.filter((c) => {
@@ -363,12 +387,39 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ initialCustomers }
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#E5E5E5]">
-                    {/* Fila Informativa sobre movimientos de cuenta corriente */}
-                    <tr>
-                      <td colSpan={6} className="py-6 text-center text-gray-400 font-medium">
-                        El historial de ventas, remitos y cobranzas se integrará con el motor de ventas en Fase 4.
-                      </td>
-                    </tr>
+                    {customerMovements.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-6 text-center text-gray-400 font-medium">
+                          Sin movimientos registrados para este cliente.
+                        </td>
+                      </tr>
+                    ) : (
+                      customerMovements.map((m) => (
+                        <tr key={m.id} className="hover:bg-gray-50/80 transition-colors">
+                          <td className="py-2.5 px-3 font-semibold text-black whitespace-nowrap">{m.date}</td>
+                          <td className="py-2.5 px-3 text-gray-500">—</td>
+                          <td className="py-2.5 px-3 text-gray-500">{m.documentCode || '—'}</td>
+                          <td className="py-2.5 px-3 font-mono font-bold text-[#008102]">
+                            {m.isPayment ? formatArsInteger(m.amountArs) : '—'}
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-mono font-bold text-black">
+                            {formatArsInteger(m.amountArs)}
+                          </td>
+                          <td className="py-2.5 px-3 text-center">
+                            {m.isPayment && m.paymentId && (
+                              <button
+                                type="button"
+                                onClick={() => setEditingPaymentId(m.paymentId!)}
+                                title="Editar Pago"
+                                className="p-1 rounded text-gray-500 hover:text-[#0E50A0] transition-colors cursor-pointer"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
 
                     {/* Fila de SALDO ACTUALIZADO con fondo salmón si tiene deuda según Figma */}
                     {(() => {
@@ -399,8 +450,8 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ initialCustomers }
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                 <Button
                   variant="verde"
-                  onClick={() => alert('Módulo de registro de pagos se activará en el bloque de Administración')}
-                  className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider"
+                  onClick={() => setIsPagoModalOpen(true)}
+                  className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider cursor-pointer"
                 >
                   REGISTRAR PAGO
                 </Button>
@@ -567,6 +618,28 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ initialCustomers }
           onCancel={() => setConfirmDialogCustomer(null)}
         />
       )}
+
+      {/* Modal Registrar Pago Cliente */}
+      <RegistrarPagoClienteModal
+        isOpen={isPagoModalOpen}
+        onClose={() => setIsPagoModalOpen(false)}
+        initialCustomerId={selectedCustomer?.id}
+        onSuccess={() => {
+          loadMovements();
+          router.refresh();
+        }}
+      />
+
+      {/* Modal Editar Pago */}
+      <EditarPagoModal
+        isOpen={!!editingPaymentId}
+        onClose={() => setEditingPaymentId(null)}
+        paymentId={editingPaymentId || ''}
+        onSuccess={() => {
+          loadMovements();
+          router.refresh();
+        }}
+      />
 
     </div>
   );
