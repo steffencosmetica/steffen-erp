@@ -30,6 +30,8 @@ import { PurchaseRepository } from '@/repositories/purchase.repository';
 import { PurchaseDomainService } from '@/services/purchase.service';
 import { OrderRepository } from '@/repositories/order.repository';
 import { OrderDomainService } from '@/services/order.service';
+import { PlanningRepository } from '@/repositories/planning.repository';
+import { PlanningDomainService } from '@/services/planning.service';
 
 /**
  * Composition Root para instanciación controlada y unificada de servicios
@@ -258,3 +260,22 @@ export function getOrderService(): OrderDomainService {
   }
   return orderServiceInstance;
 }
+
+let planningRepoInstance: PlanningRepository | null = null;
+let planningServiceInstance: PlanningDomainService | null = null;
+
+export function getPlanningRepository(): PlanningRepository {
+  if (!planningRepoInstance) {
+    planningRepoInstance = new PlanningRepository(serverSupabase);
+  }
+  return planningRepoInstance;
+}
+
+export function getPlanningService(): PlanningDomainService {
+  if (!planningServiceInstance) {
+    const planningRepo = getPlanningRepository();
+    planningServiceInstance = new PlanningDomainService(planningRepo);
+  }
+  return planningServiceInstance;
+}
+

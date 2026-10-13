@@ -1,31 +1,101 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, ShoppingCart } from 'lucide-react';
+import { Eye, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, AlertCircle } from 'lucide-react';
 import type { OrderListItemDTO } from '@/actions/order.dto';
+import type { PlanningMatrixDTO } from '@/actions/planning.dto';
+import { reorderProductPrioritiesAction, reorderOrderPrioritiesAction } from '@/actions/planning.actions';
 import { NuevoPedidoModal } from '@/ui/modals/NuevoPedidoModal';
 import { VerPedidoModal } from '@/ui/modals/VerPedidoModal';
 
 interface PedidosViewProps {
   orders: OrderListItemDTO[];
+  initialPlanning: PlanningMatrixDTO;
 }
 
-export const PedidosView: React.FC<PedidosViewProps> = ({ orders }) => {
+export const PedidosView: React.FC<PedidosViewProps> = ({ orders, initialPlanning }) => {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [planning, setPlanning] = useState<PlanningMatrixDTO>(initialPlanning);
+  const [errorMsg, setErrorMsg] = useState<string>('');
+
+  // Sincronizar estado local de planificación si cambia desde el servidor
+  useEffect(() => {
+    setPlanning(initialPlanning);
+  }, [initialPlanning]);
 
   const handleRefresh = () => {
     router.refresh();
   };
 
+  // Reordenar filas de productos (prioridad arriba/abajo)
+  const handleMoveProduct = (index: number, direction: 'UP' | 'DOWN') => {
+    if (direction === 'UP' && index === 0) return;
+    if (direction === 'DOWN' && index === planning.products.length - 1) return;
+
+    setErrorMsg('');
+    const targetIndex = direction === 'UP' ? index - 1 : index + 1;
+    const newProducts = [...planning.products];
+    const [moved] = newProducts.splice(index, 1);
+    newProducts.splice(targetIndex, 0, moved);
+
+    // Actualización optimista de UI
+    setPlanning({ ...planning, products: newProducts });
+
+    startTransition(async () => {
+      const productIds = newProducts.map((p) => p.productId);
+      const res = await reorderProductPrioritiesAction(productIds);
+      if (!res.success) {
+        setErrorMsg(res.error || 'Error actualizando prioridad de productos.');
+        setPlanning(initialPlanning);
+      } else {
+        router.refresh();
+      }
+    });
+  };
+
+  // Reordenar columnas de pedidos (prioridad izquierda/derecha)
+  const handleMoveOrder = (index: number, direction: 'LEFT' | 'RIGHT') => {
+    if (direction === 'LEFT' && index === 0) return;
+    if (direction === 'RIGHT' && index === planning.openOrders.length - 1) return;
+
+    setErrorMsg('');
+    const targetIndex = direction === 'LEFT' ? index - 1 : index + 1;
+    const newOrders = [...planning.openOrders];
+    const [moved] = newOrders.splice(index, 1);
+    newOrders.splice(targetIndex, 0, moved);
+
+    // Actualización optimista de UI
+    setPlanning({ ...planning, openOrders: newOrders });
+
+    startTransition(async () => {
+      const orderIds = newOrders.map((o) => o.orderId);
+      const res = await reorderOrderPrioritiesAction(orderIds);
+      if (!res.success) {
+        setErrorMsg(res.error || 'Error actualizando prioridad de pedidos.');
+        setPlanning(initialPlanning);
+      } else {
+        router.refresh();
+      }
+    });
+  };
+
   return (
     <div className="space-y-6">
-      {/* Tarjeta Principal: Pedidos Abiertos (Figma PEDIDOS.png) */}
+      {errorMsg && (
+        <div className="p-3 bg-red-50 border border-[#DD0000] text-[#DD0000] text-xs font-semibold rounded-[2px] flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* 1. TARJETA PRINCIPAL: PEDIDOS ABIERTOS (Figma PEDIDOS.png)     */}
+      {/* ============================================================== */}
       <div className="bg-white rounded-[5px] border border-[#D9D9D9] p-5 shadow-xs">
-        
-        {/* Cabecera de la solapa */}
         <div className="flex justify-between items-center pb-4 border-b border-[#D9D9D9]">
           <h2 className="text-xl font-bold tracking-tight text-black">
             Pedidos abiertos
@@ -40,7 +110,6 @@ export const PedidosView: React.FC<PedidosViewProps> = ({ orders }) => {
           </button>
         </div>
 
-        {/* Tabla de Pedidos Abiertos */}
         <div className="mt-4 border border-[#D9D9D9] rounded-[2px] overflow-hidden">
           <table className="w-full text-left text-xs border-collapse">
             <thead className="bg-[#D9D9D9] text-black font-bold uppercase text-[11px]">
@@ -92,7 +161,194 @@ export const PedidosView: React.FC<PedidosViewProps> = ({ orders }) => {
         </div>
       </div>
 
-      {/* Modales */}
+      {/* ============================================================== */}
+      {/* 2. TARJETA RESUMEN DE PEDIDOS / PLANIFICACIÓN (Figma PEDIDOS.png) */}
+      {/* ============================================================== */}
+      <div className="bg-white rounded-[5px] border border-[#D9D9D9] p-5 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 pb-3 border-b border-[#D9D9D9]">
+          <div>
+            <h2 className="text-xl font-bold tracking-tight text-black">
+              Resumen de pedidos
+            </h2>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Planificación / simulación — no modifica stock
+            </p>
+          </div>
+          <div className="text-[11px] bg-gray-50 border border-[#D9D9D9] text-gray-700 px-3 py-1.5 rounded-[2px]">
+            <strong>Prioridad:</strong> Filas (arriba reserva primero) • Columnas (izquierda se cubre primero)
+          </div>
+        </div>
+
+        {planning.openOrders.length === 0 ? (
+          <div className="py-12 text-center text-gray-500 font-medium text-xs">
+            No hay pedidos abiertos para planificar.
+          </div>
+        ) : planning.products.length === 0 ? (
+          <div className="py-12 text-center text-gray-500 font-medium text-xs">
+            Los pedidos abiertos no contienen productos para simular.
+          </div>
+        ) : (
+          <div className="border border-[#D9D9D9] rounded-[2px] overflow-x-auto">
+            <table className="w-full text-xs border-collapse min-w-[700px]">
+              <thead>
+                <tr className="bg-[#D9D9D9] text-black font-bold uppercase text-[11px] border-b border-[#D9D9D9]">
+                  {/* Columna PRODUCTO */}
+                  <th className="py-2.5 px-3 text-left border-r border-[#D9D9D9] sticky left-0 bg-[#D9D9D9] z-10 w-64 min-w-[200px]">
+                    PRODUCTO
+                  </th>
+
+                  {/* Columnas dinámicas de pedidos abiertos */}
+                  {planning.openOrders.map((o, idx) => (
+                    <th
+                      key={o.orderId}
+                      className="py-2 px-3 text-center border-r border-[#D9D9D9] min-w-[120px] bg-[#D9D9D9]"
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          type="button"
+                          disabled={idx === 0 || isPending}
+                          onClick={() => handleMoveOrder(idx, 'LEFT')}
+                          className={`p-0.5 rounded text-gray-700 transition-colors ${
+                            idx === 0 || isPending ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/60 cursor-pointer'
+                          }`}
+                          title="Mover pedido hacia la izquierda (mayor prioridad)"
+                        >
+                          <ArrowLeft className="w-3 h-3 stroke-[2.5]" />
+                        </button>
+                        <span className="font-bold text-[#0E50A0] text-xs">
+                          {o.code}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={idx === planning.openOrders.length - 1 || isPending}
+                          onClick={() => handleMoveOrder(idx, 'RIGHT')}
+                          className={`p-0.5 rounded text-gray-700 transition-colors ${
+                            idx === planning.openOrders.length - 1 || isPending ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/60 cursor-pointer'
+                          }`}
+                          title="Mover pedido hacia la derecha (menor prioridad)"
+                        >
+                          <ArrowRight className="w-3 h-3 stroke-[2.5]" />
+                        </button>
+                      </div>
+                      <div className="text-[11px] font-normal normal-case text-gray-800 truncate max-w-[120px] mx-auto mt-0.5">
+                        {o.customerDisplayName}
+                      </div>
+                    </th>
+                  ))}
+
+                  {/* Columnas finales */}
+                  <th className="py-2.5 px-3 text-center border-r border-[#D9D9D9] w-24">
+                    TOTAL
+                  </th>
+                  <th className="py-2.5 px-3 text-center border-r border-[#D9D9D9] w-36">
+                    STOCK
+                  </th>
+                  <th className="py-2.5 px-3 text-center w-28">
+                    FALTANTE
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#D9D9D9]">
+                {planning.products.map((p, pIdx) => (
+                  <tr key={p.productId} className="hover:bg-gray-50 transition-colors">
+                    {/* Celda Producto con controles de prioridad */}
+                    <td className="py-2.5 px-3 border-r border-[#D9D9D9] sticky left-0 bg-white z-10">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <span className="font-bold text-black block truncate" title={p.productName}>
+                            {p.productName}
+                          </span>
+                          <span className="text-[10px] text-gray-500 block truncate">
+                            {p.productCode}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          <button
+                            type="button"
+                            disabled={pIdx === 0 || isPending}
+                            onClick={() => handleMoveProduct(pIdx, 'UP')}
+                            className={`p-1 rounded text-gray-600 transition-colors ${
+                              pIdx === 0 || isPending ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-200 cursor-pointer'
+                            }`}
+                            title="Mover producto arriba (mayor prioridad)"
+                          >
+                            <ArrowUp className="w-3.5 h-3.5 stroke-[2.5]" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={pIdx === planning.products.length - 1 || isPending}
+                            onClick={() => handleMoveProduct(pIdx, 'DOWN')}
+                            className={`p-1 rounded text-gray-600 transition-colors ${
+                              pIdx === planning.products.length - 1 || isPending ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-200 cursor-pointer'
+                            }`}
+                            title="Mover producto abajo (menor prioridad)"
+                          >
+                            <ArrowDown className="w-3.5 h-3.5 stroke-[2.5]" />
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Celdas de pedidos: rojo si hay faltante */}
+                    {planning.openOrders.map((o) => {
+                      const cell = p.ordersCoverage[o.orderId] || { requested: 0, covered: 0, hasShortage: false };
+                      const hasShortage = cell.hasShortage;
+                      return (
+                        <td
+                          key={o.orderId}
+                          className={`py-2 px-3 text-center border-r border-[#D9D9D9] font-semibold ${
+                            hasShortage
+                              ? 'text-[#DD0000] font-bold bg-[#FFA8A8]/20'
+                              : cell.requested > 0
+                              ? 'text-black'
+                              : 'text-gray-400 font-normal'
+                          }`}
+                          title={`Solicitado: ${cell.requested} | Cubierto: ${cell.covered}`}
+                        >
+                          {cell.requested}
+                        </td>
+                      );
+                    })}
+
+                    {/* Total Requerido */}
+                    <td className="py-2 px-3 text-center font-bold text-black border-r border-[#D9D9D9]">
+                      {p.totalRequested}
+                    </td>
+
+                    {/* Stock (físico + granel virtual en azul #0E50A0) */}
+                    <td className="py-2 px-3 text-center font-semibold text-black border-r border-[#D9D9D9]">
+                      {p.stockProPart > 0 && p.bulkPart > 0 ? (
+                        <span>
+                          {p.stockProPart} + <span className="text-[#0E50A0] font-bold">({p.bulkPart})GR</span>
+                        </span>
+                      ) : p.stockProPart === 0 && p.bulkPart > 0 ? (
+                        <span className="text-[#0E50A0] font-bold">({p.bulkPart})GR</span>
+                      ) : p.stockProPart > 0 && p.bulkPart === 0 ? (
+                        <span>{p.stockProPart}</span>
+                      ) : (
+                        <span className="text-gray-600">0</span>
+                      )}
+                    </td>
+
+                    {/* Faltante (rojo si > 0, guion si 0) */}
+                    <td className="py-2 px-3 text-center font-bold">
+                      {p.finalShortage > 0 ? (
+                        <span className="text-[#DD0000]">{p.finalShortage}</span>
+                      ) : (
+                        <span className="text-gray-600 font-normal">-</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* ============================================================== */}
+      {/* 3. MODALES                                                     */}
+      {/* ============================================================== */}
       <NuevoPedidoModal
         isOpen={isNewOrderOpen}
         onClose={() => setIsNewOrderOpen(false)}
