@@ -10,6 +10,7 @@ import {
   getProductService,
   getFactoryService,
   getPatrimonyService,
+  getOrderService,
 } from '@/services/composition';
 import { Decimal, toNumericString } from '@/domain/decimal';
 import { serializeBulkLot } from '@/actions/factory.dto';
@@ -40,6 +41,7 @@ export default async function ErpHomePage() {
     productRecords,
     openLotsRecords,
     patrimonialSummary,
+    openOrdersCount,
   ] = await Promise.all([
     getMasterItemService().listMasterItems('MPR').catch(() => []),
     getCustomerService().listCustomers().catch(() => []),
@@ -54,6 +56,7 @@ export default async function ErpHomePage() {
       deudasProveedores: new Decimal(0),
       neto: new Decimal(0),
     })),
+    getOrderService().countOpenOrders().catch(() => 0),
   ]);
 
   // Filtrar insumos críticos reales (por debajo del mínimo)
@@ -161,7 +164,7 @@ export default async function ErpHomePage() {
 
               {/* Tarjeta 4: PEDIDOS ABIERTOS (Negro Sólido Figma) */}
               <div className="bg-black rounded-xl p-3.5 text-center text-white">
-                <div className="text-3xl font-extrabold text-white">2</div>
+                <div className="text-3xl font-extrabold text-white">{openOrdersCount}</div>
                 <div className="text-[10px] font-bold text-white uppercase tracking-tight mt-1">
                   PEDIDOS ABIERTOS
                 </div>

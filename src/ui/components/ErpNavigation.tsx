@@ -13,7 +13,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { name: 'DASHBOARD', href: '/', enabled: true },
   { name: 'MI FABRICA', href: '/fabrica', enabled: true },
-  { name: 'PEDIDOS', href: '/pedidos', enabled: false },
+  { name: 'PEDIDOS', href: '/pedidos', enabled: true },
   { name: 'STOCK', href: '/stock', enabled: true },
   { name: 'ADMINISTRACION', href: '/administracion', enabled: true },
 ];
@@ -30,6 +30,7 @@ export const ErpNavDesktop: React.FC = () => {
           (pathname.startsWith('/fabrica') ||
             pathname.startsWith('/formulas') ||
             pathname.startsWith('/costo-ganancia'));
+        const isPedidos = item.href === '/pedidos' && pathname.startsWith('/pedidos');
         const isStock =
           item.href === '/stock' &&
           (pathname.startsWith('/stock') ||
@@ -44,7 +45,7 @@ export const ErpNavDesktop: React.FC = () => {
             pathname.startsWith('/precios') ||
             pathname.startsWith('/system-status'));
 
-        const isActive = isDashboard || isFabrica || isStock || isAdmin;
+        const isActive = isDashboard || isFabrica || isPedidos || isStock || isAdmin;
         const slotWidthClass = 'w-[140px] xl:w-[185px]';
 
         if (!item.enabled) {
@@ -111,6 +112,7 @@ export const ErpNavMobile: React.FC = () => {
           (pathname.startsWith('/fabrica') ||
             pathname.startsWith('/formulas') ||
             pathname.startsWith('/costo-ganancia'));
+        const isPedidos = item.href === '/pedidos' && pathname.startsWith('/pedidos');
         const isStock =
           item.href === '/stock' &&
           (pathname.startsWith('/stock') ||
@@ -125,7 +127,7 @@ export const ErpNavMobile: React.FC = () => {
             pathname.startsWith('/precios') ||
             pathname.startsWith('/system-status'));
 
-        const isActive = isDashboard || isFabrica || isStock || isAdmin;
+        const isActive = isDashboard || isFabrica || isPedidos || isStock || isAdmin;
 
         if (!item.enabled) {
           return (

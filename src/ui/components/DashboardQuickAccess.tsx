@@ -9,6 +9,7 @@ import type { BulkLotDTO } from '@/actions/factory.dto';
 
 import { RegistrarPagoClienteModal } from '@/ui/modals/RegistrarPagoClienteModal';
 import { RegistrarPagoProveedorModal } from '@/ui/modals/RegistrarPagoProveedorModal';
+import { NuevoPedidoModal } from '@/ui/modals/NuevoPedidoModal';
 
 interface DashboardQuickAccessProps {
   suppliers: SupplierOption[];
@@ -26,6 +27,7 @@ export const DashboardQuickAccess: React.FC<DashboardQuickAccessProps> = ({
   const router = useRouter();
   const [activeModal, setActiveModal] = useState<
     | 'purchase'
+    | 'order'
     | 'manufacturing'
     | 'packaging'
     | 'customer-payment'
@@ -58,9 +60,9 @@ export const DashboardQuickAccess: React.FC<DashboardQuickAccessProps> = ({
 
           <button
             type="button"
-            disabled
-            title="Módulo de Pedidos (PED) próximo en Fase 10"
-            className="h-[52px] bg-[#0E50A0] hover:bg-[#0c4386] text-white font-bold text-sm rounded-[2px] flex items-center justify-center transition-colors cursor-not-allowed opacity-80"
+            onClick={() => setActiveModal('order')}
+            title="Registrar Nuevo Pedido (PED)"
+            className="h-[52px] bg-[#0E50A0] hover:bg-[#0c4386] text-white font-bold text-sm rounded-[2px] flex items-center justify-center transition-colors cursor-pointer shadow-xs active:scale-[0.99]"
           >
             Nuevo pedido
           </button>
@@ -153,6 +155,16 @@ export const DashboardQuickAccess: React.FC<DashboardQuickAccessProps> = ({
       {/* Modal Pago Proveedor */}
       <RegistrarPagoProveedorModal
         isOpen={activeModal === 'supplier-payment'}
+        onClose={() => setActiveModal(null)}
+        onSuccess={() => {
+          setActiveModal(null);
+          router.refresh();
+        }}
+      />
+
+      {/* Modal Nuevo Pedido */}
+      <NuevoPedidoModal
+        isOpen={activeModal === 'order'}
         onClose={() => setActiveModal(null)}
         onSuccess={() => {
           setActiveModal(null);

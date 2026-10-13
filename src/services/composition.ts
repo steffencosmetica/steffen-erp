@@ -28,6 +28,8 @@ import { FactoryRepository } from '@/repositories/factory.repository';
 import { FactoryDomainService } from '@/services/factory.service';
 import { PurchaseRepository } from '@/repositories/purchase.repository';
 import { PurchaseDomainService } from '@/services/purchase.service';
+import { OrderRepository } from '@/repositories/order.repository';
+import { OrderDomainService } from '@/services/order.service';
 
 /**
  * Composition Root para instanciación controlada y unificada de servicios
@@ -239,5 +241,20 @@ export function getPurchaseService(): PurchaseDomainService {
   return purchaseServiceInstance;
 }
 
+let orderRepoInstance: OrderRepository | null = null;
+let orderServiceInstance: OrderDomainService | null = null;
 
+export function getOrderRepository(): OrderRepository {
+  if (!orderRepoInstance) {
+    orderRepoInstance = new OrderRepository(serverSupabase);
+  }
+  return orderRepoInstance;
+}
 
+export function getOrderService(): OrderDomainService {
+  if (!orderServiceInstance) {
+    const orderRepo = getOrderRepository();
+    orderServiceInstance = new OrderDomainService(orderRepo);
+  }
+  return orderServiceInstance;
+}
