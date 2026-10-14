@@ -9,6 +9,11 @@ import {
   getOrderFormDataAction,
 } from '@/actions/order.actions';
 import type { OrderDetailDTO, OrderProductOptionDTO } from '@/actions/order.dto';
+import {
+  confirmOrderToRemittanceAction,
+  previewRtoAction,
+} from '@/actions/remittance.actions';
+import type { RtoPreviewDTO } from '@/actions/remittance.dto';
 import { Decimal, toWholePesos, toKgPrecision } from '@/domain/decimal';
 
 interface VerPedidoModalProps {
@@ -17,6 +22,8 @@ interface VerPedidoModalProps {
   onClose: () => void;
   onOrderUpdated?: () => void;
   onOrderDeleted?: () => void;
+  hasPendingRtm?: boolean;
+  pendingRtmCode?: string | null;
 }
 
 interface EditableLine {
@@ -36,6 +43,8 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
   onClose,
   onOrderUpdated,
   onOrderDeleted,
+  hasPendingRtm,
+  pendingRtmCode,
 }) => {
   const [isPending, startTransition] = useTransition();
   const [loading, setLoading] = useState(false);
@@ -62,6 +71,12 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
   // Delete confirm state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  // RTO Confirmation state
+  const [showRtoConfirm, setShowRtoConfirm] = useState(false);
+  const [rtoPreview, setRtoPreview] = useState<RtoPreviewDTO | null>(null);
+  const [rtoErrorMsg, setRtoErrorMsg] = useState('');
+  const [isConfirmingRto, setIsConfirmingRto] = useState(false);
+
   // Load order data
   useEffect(() => {
     if (isOpen && orderId) {
@@ -69,6 +84,10 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
       setLoading(true);
       setShowDeleteConfirm(false);
       setShowAddProduct(false);
+      setShowRtoConfirm(false);
+      setRtoPreview(null);
+      setRtoErrorMsg('');
+      setIsConfirmingRto(false);
 
       Promise.all([
         getOrderDetailAction(orderId),
@@ -273,6 +292,91 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
         setErrorMsg(res.error || 'Error al borrar pedido.');
       }
     });
+  };
+
+  // Open RTO preview / confirm
+  const handleOpenRtoPreview = async () => {
+    if (!order) return;
+    setErrorMsg('');
+    setRtoErrorMsg('');
+
+    if (hasPendingRtm) {
+      setErrorMsg(
+        `Bloqueo de remito activo: Existe un remito pendiente de transporte (${pendingRtmCode || ''}). Debe procesarse en Fase 13 antes de generar otro remito.`
+      );
+      return;
+    }
+
+    for (const l of lines) {
+      if (l.agQuantity === null || isNaN(l.agQuantity) || l.agQuantity < 0) {
+        setErrorMsg('Todos los productos deben tener cantidad AG asignada (número entero ≥ 0).');
+        return;
+      }
+    }
+
+    const hasPositiveAg = lines.some((l) => (l.agQuantity || 0) > 0);
+    if (!hasPositiveAg) {
+      setErrorMsg('Al menos un producto debe tener cantidad AG mayor a 0 para generar el remito.');
+      return;
+    }
+
+    const payload = {
+      packageCount: packageCount.trim() !== '' ? parseInt(packageCount, 10) : null,
+      recipientName: order.customerSource === 'CONSUMER_FINAL' ? recipientName : undefined,
+      address: order.customerSource === 'CONSUMER_FINAL' ? address : undefined,
+      locality: order.customerSource === 'CONSUMER_FINAL' ? locality : undefined,
+      province: order.customerSource === 'CONSUMER_FINAL' ? province : undefined,
+      phone: order.customerSource === 'CONSUMER_FINAL' ? phone : undefined,
+      transportName: order.customerSource === 'CONSUMER_FINAL' ? transportName : undefined,
+      items: lines.map((l) => ({
+        productId: l.productId,
+        requestedQuantity: l.requestedQuantity,
+        agQuantity: l.agQuantity,
+      })),
+    };
+
+    setLoading(true);
+    const saveRes = await updateOrderAction(order.id, payload);
+    if (!saveRes.success) {
+      setLoading(false);
+      setErrorMsg(saveRes.error || 'Error guardando datos del pedido.');
+      return;
+    }
+
+    const previewRes = await previewRtoAction(order.id);
+    setLoading(false);
+
+    if (!previewRes.success || !previewRes.data) {
+      setErrorMsg(previewRes.error || 'Error al calcular previsualización del remito.');
+      return;
+    }
+
+    setRtoPreview(previewRes.data);
+    setShowRtoConfirm(true);
+  };
+
+  // Confirm RTO
+  const handleConfirmRto = async () => {
+    if (!order) return;
+    setRtoErrorMsg('');
+    setIsConfirmingRto(true);
+
+    try {
+      const res = await confirmOrderToRemittanceAction(order.id);
+      if (!res.success) {
+        setRtoErrorMsg(res.error || 'Error al confirmar remito.');
+        setIsConfirmingRto(false);
+        return;
+      }
+
+      setIsConfirmingRto(false);
+      setShowRtoConfirm(false);
+      if (onOrderUpdated) onOrderUpdated();
+      onClose();
+    } catch (err: any) {
+      setRtoErrorMsg(err.message || 'Error inesperado al confirmar remito.');
+      setIsConfirmingRto(false);
+    }
   };
 
   return (
@@ -596,14 +700,222 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
             </button>
             <button
               type="button"
-              disabled
-              title="Disponible en Fase 12 — RTO"
-              className="px-5 py-2 bg-[#008102] text-white font-bold text-xs rounded-[2px] opacity-70 cursor-not-allowed"
+              onClick={handleOpenRtoPreview}
+              disabled={isPending || loading || hasPendingRtm || !order}
+              title={
+                hasPendingRtm
+                  ? `Bloqueado: Existe un remito pendiente de transporte (${pendingRtmCode || ''}). Debe procesarse en Fase 13.`
+                  : 'Confirmar venta y generar remito (RTO)'
+              }
+              className={`px-5 py-2 font-bold text-xs rounded-[2px] transition-colors cursor-pointer ${
+                hasPendingRtm
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-75'
+                  : 'bg-[#008102] hover:bg-[#006e02] text-white active:scale-[0.99]'
+              }`}
             >
-              Generar Remito
+              {loading ? 'Calculando...' : 'Generar Remito'}
             </button>
           </div>
         </div>
+
+        {/* ============================================================== */}
+        {/* DIÁLOGO MODAL: CONFIRMACIÓN DE REMITO (RTO)                    */}
+        {/* ============================================================== */}
+        {showRtoConfirm && rtoPreview && (
+          <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-4">
+            <div className="bg-white rounded-[5px] border border-[#D9D9D9] w-full max-w-2xl p-6 shadow-xl max-h-[90vh] flex flex-col space-y-4">
+              {/* Header */}
+              <div className="flex justify-between items-center pb-3 border-b border-[#D9D9D9]">
+                <div>
+                  <h3 className="text-lg font-bold text-black uppercase tracking-tight">
+                    Confirmar Generación de Remito (RTO)
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    Conversión definitiva de pedido a venta real • Descuenta stock
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowRtoConfirm(false)}
+                  disabled={isConfirmingRto}
+                  className="text-gray-400 hover:text-black transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {rtoErrorMsg && (
+                <div className="p-3 bg-red-50 border border-[#DD0000] text-[#DD0000] text-xs font-semibold rounded-[2px] flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{rtoErrorMsg}</span>
+                </div>
+              )}
+
+              <div className="overflow-y-auto space-y-4 flex-1 pr-1 text-xs">
+                {/* Meta datos */}
+                <div className="grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded-[3px] border border-[#D9D9D9]">
+                  <div>
+                    <span className="text-gray-500 font-semibold block text-[11px]">PEDIDO:</span>
+                    <span className="font-bold text-[#0E50A0] text-sm">{rtoPreview.orderCode}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 font-semibold block text-[11px]">DESTINATARIO:</span>
+                    <span className="font-bold text-black">{rtoPreview.customerDisplayName}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-gray-500 font-semibold block text-[11px]">CANAL / DESTINO:</span>
+                    <span className="font-medium text-gray-800">
+                      {rtoPreview.customerSource === 'REGISTERED_CUSTOMER'
+                        ? 'Cliente Registrado'
+                        : rtoPreview.customerSource === 'MERCADO_LIBRE'
+                        ? 'Mercado Libre'
+                        : 'Consumidor Final'}
+                      {[order?.locality, order?.province].filter(Boolean).length > 0 && ` • ${[order?.locality, order?.province].filter(Boolean).join(', ')}`}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Tabla de items */}
+                <div>
+                  <div className="font-bold text-gray-700 uppercase mb-1.5 text-[11px]">
+                    Detalle de productos a remitir
+                  </div>
+                  <table className="w-full text-left border-collapse border border-[#D9D9D9]">
+                    <thead className="bg-[#D9D9D9] text-black font-bold uppercase text-[10px]">
+                      <tr>
+                        <th className="py-2 px-2.5">CÓDIGO</th>
+                        <th className="py-2 px-2.5">PRODUCTO</th>
+                        <th className="py-2 px-2.5 text-center">PED</th>
+                        <th className="py-2 px-2.5 text-center bg-[#D2AB68]/20">AG (REMITO)</th>
+                        <th className="py-2 px-2.5 text-right">PRECIO</th>
+                        <th className="py-2 px-2.5 text-right">TOTAL</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#D9D9D9]">
+                      {rtoPreview.lines.map((it) => {
+                        const isZero = it.agQuantity === 0;
+                        return (
+                          <tr
+                            key={it.productId}
+                            className={
+                              isZero
+                                ? 'bg-gray-50 text-gray-400 italic'
+                                : 'hover:bg-gray-50 text-black'
+                            }
+                          >
+                            <td className="py-2 px-2.5 font-bold">{it.productCode}</td>
+                            <td className="py-2 px-2.5">{it.productName}</td>
+                            <td className="py-2 px-2.5 text-center text-gray-500">
+                              {it.requestedQuantity}
+                            </td>
+                            <td
+                              className={`py-2 px-2.5 text-center font-extrabold ${
+                                isZero
+                                  ? 'text-gray-400'
+                                  : 'text-[#0E50A0] bg-[#D2AB68]/10'
+                              }`}
+                            >
+                              {isZero ? '0 (omitido)' : it.agQuantity}
+                            </td>
+                            <td className="py-2 px-2.5 text-right">{formatPesos(it.unitPriceArs)}</td>
+                            <td className="py-2 px-2.5 text-right font-bold">
+                              {isZero ? '-' : formatPesos(it.lineTotalArs)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Desglose de Totales */}
+                <div className="flex flex-col items-end space-y-1 pt-2 border-t border-[#D9D9D9]">
+                  <div className="flex justify-between w-64">
+                    <span className="font-bold text-gray-700 uppercase">SUBTOTAL RTO</span>
+                    <span className="font-bold text-black">{formatPesos(rtoPreview.subtotalArs)}</span>
+                  </div>
+
+                  {rtoPreview.discountSteps.map((ds) => (
+                    <div key={ds.position} className="flex justify-between w-64 text-red-600">
+                      <span className="font-bold uppercase">DESCUENTO {ds.percent}%</span>
+                      <span>- {formatPesos(ds.amountArs)}</span>
+                    </div>
+                  ))}
+
+                  <div className="flex justify-between w-64 pt-1 border-t border-gray-200">
+                    <span className="font-extrabold text-black uppercase">TOTAL REMITO</span>
+                    <span className="font-extrabold text-black text-sm">
+                      {formatPesos(rtoPreview.totalOrderArs)}
+                    </span>
+                  </div>
+
+                  {rtoPreview.customerSource === 'REGISTERED_CUSTOMER' && (
+                    <div className="flex justify-between w-64">
+                      <span className="font-bold text-gray-600 uppercase">SALDO ANTERIOR</span>
+                      <span className="font-bold text-[#0E50A0]">
+                        {formatPesos(rtoPreview.priorBalanceArs)}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between w-64 pt-1 border-t border-gray-300">
+                    <span className="font-extrabold text-black uppercase">TOTAL A COBRAR</span>
+                    <span className="font-extrabold text-[#0E50A0] text-sm">
+                      {formatPesos(rtoPreview.totalToCollectArs)}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between w-64 text-gray-600 text-[11px] pt-1">
+                    <span>
+                      Peso Real: <strong>{rtoPreview.totalWeightKg} kg</strong>
+                    </span>
+                    <span>
+                      Bultos:{' '}
+                      <strong>
+                        {rtoPreview.packageCount !== null ? rtoPreview.packageCount : '-'}
+                      </strong>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Advertencia Crítica */}
+                <div className="p-3 bg-amber-50 border border-amber-300 rounded-[3px] text-[11px] text-amber-900 space-y-1">
+                  <div className="font-bold flex items-center gap-1.5 text-amber-950">
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>ADVERTENCIA NORMATIVA IRREVERSIBLE:</span>
+                  </div>
+                  <ul className="list-disc list-inside space-y-0.5 text-amber-900 pl-1">
+                    <li>Descuenta stock físico real de productos terminados (MST VENTA).</li>
+                    <li>Genera el movimiento patrimonial de venta (MOV VENTA).</li>
+                    <li>Actualiza cuenta corriente del cliente o caja correspondiente.</li>
+                    <li>El pedido pasa a estado CONVERTIDO y no podrá volver a editarse.</li>
+                    <li>El remito entra en RTM_PENDING, bloqueando nuevos remitos hasta cerrar transporte.</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Botones */}
+              <div className="flex justify-end items-center gap-3 pt-3 border-t border-[#D9D9D9]">
+                <button
+                  type="button"
+                  onClick={() => setShowRtoConfirm(false)}
+                  disabled={isConfirmingRto}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-black font-semibold text-xs rounded-[2px] transition-colors cursor-pointer"
+                >
+                  Cancelar / Volver
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmRto}
+                  disabled={isConfirmingRto}
+                  className="px-5 py-2 bg-[#008102] hover:bg-[#006e02] text-white font-bold text-xs rounded-[2px] transition-colors cursor-pointer shadow-xs active:scale-[0.99] flex items-center gap-2"
+                >
+                  {isConfirmingRto ? 'Confirmando venta...' : 'CONFIRMAR Y GENERAR REMITO'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
