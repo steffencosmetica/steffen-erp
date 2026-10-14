@@ -32,6 +32,8 @@ import { OrderRepository } from '@/repositories/order.repository';
 import { OrderDomainService } from '@/services/order.service';
 import { PlanningRepository } from '@/repositories/planning.repository';
 import { PlanningDomainService } from '@/services/planning.service';
+import { RemittanceRepository } from '@/repositories/remittance.repository';
+import { RemittanceDomainService } from '@/services/remittance.service';
 
 /**
  * Composition Root para instanciación controlada y unificada de servicios
@@ -278,4 +280,25 @@ export function getPlanningService(): PlanningDomainService {
   }
   return planningServiceInstance;
 }
+
+let remittanceRepoInstance: RemittanceRepository | null = null;
+let remittanceServiceInstance: RemittanceDomainService | null = null;
+
+export function getRemittanceRepository(): RemittanceRepository {
+  if (!remittanceRepoInstance) {
+    remittanceRepoInstance = new RemittanceRepository(serverSupabase);
+  }
+  return remittanceRepoInstance;
+}
+
+export function getRemittanceService(): RemittanceDomainService {
+  if (!remittanceServiceInstance) {
+    const remittanceRepo = getRemittanceRepository();
+    const orderRepo = getOrderRepository();
+    const stockRepo = new StockRepository(serverSupabase);
+    remittanceServiceInstance = new RemittanceDomainService(remittanceRepo, orderRepo, stockRepo);
+  }
+  return remittanceServiceInstance;
+}
+
 

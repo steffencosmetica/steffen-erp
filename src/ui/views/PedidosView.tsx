@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Eye, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, AlertCircle } from 'lucide-react';
 import type { OrderListItemDTO } from '@/actions/order.dto';
 import type { PlanningMatrixDTO } from '@/actions/planning.dto';
+import type { PendingRtmBannerDTO } from '@/actions/remittance.dto';
 import { reorderProductPrioritiesAction, reorderOrderPrioritiesAction } from '@/actions/planning.actions';
 import { NuevoPedidoModal } from '@/ui/modals/NuevoPedidoModal';
 import { VerPedidoModal } from '@/ui/modals/VerPedidoModal';
@@ -12,9 +13,10 @@ import { VerPedidoModal } from '@/ui/modals/VerPedidoModal';
 interface PedidosViewProps {
   orders: OrderListItemDTO[];
   initialPlanning: PlanningMatrixDTO;
+  pendingRtm?: PendingRtmBannerDTO | null;
 }
 
-export const PedidosView: React.FC<PedidosViewProps> = ({ orders, initialPlanning }) => {
+export const PedidosView: React.FC<PedidosViewProps> = ({ orders, initialPlanning, pendingRtm }) => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
@@ -89,6 +91,27 @@ export const PedidosView: React.FC<PedidosViewProps> = ({ orders, initialPlannin
         <div className="p-3 bg-red-50 border border-[#DD0000] text-[#DD0000] text-xs font-semibold rounded-[2px] flex items-center gap-2">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{errorMsg}</span>
+        </div>
+      )}
+
+      {/* BANNER PERSISTENTE RTM_PENDING GATE */}
+      {pendingRtm && (
+        <div className="p-4 bg-amber-50 border border-amber-300 rounded-[5px] text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-start sm:items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5 sm:mt-0" />
+            <div>
+              <p className="font-bold text-sm text-black">
+                Remito {pendingRtm.code} pendiente de procesar transporte (RTM_PENDING)
+              </p>
+              <p className="text-xs text-amber-800 mt-0.5">
+                Destinatario: <strong>{pendingRtm.customerDisplayName}</strong>. 
+                El sistema no permite generar nuevos remitos hasta completar el despacho en Fase 13 (RTM).
+              </p>
+            </div>
+          </div>
+          <span className="self-start sm:self-center px-2.5 py-1 bg-amber-200/90 text-amber-950 font-bold text-[11px] rounded-[2px] uppercase shrink-0">
+            RTM PENDIENTE
+          </span>
         </div>
       )}
 
@@ -361,6 +384,8 @@ export const PedidosView: React.FC<PedidosViewProps> = ({ orders, initialPlannin
         orderId={selectedOrderId}
         isOpen={selectedOrderId !== null}
         onClose={() => setSelectedOrderId(null)}
+        hasPendingRtm={!!pendingRtm}
+        pendingRtmCode={pendingRtm?.code || null}
         onOrderUpdated={() => {
           handleRefresh();
         }}
