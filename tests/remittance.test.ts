@@ -15,6 +15,8 @@ import { PlanningDomainService } from '../src/services/planning.service';
 import { Decimal, toWholePesos, toKgPrecision } from '../src/domain/decimal';
 import { DomainError } from '../src/domain/errors';
 import type { Database } from '../src/database/types';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -194,9 +196,19 @@ test('FASE 12 — RTO / CONFIRMACIÓN DE VENTA: Suite de pruebas obligatorias', 
     }
 
     for (const cId of createdCustomerIds) {
-      await supabase.from('financial_entries').delete().filter('account_id', 'in', `(select id from financial_accounts where customer_id = '${cId}')`);
+      // Columna real: financial_account_id (no "account_id"). Resolver las cuentas
+      // propias del cliente de prueba y borrar únicamente sus entries por id explícito.
+      const { data: accounts } = await supabase
+        .from('financial_accounts')
+        .select('id')
+        .eq('customer_id', cId);
+      const accountIds = (accounts || []).map((a) => a.id);
+      if (accountIds.length > 0) {
+        await supabase.from('financial_entries').delete().in('financial_account_id', accountIds);
+      }
       await supabase.from('financial_accounts').delete().eq('customer_id', cId);
-      await supabase.from('customer_discount_steps').delete().eq('customer_id', cId);
+      // Nota: no existe la tabla "customer_discount_steps" en el esquema (los descuentos
+      // viven directamente en customers.discount_1_pct/2/3); se elimina esa llamada muerta.
       await supabase.from('customers').delete().eq('id', cId);
     }
   });
@@ -679,7 +691,267 @@ test('FASE 12 — RTO / CONFIRMACIÓN DE VENTA: Suite de pruebas obligatorias', 
   });
 
   // =========================================================================
-  // 6. TESTS 38 A 46: Inmutabilidad, Idempotencia, Gating y Concurrencia
+  // 5b. TESTS 37 A 40: Snapshots de destinatario/producto y inmutabilidad real
+  // =========================================================================
+  await t.test('37. Snapshot de destinatario se congela correctamente según origen (sin asumir campos no usados)', async () => {
+    // Caso A: Cliente Registrado SIN overrides manuales -> snapshot toma los datos del cliente
+    const orderA = await orderService.createOrder({
+      customerSource: 'REGISTERED_CUSTOMER',
+      customerId,
+      items: [{ productId: pro1Id, requestedQuantity: 1, agQuantity: 1 }],
+      packageCount: 4,
+    });
+    createdOrderIds.push(orderA.id);
+    const rtoResA = await remittanceService.confirmOrderToRemittance(orderA.id);
+    createdRemittanceIds.push(rtoResA.remittanceId);
+    const rtoA = await remittanceRepo.getRemittanceById(rtoResA.remittanceId);
+    assert.ok(rtoA);
+    assert.strictEqual(rtoA.recipientNameSnapshot, `Cliente RTO Test ${testTag}`);
+    assert.strictEqual(rtoA.addressSnapshot, 'Av. Corrientes 1234');
+    assert.strictEqual(rtoA.localitySnapshot, 'CABA');
+    assert.strictEqual(rtoA.provinceSnapshot, 'Buenos Aires');
+    assert.strictEqual(rtoA.phoneSnapshot, '1122334455');
+    assert.strictEqual(rtoA.transportNameSnapshot, 'Expreso Steffen');
+    assert.strictEqual(rtoA.transportAddressSnapshot, null, 'El cliente de prueba no usa transport_address: no debe inventarse un valor');
+    assert.strictEqual(rtoA.packageCountSnapshot, 4);
+    await releaseRtmPendingGate(rtoResA.remittanceId);
+
+    // Caso B: Cliente Registrado CON override manual de dirección en el propio PED -> gana el override
+    const orderB = await orderService.createOrder({
+      customerSource: 'REGISTERED_CUSTOMER',
+      customerId,
+      address: 'Dirección Override PED 456',
+      items: [{ productId: pro1Id, requestedQuantity: 1, agQuantity: 1 }],
+    });
+    createdOrderIds.push(orderB.id);
+    const rtoResB = await remittanceService.confirmOrderToRemittance(orderB.id);
+    createdRemittanceIds.push(rtoResB.remittanceId);
+    const rtoB = await remittanceRepo.getRemittanceById(rtoResB.remittanceId);
+    assert.ok(rtoB);
+    assert.strictEqual(rtoB.addressSnapshot, 'Dirección Override PED 456');
+    assert.strictEqual(rtoB.localitySnapshot, 'CABA', 'El resto de los campos no overrideados sigue viniendo del cliente');
+    await releaseRtmPendingGate(rtoResB.remittanceId);
+
+    // Caso C: Consumidor Final -> no hay cliente asociado; todo el destinatario viene del propio PED
+    const orderC = await orderService.createOrder({
+      customerSource: 'CONSUMER_FINAL',
+      recipientName: 'Juan Consumidor',
+      address: 'Calle Falsa 123',
+      locality: 'Rosario',
+      province: 'Santa Fe',
+      phone: '3410000000',
+      transportName: 'Transporte Propio',
+      items: [{ productId: pro1Id, requestedQuantity: 1, agQuantity: 1 }],
+      packageCount: 1,
+    });
+    createdOrderIds.push(orderC.id);
+    const rtoResC = await remittanceService.confirmOrderToRemittance(orderC.id);
+    createdRemittanceIds.push(rtoResC.remittanceId);
+    const rtoC = await remittanceRepo.getRemittanceById(rtoResC.remittanceId);
+    assert.ok(rtoC);
+    assert.strictEqual(rtoC.customerId, null, 'Consumidor Final no debe tener customer_id');
+    assert.strictEqual(rtoC.recipientNameSnapshot, 'Juan Consumidor');
+    assert.strictEqual(rtoC.addressSnapshot, 'Calle Falsa 123');
+    assert.strictEqual(rtoC.localitySnapshot, 'Rosario');
+    assert.strictEqual(rtoC.provinceSnapshot, 'Santa Fe');
+    assert.strictEqual(rtoC.phoneSnapshot, '3410000000');
+    assert.strictEqual(rtoC.transportNameSnapshot, 'Transporte Propio');
+    assert.strictEqual(rtoC.packageCountSnapshot, 1);
+    await releaseRtmPendingGate(rtoResC.remittanceId);
+
+    // Caso D: Mercado Libre sin recipientName -> fallback explícito normativo a 'Mercado Libre'
+    const orderD = await orderService.createOrder({
+      customerSource: 'MERCADO_LIBRE',
+      items: [{ productId: pro1Id, requestedQuantity: 1, agQuantity: 1 }],
+    });
+    createdOrderIds.push(orderD.id);
+    const rtoResD = await remittanceService.confirmOrderToRemittance(orderD.id);
+    createdRemittanceIds.push(rtoResD.remittanceId);
+    const rtoD = await remittanceRepo.getRemittanceById(rtoResD.remittanceId);
+    assert.ok(rtoD);
+    assert.strictEqual(rtoD.customerId, null, 'Mercado Libre no debe tener customer_id');
+    assert.strictEqual(rtoD.recipientNameSnapshot, 'Mercado Libre');
+    await releaseRtmPendingGate(rtoResD.remittanceId);
+  });
+
+  await t.test('38. Modificar el Cliente después de confirmar RTO no altera el remito ya confirmado', async () => {
+    const order = await orderService.createOrder({
+      customerSource: 'REGISTERED_CUSTOMER',
+      customerId,
+      items: [{ productId: pro1Id, requestedQuantity: 2, agQuantity: 2 }],
+    });
+    createdOrderIds.push(order.id);
+
+    const rtoRes = await remittanceService.confirmOrderToRemittance(order.id);
+    createdRemittanceIds.push(rtoRes.remittanceId);
+
+    // Snapshot original (datos A) tomado en el momento de la confirmación
+    const rtoBefore = await remittanceRepo.getRemittanceById(rtoRes.remittanceId);
+    assert.ok(rtoBefore);
+    const originalName = rtoBefore.recipientNameSnapshot;
+    const originalAddress = rtoBefore.addressSnapshot;
+    const originalLocality = rtoBefore.localitySnapshot;
+    const originalPhone = rtoBefore.phoneSnapshot;
+
+    // Modificar la ficha del cliente a datos B
+    await supabase
+      .from('customers')
+      .update({
+        name: 'Cliente Modificado B',
+        address: 'Nueva Dirección B 999',
+        locality: 'Córdoba',
+        phone: '9999999999',
+      })
+      .eq('id', customerId);
+
+    try {
+      // El RTO debe seguir mostrando datos A, no B. No se reconstruye desde customers actual.
+      const rtoAfter = await remittanceRepo.getRemittanceById(rtoRes.remittanceId);
+      assert.ok(rtoAfter);
+      assert.strictEqual(rtoAfter.recipientNameSnapshot, originalName);
+      assert.strictEqual(rtoAfter.addressSnapshot, originalAddress);
+      assert.strictEqual(rtoAfter.localitySnapshot, originalLocality);
+      assert.strictEqual(rtoAfter.phoneSnapshot, originalPhone);
+      assert.notStrictEqual(rtoAfter.recipientNameSnapshot, 'Cliente Modificado B');
+    } finally {
+      // Restaurar datos A: este customerId es compartido por el resto de la suite
+      await supabase
+        .from('customers')
+        .update({
+          name: `Cliente RTO Test ${testTag}`,
+          address: 'Av. Corrientes 1234',
+          locality: 'CABA',
+          phone: '1122334455',
+        })
+        .eq('id', customerId);
+    }
+
+    await releaseRtmPendingGate(rtoRes.remittanceId);
+  });
+
+  await t.test('39. Modificar el PRO (maestro y precio vigente) después de confirmar RTO no altera el snapshot del remito', async () => {
+    const order = await orderService.createOrder({
+      customerSource: 'REGISTERED_CUSTOMER',
+      customerId,
+      items: [{ productId: pro2Id, requestedQuantity: 3, agQuantity: 3 }],
+    });
+    createdOrderIds.push(order.id);
+
+    const rtoRes = await remittanceService.confirmOrderToRemittance(order.id);
+    createdRemittanceIds.push(rtoRes.remittanceId);
+
+    const rtoBefore = await remittanceRepo.getRemittanceById(rtoRes.remittanceId);
+    assert.ok(rtoBefore);
+    const item = rtoBefore.items.find((i) => i.productId === pro2Id);
+    assert.ok(item);
+    const originalCode = item.productCodeSnapshot;
+    const originalName = item.productNameSnapshot;
+    const originalPresentation = item.presentationSnapshot;
+    const originalWeight = item.weightKgSnapshot.toNumber();
+    const originalPrice = item.unitPriceArsSnapshot.toNumber();
+    assert.strictEqual(originalName, `Acondicionador Test 2 ${testTag}`);
+    assert.strictEqual(originalPresentation, '1000ml');
+    assert.strictEqual(originalWeight, 1.0);
+    assert.strictEqual(originalPrice, 20000);
+
+    try {
+      // Modificar datos editables actuales del PRO (nombre, presentación, peso) y precio vigente de lista
+      await supabase.from('stock_items').update({ name: 'Acondicionador RENOMBRADO' }).eq('id', pro2Id);
+      await supabase.from('products').update({ presentation: '2000ml', weight_kg: 2.5 }).eq('stock_item_id', pro2Id);
+      await priceListRepo.setProductPrice(salonListId, pro2Id, 77777);
+
+      const rtoAfter = await remittanceRepo.getRemittanceById(rtoRes.remittanceId);
+      assert.ok(rtoAfter);
+      const itemAfter = rtoAfter.items.find((i) => i.productId === pro2Id);
+      assert.ok(itemAfter);
+      assert.strictEqual(itemAfter.productCodeSnapshot, originalCode);
+      assert.strictEqual(itemAfter.productNameSnapshot, originalName);
+      assert.strictEqual(itemAfter.presentationSnapshot, originalPresentation);
+      assert.strictEqual(itemAfter.weightKgSnapshot.toNumber(), originalWeight);
+      assert.strictEqual(itemAfter.unitPriceArsSnapshot.toNumber(), originalPrice);
+    } finally {
+      // Restaurar maestros de PRO2: compartido por el resto de la suite
+      await supabase.from('stock_items').update({ name: `Acondicionador Test 2 ${testTag}` }).eq('id', pro2Id);
+      await supabase.from('products').update({ presentation: '1000ml', weight_kg: 1.0 }).eq('stock_item_id', pro2Id);
+      await priceListRepo.setProductPrice(salonListId, pro2Id, 20000);
+    }
+
+    await releaseRtmPendingGate(rtoRes.remittanceId);
+  });
+
+  await t.test('40. Un RTO confirmado no es editable (ni por la aplicación ni directamente en la base)', async () => {
+    // 1. Auditoría de superficie de aplicación: no debe existir ninguna Server Action
+    //    de edición/borrado expuesta sobre remitos. Se audita el código fuente en lugar
+    //    de importar el módulo: `remittance.actions.ts` es 'use server' y arrastra
+    //    composition.ts -> 'server-only', que aborta fuera del runtime de Next.js.
+    const actionsSource = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/actions/remittance.actions.ts'),
+      'utf-8'
+    );
+    const exportedFnNames = Array.from(actionsSource.matchAll(/export\s+async\s+function\s+(\w+)/g)).map(
+      (m) => m[1]
+    );
+    assert.ok(exportedFnNames.length > 0, 'La auditoría debe encontrar al menos una Server Action exportada');
+    const exposedEditLike = exportedFnNames.filter((k) => /update|edit|delete/i.test(k));
+    assert.deepStrictEqual(exposedEditLike, [], 'No debe existir ninguna Server Action de edición/borrado sobre remitos');
+
+    // 2. Tampoco debe existir método de dominio ni de repositorio para editar un remito existente.
+    assert.strictEqual('updateRemittance' in remittanceService, false);
+    assert.strictEqual('updateRemittance' in remittanceRepo, false);
+
+    // 3. Crear y confirmar un RTO real
+    const order = await orderService.createOrder({
+      customerSource: 'REGISTERED_CUSTOMER',
+      customerId,
+      items: [{ productId: pro1Id, requestedQuantity: 1, agQuantity: 1 }],
+    });
+    createdOrderIds.push(order.id);
+    const rtoRes = await remittanceService.confirmOrderToRemittance(order.id);
+    createdRemittanceIds.push(rtoRes.remittanceId);
+
+    // 4. Intentar editar un importe/snapshot directamente en la base, usando el mismo rol
+    //    (service_role) que usa el servidor de la aplicación. Debe ser rechazado por el
+    //    guard de inmutabilidad (migración 20261002000027), no por RLS.
+    const { error: editErr } = await supabase
+      .from('remittances')
+      .update({ total_order_ars: 1 })
+      .eq('id', rtoRes.remittanceId);
+    assert.ok(editErr, 'Editar un importe de venta de un remito confirmado debe ser rechazado');
+    assert.match(editErr.message, /inmutable/i);
+
+    // 5. Intentar editar una línea del remito (remittance_items) también debe ser rechazado
+    const { data: items } = await supabase
+      .from('remittance_items')
+      .select('id')
+      .eq('remittance_id', rtoRes.remittanceId)
+      .limit(1);
+    assert.ok(items && items.length === 1);
+    const { error: itemEditErr } = await supabase
+      .from('remittance_items')
+      .update({ quantity_sent: 999 })
+      .eq('id', items[0].id);
+    assert.ok(itemEditErr, 'Editar una línea de remito confirmado debe ser rechazado');
+    assert.match(itemEditErr.message, /inmutable/i);
+
+    // 6. La ÚNICA transición de estado legítima futura (RTM_PENDING -> COMPLETED, que ejecutará
+    //    la futura RPC de RTM en Fase 13) debe seguir siendo posible: no debe quedar bloqueada
+    //    por esta protección de inmutabilidad.
+    const { error: statusOkErr } = await supabase
+      .from('remittances')
+      .update({ status: 'COMPLETED' })
+      .eq('id', rtoRes.remittanceId);
+    assert.strictEqual(statusOkErr, null, 'La transición RTM_PENDING -> COMPLETED debe seguir permitida para la futura RTM de Fase 13');
+
+    // 7. Una transición de estado inválida (revertir COMPLETED -> RTM_PENDING) debe seguir rechazada
+    const { error: invalidStatusErr } = await supabase
+      .from('remittances')
+      .update({ status: 'RTM_PENDING' })
+      .eq('id', rtoRes.remittanceId);
+    assert.ok(invalidStatusErr, 'No debe permitirse revertir COMPLETED -> RTM_PENDING');
+  });
+
+  // =========================================================================
+  // 6. TESTS 41 A 46: Idempotencia, Gating y Concurrencia
   // =========================================================================
   await t.test('41-42. Segundo confirm del mismo PED es rechazado (idempotencia y UNIQUE order_id)', async () => {
     const order = await orderService.createOrder({
