@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronDown,
   Edit3,
+  FileText,
   Power,
   RefreshCw,
   Search,
@@ -20,22 +21,28 @@ import { RegistrarPagoClienteModal } from '@/ui/modals/RegistrarPagoClienteModal
 import { EditarPagoModal } from '@/ui/modals/EditarPagoModal';
 import { getCustomerMovementsAction } from '@/actions/patrimony.actions';
 import type { AccountMovementDTO } from '@/actions/patrimony.dto';
-import { formatArsInteger } from '@/actions/administracion.dto';
+import { formatArs } from '@/lib/format';
+import { resolveInitialSelectedId } from '@/lib/selection';
 
 interface CustomersViewProps {
   initialCustomers: CustomerDTO[];
+  initialSelectedCustomerId?: string;
 }
 
-export const CustomersView: React.FC<CustomersViewProps> = ({ initialCustomers }) => {
+export const CustomersView: React.FC<CustomersViewProps> = ({
+  initialCustomers,
+  initialSelectedCustomerId,
+}) => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   // Vista activa: 'ficha' (CUENTAS-CLIENTES.png) o 'listado' (ADMINISTRACION.png)
   const [viewMode, setViewMode] = useState<'ficha' | 'listado'>('ficha');
 
-  // Cliente seleccionado para la Ficha
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>(
-    initialCustomers[0]?.id || ''
+  // Cliente seleccionado para la Ficha. Si llega ?customerId=<UUID> válido por deep-link,
+  // se selecciona automáticamente; si no existe/es inválido, fallback seguro al primero.
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>(() =>
+    resolveInitialSelectedId(initialCustomers, initialSelectedCustomerId)
   );
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -70,6 +77,16 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ initialCustomers }
   useEffect(() => {
     loadMovements();
   }, [selectedCustomer?.id]);
+
+  useEffect(() => {
+    if (initialSelectedCustomerId) {
+      const match = initialCustomers.find((c) => c.id === initialSelectedCustomerId);
+      if (match) {
+        setSelectedCustomerId(match.id);
+        setViewMode('ficha');
+      }
+    }
+  }, [initialSelectedCustomerId, initialCustomers]);
 
   // Filtrado de clientes para listado
   const filteredCustomers = initialCustomers.filter((c) => {
@@ -120,9 +137,8 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ initialCustomers }
 
   const formatBalance = (balanceStr: string) => {
     const num = parseFloat(balanceStr) || 0;
-    const formatted = Math.round(num).toLocaleString('es-AR');
     return {
-      text: `$ ${formatted}`,
+      text: formatArs(balanceStr),
       hasDebt: num > 0,
       hasCredit: num < 0,
       amount: num,
@@ -397,16 +413,18 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ initialCustomers }
                       customerMovements.map((m) => (
                         <tr key={m.id} className="hover:bg-gray-50/80 transition-colors">
                           <td className="py-2.5 px-3 font-semibold text-black whitespace-nowrap">{m.date}</td>
-                          <td className="py-2.5 px-3 text-gray-500">—</td>
+                          <td className="py-2.5 px-3 font-mono font-bold text-black">
+                            {!m.isPayment ? formatArs(m.amountArs) : '—'}
+                          </td>
                           <td className="py-2.5 px-3 text-gray-500">{m.documentCode || '—'}</td>
                           <td className="py-2.5 px-3 font-mono font-bold text-[#008102]">
-                            {m.isPayment ? formatArsInteger(m.amountArs) : '—'}
+                            {m.isPayment ? formatArs(m.amountArs) : '—'}
                           </td>
                           <td className="py-2.5 px-3 text-right font-mono font-bold text-black">
-                            {formatArsInteger(m.amountArs)}
+                            {formatArs(m.amountArs)}
                           </td>
                           <td className="py-2.5 px-3 text-center">
-                            {m.isPayment && m.paymentId && (
+                            {m.isPayment && m.paymentId ? (
                               <button
                                 type="button"
                                 onClick={() => setEditingPaymentId(m.paymentId!)}
@@ -415,7 +433,16 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ initialCustomers }
                               >
                                 <Edit3 className="w-3.5 h-3.5" />
                               </button>
-                            )}
+                            ) : !m.isPayment && m.remittanceId ? (
+                              <button
+                                type="button"
+                                disabled
+                                title="PDF RTO disponible en Fase 14"
+                                className="p-1 rounded text-gray-300 cursor-not-allowed inline-flex"
+                              >
+                                <FileText className="w-3.5 h-3.5" />
+                              </button>
+                            ) : null}
                           </td>
                         </tr>
                       ))

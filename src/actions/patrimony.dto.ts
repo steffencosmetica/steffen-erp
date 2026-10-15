@@ -69,6 +69,7 @@ export interface AccountMovementDTO {
   isPayment: boolean;
   paymentId?: string;
   purchaseId?: string;
+  remittanceId?: string;
   paymentMode?: string;
   currencyCodeSnapshot?: string;
   totalNetSourceCurrency?: string;

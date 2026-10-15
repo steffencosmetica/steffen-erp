@@ -15,6 +15,7 @@ import { CostGainView } from './CostGainView';
 import { RegistrarFabricacionModal, type BaseProductOption } from '@/ui/modals/RegistrarFabricacionModal';
 import { RegistrarEnvasadoModal, type PackagingProductOption } from '@/ui/modals/RegistrarEnvasadoModal';
 import type { BulkLotDTO, FactoryMovementDTO } from '@/actions/factory.dto';
+import { formatKg } from '@/lib/format';
 
 export interface FabricaFormulaOptionDTO {
   id: string;
@@ -96,7 +97,7 @@ export const FabricaView: React.FC<FabricaViewProps> = ({
                           {lot.baseProductName}
                         </td>
                         <td className="py-2.5 px-3 text-right font-mono font-bold text-black">
-                          {lot.kgAvailable} Kg
+                          {formatKg(lot.kgAvailable)} Kg
                         </td>
                       </tr>
                     ))
@@ -268,7 +269,7 @@ export const FabricaView: React.FC<FabricaViewProps> = ({
                       <tr key={idx}>
                         <td className="py-2 px-2 text-gray-800 truncate max-w-0">{it.rawMaterialName}</td>
                         <td className="py-2 px-2 text-right font-mono font-medium whitespace-nowrap">
-                          {it.quantityKg} kg
+                          {formatKg(it.quantityKg)} kg
                         </td>
                       </tr>
                     ))

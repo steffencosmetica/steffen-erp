@@ -3,9 +3,17 @@ import {
   RemittanceRepository,
   RemittanceRecord,
   ConfirmedRemittanceResult,
+  MonthlySaleRecord,
 } from '@/repositories/remittance.repository';
+import {
+  IMarginRemittanceRepository,
+  MarginRemittanceRepository,
+  MarginRemittanceRecord,
+  CompletedRtmResult,
+} from '@/repositories/margin-remittance.repository';
 import { IOrderRepository, OrderRepository } from '@/repositories/order.repository';
 import { IStockRepository, StockRepository } from '@/repositories/stock.repository';
+import { ICostEngineService, CostEngineService } from '@/services/cost-engine.service';
 import { DomainError } from '@/domain/errors';
 import { Decimal, toKgPrecision, toWholePesos } from '@/domain/decimal';
 
@@ -48,19 +56,57 @@ export interface RtoPreviewResult {
   packageCount: number | null;
 }
 
+export interface RtmPreviewLine {
+  productId: string;
+  productCode: string;
+  productName: string;
+  quantitySent: number;
+  unitPriceArs: Decimal;
+  lineTotalArs: Decimal;
+  unitCostTheoreticalArs: Decimal;
+  lineCostTotalArs: Decimal;
+}
+
+export interface RtmPreviewResult {
+  remittanceId: string;
+  remittanceCode: string;
+  customerSource: string;
+  customerDisplayName: string;
+  addressSnapshot: string | null;
+  localitySnapshot: string | null;
+  provinceSnapshot: string | null;
+  transportNameSnapshot: string | null;
+  packageCountSnapshot: number | null;
+  weightKgSnapshot: Decimal;
+  createdAt: string;
+  isValidToComplete: boolean;
+  validationErrors: string[];
+  lines: RtmPreviewLine[];
+  totalOrderArs: Decimal;
+  productsCostTotalArs: Decimal;
+  transportCostArs: Decimal;
+  gainArs: Decimal;
+}
+
 export interface IRemittanceDomainService {
   confirmOrderToRemittance(orderId: string, businessDate?: string): Promise<ConfirmedRemittanceResult>;
   getPendingRtmRemittance(): Promise<RemittanceRecord | null>;
   getRemittanceById(id: string): Promise<RemittanceRecord | null>;
   getRemittanceByOrderId(orderId: string): Promise<RemittanceRecord | null>;
   previewRto(orderId: string, agOverrides?: Record<string, number>): Promise<RtoPreviewResult>;
+  previewRtm(remittanceId: string, transportCostArs?: Decimal.Value): Promise<RtmPreviewResult>;
+  completeRtm(remittanceId: string, transportCostArs: Decimal.Value): Promise<CompletedRtmResult>;
+  getMarginRemittanceByRemittanceId(remittanceId: string): Promise<MarginRemittanceRecord | null>;
+  listCompletedSalesForMonth(year: number, month: number): Promise<MonthlySaleRecord[]>;
 }
 
 export class RemittanceDomainService implements IRemittanceDomainService {
   constructor(
     private readonly remittanceRepo: IRemittanceRepository = new RemittanceRepository(),
     private readonly orderRepo: IOrderRepository = new OrderRepository(),
-    private readonly stockRepo: IStockRepository = new StockRepository()
+    private readonly stockRepo: IStockRepository = new StockRepository(),
+    private readonly marginRemittanceRepo: IMarginRemittanceRepository = new MarginRemittanceRepository(),
+    private readonly costEngineService: ICostEngineService = new CostEngineService()
   ) {}
 
   async confirmOrderToRemittance(orderId: string, businessDate?: string): Promise<ConfirmedRemittanceResult> {
@@ -220,5 +266,102 @@ export class RemittanceDomainService implements IRemittanceDomainService {
       totalWeightKg: toKgPrecision(totalWeightKg),
       packageCount: order.packageCount,
     };
+  }
+
+  /**
+   * Previsualización de RTM. El costo teórico mostrado es preview: lee la misma
+   * fuente canónica (v_current_product_cost, vía CostEngineService) que usará
+   * la RPC autoritativa `complete_rtm_atomic`, pero no es vinculante — el
+   * backend vuelve a calcularlo al confirmar, dentro de la transacción atómica.
+   */
+  async previewRtm(remittanceId: string, transportCostArsInput?: Decimal.Value): Promise<RtmPreviewResult> {
+    if (!remittanceId) {
+      throw new DomainError('El ID del remito es obligatorio.');
+    }
+
+    const remittance = await this.remittanceRepo.getRemittanceById(remittanceId);
+    if (!remittance) {
+      throw new DomainError(`Remito ${remittanceId} no encontrado.`);
+    }
+
+    const validationErrors: string[] = [];
+    if (remittance.status !== 'RTM_PENDING') {
+      validationErrors.push(`El remito no está pendiente de RTM (estado actual: ${remittance.status}).`);
+    }
+
+    const transportCostArs =
+      transportCostArsInput !== undefined && transportCostArsInput !== null && transportCostArsInput !== ''
+        ? new Decimal(transportCostArsInput)
+        : new Decimal(0);
+
+    if (transportCostArs.lt(0)) {
+      validationErrors.push('El transporte no puede ser negativo.');
+    }
+
+    const costsMap = await this.costEngineService.getBatchProductCosts!();
+
+    let productsCostTotalArs = new Decimal(0);
+    const lines: RtmPreviewLine[] = remittance.items.map((it) => {
+      const unitCostTheoreticalArs = costsMap.get(it.productId) || new Decimal(0);
+      const lineCostTotalArs = unitCostTheoreticalArs.times(it.quantitySent);
+      productsCostTotalArs = productsCostTotalArs.plus(lineCostTotalArs);
+
+      return {
+        productId: it.productId,
+        productCode: it.productCodeSnapshot,
+        productName: it.productNameSnapshot,
+        quantitySent: it.quantitySent,
+        unitPriceArs: it.unitPriceArsSnapshot,
+        lineTotalArs: it.lineTotalArs,
+        unitCostTheoreticalArs,
+        lineCostTotalArs,
+      };
+    });
+
+    const gainArs = remittance.totalOrderArs.minus(productsCostTotalArs).minus(transportCostArs);
+
+    return {
+      remittanceId: remittance.id,
+      remittanceCode: remittance.code,
+      customerSource: remittance.customerSource,
+      customerDisplayName: remittance.customerDisplayName,
+      addressSnapshot: remittance.addressSnapshot,
+      localitySnapshot: remittance.localitySnapshot,
+      provinceSnapshot: remittance.provinceSnapshot,
+      transportNameSnapshot: remittance.transportNameSnapshot,
+      packageCountSnapshot: remittance.packageCountSnapshot,
+      weightKgSnapshot: remittance.weightKgSnapshot,
+      createdAt: remittance.createdAt,
+      isValidToComplete: validationErrors.length === 0,
+      validationErrors,
+      lines,
+      totalOrderArs: remittance.totalOrderArs,
+      productsCostTotalArs,
+      transportCostArs,
+      gainArs,
+    };
+  }
+
+  async completeRtm(remittanceId: string, transportCostArs: Decimal.Value): Promise<CompletedRtmResult> {
+    if (!remittanceId) {
+      throw new DomainError('El ID del remito es obligatorio.');
+    }
+    const transport = new Decimal(transportCostArs ?? 0);
+    if (transport.lt(0)) {
+      throw new DomainError('El transporte no puede ser negativo.');
+    }
+    return this.marginRemittanceRepo.completeRtmAtomic(remittanceId, transport);
+  }
+
+  async getMarginRemittanceByRemittanceId(remittanceId: string): Promise<MarginRemittanceRecord | null> {
+    if (!remittanceId) return null;
+    return this.marginRemittanceRepo.getMarginRemittanceByRemittanceId(remittanceId);
+  }
+
+  async listCompletedSalesForMonth(year: number, month: number): Promise<MonthlySaleRecord[]> {
+    if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
+      throw new DomainError('Año y mes inválidos para consultar ventas del mes.');
+    }
+    return this.remittanceRepo.listCompletedSalesForMonth(year, month);
   }
 }

@@ -15,6 +15,7 @@ import {
 } from '@/actions/remittance.actions';
 import type { RtoPreviewDTO } from '@/actions/remittance.dto';
 import { Decimal, toWholePesos, toKgPrecision } from '@/domain/decimal';
+import { formatArs, formatKg } from '@/lib/format';
 
 interface VerPedidoModalProps {
   orderId: string | null;
@@ -129,11 +130,6 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
   }, [isOpen, orderId]);
 
   if (!isOpen) return null;
-
-  const formatPesos = (d: Decimal | number | string) => {
-    const num = typeof d === 'number' ? d : Math.round(new Decimal(d).toNumber());
-    return `$ ${num.toLocaleString('es-AR')}`;
-  };
 
   // Recalculate live totals
   let subtotal = new Decimal(0);
@@ -461,7 +457,7 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                 </div>
                 <div>
                   <span className="font-bold text-gray-700">Peso (kg):</span>{' '}
-                  <span className="font-bold text-black">{toKgPrecision(totalWeight).toString()} kg</span>
+                  <span className="font-bold text-black">{formatKg(toKgPrecision(totalWeight))} kg</span>
                 </div>
                 <div>
                   <span className="font-bold text-gray-700">Lista congelada:</span>{' '}
@@ -511,8 +507,8 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                         <td className="py-2 px-3 font-semibold text-black">
                           {l.productCode} - {l.productName}
                         </td>
-                        <td className="py-2 px-3 text-right font-medium text-black">{formatPesos(l.unitPriceArs)}</td>
-                        <td className="py-2 px-3 text-right font-bold text-black">{formatPesos(linePt)}</td>
+                        <td className="py-2 px-3 text-right font-medium text-black">{formatArs(l.unitPriceArs)}</td>
+                        <td className="py-2 px-3 text-right font-bold text-black">{formatArs(linePt)}</td>
                         <td className="py-1 px-2 text-center">
                           <input
                             type="number"
@@ -607,33 +603,33 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
             <div className="flex flex-col items-end pt-2 border-t border-[#D9D9D9] space-y-1 text-xs">
               <div className="flex justify-between w-64">
                 <span className="font-bold text-gray-700 uppercase">SUBTOTAL</span>
-                <span className="font-bold text-black">{formatPesos(subtotal)}</span>
+                <span className="font-bold text-black">{formatArs(subtotal)}</span>
               </div>
 
               {liveDiscountSteps.map((ds) => (
                 <div key={ds.position} className="flex justify-between w-64 text-red-600">
                   <span className="font-bold uppercase">DESCUENTO {ds.percent.toString()}%</span>
-                  <span>- {formatPesos(ds.amount)}</span>
+                  <span>- {formatArs(ds.amount)}</span>
                 </div>
               ))}
 
               <div className="flex justify-between w-64 pt-1 border-t border-gray-200">
                 <span className="font-extrabold text-black uppercase">TOTAL PEDIDO</span>
-                <span className="font-extrabold text-black text-sm">{formatPesos(totalPedido)}</span>
+                <span className="font-extrabold text-black text-sm">{formatArs(totalPedido)}</span>
               </div>
 
               {order.customerSource === 'REGISTERED_CUSTOMER' && (
                 <div className="flex justify-between w-64">
                   <span className="font-bold text-gray-600 uppercase">SALDO</span>
                   <span className={priorBalance.gt(0) ? 'font-bold text-[#0E50A0]' : 'text-gray-600'}>
-                    {formatPesos(priorBalance)}
+                    {formatArs(priorBalance)}
                   </span>
                 </div>
               )}
 
               <div className="flex justify-between w-64 pt-1 border-t border-gray-300">
                 <span className="font-extrabold text-black uppercase">TOTAL A COBRAR</span>
-                <span className="font-extrabold text-[#0E50A0] text-sm">{formatPesos(totalToCollect)}</span>
+                <span className="font-extrabold text-[#0E50A0] text-sm">{formatArs(totalToCollect)}</span>
               </div>
             </div>
 
@@ -817,9 +813,9 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                             >
                               {isZero ? '0 (omitido)' : it.agQuantity}
                             </td>
-                            <td className="py-2 px-2.5 text-right">{formatPesos(it.unitPriceArs)}</td>
+                            <td className="py-2 px-2.5 text-right">{formatArs(it.unitPriceArs)}</td>
                             <td className="py-2 px-2.5 text-right font-bold">
-                              {isZero ? '-' : formatPesos(it.lineTotalArs)}
+                              {isZero ? '-' : formatArs(it.lineTotalArs)}
                             </td>
                           </tr>
                         );
@@ -832,20 +828,20 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                 <div className="flex flex-col items-end space-y-1 pt-2 border-t border-[#D9D9D9]">
                   <div className="flex justify-between w-64">
                     <span className="font-bold text-gray-700 uppercase">SUBTOTAL RTO</span>
-                    <span className="font-bold text-black">{formatPesos(rtoPreview.subtotalArs)}</span>
+                    <span className="font-bold text-black">{formatArs(rtoPreview.subtotalArs)}</span>
                   </div>
 
                   {rtoPreview.discountSteps.map((ds) => (
                     <div key={ds.position} className="flex justify-between w-64 text-red-600">
                       <span className="font-bold uppercase">DESCUENTO {ds.percent}%</span>
-                      <span>- {formatPesos(ds.amountArs)}</span>
+                      <span>- {formatArs(ds.amountArs)}</span>
                     </div>
                   ))}
 
                   <div className="flex justify-between w-64 pt-1 border-t border-gray-200">
                     <span className="font-extrabold text-black uppercase">TOTAL REMITO</span>
                     <span className="font-extrabold text-black text-sm">
-                      {formatPesos(rtoPreview.totalOrderArs)}
+                      {formatArs(rtoPreview.totalOrderArs)}
                     </span>
                   </div>
 
@@ -853,7 +849,7 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                     <div className="flex justify-between w-64">
                       <span className="font-bold text-gray-600 uppercase">SALDO ANTERIOR</span>
                       <span className="font-bold text-[#0E50A0]">
-                        {formatPesos(rtoPreview.priorBalanceArs)}
+                        {formatArs(rtoPreview.priorBalanceArs)}
                       </span>
                     </div>
                   )}
@@ -861,13 +857,13 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                   <div className="flex justify-between w-64 pt-1 border-t border-gray-300">
                     <span className="font-extrabold text-black uppercase">TOTAL A COBRAR</span>
                     <span className="font-extrabold text-[#0E50A0] text-sm">
-                      {formatPesos(rtoPreview.totalToCollectArs)}
+                      {formatArs(rtoPreview.totalToCollectArs)}
                     </span>
                   </div>
 
                   <div className="flex justify-between w-64 text-gray-600 text-[11px] pt-1">
                     <span>
-                      Peso Real: <strong>{rtoPreview.totalWeightKg} kg</strong>
+                      Peso Real: <strong>{formatKg(rtoPreview.totalWeightKg)} kg</strong>
                     </span>
                     <span>
                       Bultos:{' '}

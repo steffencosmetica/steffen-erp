@@ -11,6 +11,7 @@ import type {
 } from '@/actions/product.dto';
 import { EditProductModal } from '../modals/EditProductModal';
 import { ConfirmDialog } from '../components/UIComponents';
+import { formatArs } from '@/lib/format';
 
 interface ProductsViewProps {
   products: FinalProductDTO[];
@@ -70,13 +71,6 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
       }
       setConfirmDialogProduct(null);
     });
-  };
-
-  const formatArs = (str: string | null | undefined) => {
-    if (!str) return '$ 0';
-    const num = parseFloat(str);
-    if (isNaN(num)) return '$ 0';
-    return `$ ${Math.round(num).toLocaleString('es-AR')}`;
   };
 
   return (

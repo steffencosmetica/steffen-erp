@@ -1,4 +1,5 @@
 import { toNumericString, Decimal } from '@/domain/decimal';
+import { formatArs } from '@/lib/format';
 import type { CustomerSource, OrderStatus } from '@/database/domain-types';
 import type { OrderItemRecord, OrderDiscountStepRecord } from '@/repositories/order.repository';
 import type { EnrichedOrderRecord, DiscountStepBreakdown } from '@/services/order.service';
@@ -111,8 +112,7 @@ export interface OrderFormDataDTO {
 }
 
 export function formatArsPesos(val: Decimal | number | string): string {
-  const num = typeof val === 'number' ? val : Math.round(new Decimal(val).toNumber());
-  return `$ ${num.toLocaleString('es-AR')}`;
+  return formatArs(val);
 }
 
 export function formatDateSlash(isoDate: string): string {

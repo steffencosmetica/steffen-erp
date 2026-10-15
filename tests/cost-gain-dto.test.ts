@@ -6,13 +6,12 @@ import {
   serializeDiscountProfile,
   serializeCostGainRow,
   serializeCostGainAnalysis,
-  formatArsDecimals,
-  formatArsInteger,
   formatMarkupMultiplier,
   type CostGainAnalysisDTO,
   type CostGainRowDTO,
   type DiscountProfileDTO,
 } from '../src/actions/cost-gain.dto';
+import { formatArs } from '../src/lib/format';
 import type {
   CostGainProductAnalysis,
   CostGainAnalysisResult,
@@ -134,24 +133,20 @@ test('Bloque UI-8 Costo-Ganancia — Validaciones, DTOs y formateadores analíti
     assert.strictEqual(rowUncosted.markup, null);
   });
 
-  await t.test('4. formatArsDecimals formatea importes con 2 decimales y separadores argentinos sin JS float', () => {
-    assert.strictEqual(formatArsDecimals('1500.50'), '$ 1.500,50');
-    assert.strictEqual(formatArsDecimals('1500000.75'), '$ 1.500.000,75');
-    assert.strictEqual(formatArsDecimals('0'), '$ 0,00');
-    assert.strictEqual(formatArsDecimals('0.00'), '$ 0,00');
-    assert.strictEqual(formatArsDecimals('-250.25'), '-$ 250,25');
-    assert.strictEqual(formatArsDecimals(null), '—');
-    assert.strictEqual(formatArsDecimals(undefined), '—');
-    assert.strictEqual(formatArsDecimals(''), '—');
-  });
-
-  await t.test('5. formatArsInteger formatea enteros en pesos sin JS float', () => {
-    assert.strictEqual(formatArsInteger('15000'), '$ 15.000');
-    assert.strictEqual(formatArsInteger('2500000'), '$ 2.500.000');
-    assert.strictEqual(formatArsInteger('0'), '$ 0');
-    assert.strictEqual(formatArsInteger('-500'), '-$ 500');
-    assert.strictEqual(formatArsInteger(null), '—');
-    assert.strictEqual(formatArsInteger(undefined), '—');
+  await t.test('4. formatArs (helper canónico global) formatea importes con 2 decimales y separadores argentinos sin JS float', () => {
+    assert.strictEqual(formatArs('1500.50'), '$ 1.500,50');
+    assert.strictEqual(formatArs('1500000.75'), '$ 1.500.000,75');
+    assert.strictEqual(formatArs('0'), '$ 0,00');
+    assert.strictEqual(formatArs('0.00'), '$ 0,00');
+    assert.strictEqual(formatArs('-250.25'), '-$ 250,25');
+    assert.strictEqual(formatArs(null), '$ 0,00');
+    assert.strictEqual(formatArs(undefined), '$ 0,00');
+    assert.strictEqual(formatArs(''), '$ 0,00');
+    // Ejemplos normativos exactos del post-smoke Fase 13
+    assert.strictEqual(formatArs('137.613'), '$ 137,61');
+    assert.strictEqual(formatArs('1000'), '$ 1.000,00');
+    assert.strictEqual(formatArs('2354358'), '$ 2.354.358,00');
+    assert.strictEqual(formatArs('10500.75'), '$ 10.500,75');
   });
 
   await t.test('6. formatMarkupMultiplier formatea el factor con 2 decimales y sufijo "x"', () => {

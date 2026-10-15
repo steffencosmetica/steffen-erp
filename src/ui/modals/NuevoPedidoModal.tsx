@@ -6,6 +6,7 @@ import { createOrderAction, getOrderFormDataAction } from '@/actions/order.actio
 import type { OrderCustomerOptionDTO, OrderProductOptionDTO } from '@/actions/order.dto';
 import type { CustomerSource } from '@/database/domain-types';
 import { Decimal, toWholePesos, toKgPrecision } from '@/domain/decimal';
+import { formatArs, formatKg } from '@/lib/format';
 
 interface NuevoPedidoModalProps {
   isOpen: boolean;
@@ -212,8 +213,6 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
       ? new Decimal(selectedCustomer.balanceArs || 0)
       : new Decimal(0);
   const totalToCollect = totalPedido.plus(priorBalance);
-
-  const formatPesos = (d: Decimal) => `$ ${Math.round(d.toNumber()).toLocaleString('es-AR')}`;
 
   // Submit Handler
   const handleSubmit = () => {
@@ -480,7 +479,7 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
                   <option value="">Seleccionar producto...</option>
                   {products.map((p) => {
                     const price = getProductPrice(p);
-                    const priceLabel = price ? formatPesos(price) : 'Sin precio';
+                    const priceLabel = price ? formatArs(price) : 'Sin precio';
                     return (
                       <option key={p.productId} value={p.productId}>
                         {p.code} - {p.name} ({priceLabel})
@@ -493,14 +492,14 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
               <div className="w-28 text-right">
                 <span className="block text-gray-500 font-medium mb-1 text-[11px]">Precio unitario</span>
                 <span className="block font-bold text-black py-1.5">
-                  {builderUnitPrice ? formatPesos(builderUnitPrice) : 'Automático'}
+                  {builderUnitPrice ? formatArs(builderUnitPrice) : 'Automático'}
                 </span>
               </div>
 
               <div className="w-28 text-right">
                 <span className="block text-gray-500 font-medium mb-1 text-[11px]">Precio total</span>
                 <span className="block font-bold text-black py-1.5">
-                  {builderTotalPrice ? formatPesos(builderTotalPrice) : 'Automático'}
+                  {builderTotalPrice ? formatArs(builderTotalPrice) : 'Automático'}
                 </span>
               </div>
 
@@ -551,8 +550,8 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
                         <td className="py-2 px-3 font-semibold text-black">
                           {l.productCode} - {l.productName}
                         </td>
-                        <td className="py-2 px-3 text-right font-medium text-black">{formatPesos(l.unitPriceArs)}</td>
-                        <td className="py-2 px-3 text-right font-bold text-black">{formatPesos(linePt)}</td>
+                        <td className="py-2 px-3 text-right font-medium text-black">{formatArs(l.unitPriceArs)}</td>
+                        <td className="py-2 px-3 text-right font-bold text-black">{formatArs(linePt)}</td>
                         <td className="py-1 px-3 text-center">
                           <input
                             type="number"
@@ -586,37 +585,37 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
           <div className="flex flex-col items-end pt-2 border-t border-[#D9D9D9] space-y-1 text-xs">
             <div className="flex justify-between w-64">
               <span className="font-bold text-gray-700 uppercase">SUBTOTAL</span>
-              <span className="font-bold text-black">{formatPesos(subtotal)}</span>
+              <span className="font-bold text-black">{formatArs(subtotal)}</span>
             </div>
 
             {discountSteps.map((ds) => (
               <div key={ds.position} className="flex justify-between w-64 text-red-600">
                 <span className="font-bold uppercase">DESCUENTO {ds.percent.toString()}%</span>
-                <span>- {formatPesos(ds.amount)}</span>
+                <span>- {formatArs(ds.amount)}</span>
               </div>
             ))}
 
             <div className="flex justify-between w-64 pt-1 border-t border-gray-200">
               <span className="font-extrabold text-black uppercase">TOTAL PEDIDO</span>
-              <span className="font-extrabold text-black text-sm">{formatPesos(totalPedido)}</span>
+              <span className="font-extrabold text-black text-sm">{formatArs(totalPedido)}</span>
             </div>
 
             {customerSource === 'REGISTERED_CUSTOMER' && (
               <div className="flex justify-between w-64">
                 <span className="font-bold text-gray-600 uppercase">SALDO ANTERIOR</span>
                 <span className={priorBalance.gt(0) ? 'font-bold text-[#0E50A0]' : 'text-gray-600'}>
-                  {formatPesos(priorBalance)}
+                  {formatArs(priorBalance)}
                 </span>
               </div>
             )}
 
             <div className="flex justify-between w-64 pt-1 border-t border-gray-300">
               <span className="font-extrabold text-black uppercase">TOTAL A COBRAR</span>
-              <span className="font-extrabold text-[#0E50A0] text-sm">{formatPesos(totalToCollect)}</span>
+              <span className="font-extrabold text-[#0E50A0] text-sm">{formatArs(totalToCollect)}</span>
             </div>
 
             <div className="text-[11px] text-gray-500 pt-1">
-              Peso total estimado: <span className="font-bold text-black">{toKgPrecision(totalWeight).toString()} kg</span>
+              Peso total estimado: <span className="font-bold text-black">{formatKg(toKgPrecision(totalWeight))} kg</span>
             </div>
           </div>
         </div>

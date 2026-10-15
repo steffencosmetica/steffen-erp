@@ -7,6 +7,7 @@ import {
   packageProductAction,
 } from '@/actions/factory.actions';
 import type { BulkLotDTO, PackagingPreviewDTO } from '@/actions/factory.dto';
+import { formatKg } from '@/lib/format';
 
 export interface PackagingProductOption {
   productId: string;
@@ -198,7 +199,7 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
                 ) : (
                   bulkLots.map((lot) => (
                     <option key={lot.id} value={lot.id}>
-                      {lot.code} — {lot.baseProductName} ({lot.kgAvailable} Kg)
+                      {lot.code} — {lot.baseProductName} ({formatKg(lot.kgAvailable)} Kg)
                     </option>
                   ))
                 )}
@@ -225,7 +226,7 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
             </label>
             <div className="col-span-2">
               <div className="w-full h-8 px-2 border border-[#D9D9D9] rounded-[2px] bg-gray-50 flex items-center text-xs font-mono font-bold text-black">
-                {selectedLot ? `${selectedLot.kgAvailable} Kg` : '—'}
+                {selectedLot ? `${formatKg(selectedLot.kgAvailable)} Kg` : '—'}
               </div>
             </div>
           </div>
@@ -247,7 +248,7 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
                 ) : (
                   compatibleProducts.map((p) => (
                     <option key={p.productId} value={p.productId}>
-                      {p.code} — {p.name} ({p.presentation} • {p.weightKg} kg)
+                      {p.code} — {p.name} ({p.presentation} • {formatKg(p.weightKg)} kg)
                     </option>
                   ))
                 )}
@@ -365,11 +366,11 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
                 >
                   <div>
                     <span className="font-bold">Granel Requerido:</span>{' '}
-                    <span className="font-mono">{preview.kgConsumed} Kg</span>
+                    <span className="font-mono">{formatKg(preview.kgConsumed)} Kg</span>
                   </div>
                   <div>
                     <span className="font-bold">Disponible:</span>{' '}
-                    <span className="font-mono">{preview.kgAvailable} Kg</span>
+                    <span className="font-mono">{formatKg(preview.kgAvailable)} Kg</span>
                   </div>
                   {!preview.isBulkSufficient && (
                     <span className="font-bold uppercase text-[10px] text-[#DD0000]">

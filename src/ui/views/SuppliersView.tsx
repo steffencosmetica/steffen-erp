@@ -33,7 +33,8 @@ import { RegistrarPagoProveedorModal } from '@/ui/modals/RegistrarPagoProveedorM
 import { EditarPagoModal } from '@/ui/modals/EditarPagoModal';
 import { getSupplierMovementsAction } from '@/actions/patrimony.actions';
 import type { AccountMovementDTO } from '@/actions/patrimony.dto';
-import { formatArsInteger } from '@/actions/administracion.dto';
+import { formatArs } from '@/lib/format';
+import { resolveInitialSelectedId } from '@/lib/selection';
 
 interface SuppliersViewProps {
   initialSuppliers: SupplierDTO[];
@@ -51,13 +52,9 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({
   const [viewMode, setViewMode] = useState<'ficha' | 'listado'>('ficha');
 
   // Proveedor seleccionado para la Ficha
-  const [selectedSupplierId, setSelectedSupplierId] = useState<string>(() => {
-    if (initialSelectedSupplierId) {
-      const match = initialSuppliers.find((s) => s.id === initialSelectedSupplierId);
-      if (match) return match.id;
-    }
-    return initialSuppliers[0]?.id || '';
-  });
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string>(() =>
+    resolveInitialSelectedId(initialSuppliers, initialSelectedSupplierId)
+  );
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showInactive, setShowInactive] = useState(false);
@@ -193,10 +190,9 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({
   // Normativa Fase 9: Todo saldo patrimonial se expresa en Pesos Argentinos (ARS)
   const formatBalance = (balanceStr: string) => {
     const num = parseFloat(balanceStr) || 0;
-    const formatted = Math.round(num).toLocaleString('es-AR');
 
     return {
-      text: `$ ${formatted}`,
+      text: formatArs(balanceStr),
       hasDebt: num > 0,
       hasCredit: num < 0,
       amount: num,
@@ -502,10 +498,10 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({
                                 <td className="py-2 px-2 text-gray-400 font-mono">—</td>
                                 <td className="py-2 px-2 text-gray-400 font-mono">—</td>
                                 <td className="py-2 px-2 text-right font-mono font-bold text-[#008102]">
-                                  {formatArsInteger(m.amountArs)}
+                                  {formatArs(m.amountArs)}
                                 </td>
                                 <td className="py-2 px-2 text-right font-mono font-bold text-black">
-                                  {formatArsInteger(m.amountArs)}
+                                  {formatArs(m.amountArs)}
                                 </td>
                                 <td className="py-2 px-2 text-center">
                                   {m.paymentId && (
@@ -527,7 +523,7 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({
                             <tr key={m.id} className="hover:bg-gray-50/50">
                               <td className="py-2 px-2 font-mono">{m.date}</td>
                               <td className="py-2 px-2 text-right font-mono font-bold text-black">
-                                {formatArsInteger(m.amountArs)}
+                                {formatArs(m.amountArs)}
                               </td>
                               <td className="py-2 px-2 font-mono text-gray-700">
                                 {m.documentCode || '—'}

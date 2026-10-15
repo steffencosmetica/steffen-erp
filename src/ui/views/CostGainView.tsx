@@ -5,10 +5,9 @@ import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import {
   type CostGainAnalysisDTO,
-  formatArsDecimals,
-  formatArsInteger,
   formatCostFactor,
 } from '@/actions/cost-gain.dto';
+import { formatArs } from '@/lib/format';
 
 interface CostGainViewProps {
   analysis: CostGainAnalysisDTO;
@@ -235,7 +234,7 @@ export const CostGainView: React.FC<CostGainViewProps> = ({
                     <td className="py-2.5 px-3 text-right whitespace-nowrap">
                       {p.hasCost ? (
                         <span className="font-mono text-gray-800 font-medium">
-                          {formatArsDecimals(p.theoreticalCostArs)}
+                          {formatArs(p.theoreticalCostArs)}
                         </span>
                       ) : (
                         <span
@@ -251,7 +250,7 @@ export const CostGainView: React.FC<CostGainViewProps> = ({
                     <td className="py-2.5 px-3 text-right whitespace-nowrap">
                       {p.hasSalonPrice ? (
                         <span className="font-mono text-black font-semibold">
-                          {formatArsInteger(p.salonPriceArs)}
+                          {formatArs(p.salonPriceArs)}
                         </span>
                       ) : (
                         <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
@@ -264,7 +263,7 @@ export const CostGainView: React.FC<CostGainViewProps> = ({
                     <td className="py-2.5 px-3 text-right whitespace-nowrap">
                       {p.netPriceArs !== null ? (
                         <span className="font-mono text-black font-semibold">
-                          {formatArsDecimals(p.netPriceArs)}
+                          {formatArs(p.netPriceArs)}
                         </span>
                       ) : (
                         <span className="text-gray-400">—</span>
@@ -297,7 +296,7 @@ export const CostGainView: React.FC<CostGainViewProps> = ({
                               : 'text-[#008102]'
                           }`}
                         >
-                          {formatArsDecimals(p.gainArs)}
+                          {formatArs(p.gainArs)}
                         </span>
                       ) : (
                         <span className="text-gray-400 font-mono">—</span>

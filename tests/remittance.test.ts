@@ -54,8 +54,22 @@ test('FASE 12 — RTO / CONFIRMACIÓN DE VENTA: Suite de pruebas obligatorias', 
   const createdRemittanceIds: string[] = [];
 
   t.before(async () => {
-    // 0. Asegurar que no existan remitos en RTM_PENDING residuales de pruebas previas
-    await supabase.from('remittances').update({ status: 'COMPLETED' }).eq('status', 'RTM_PENDING');
+    // 0. Precondición de seguridad: esta suite NUNCA debe completar un remito que no creó
+    // ella misma (real o de otra corrida). Si el gate ya está ocupado, abortar en vez de
+    // barrerlo a ciegas (incidente: esto llegó a completar RTO0182, un remito real de
+    // smoke manual, ver migración 20261002000030_fix_rto0182_revert_to_rtm_pending.sql).
+    const { data: foreignPending } = await supabase
+      .from('remittances')
+      .select('id, code')
+      .eq('status', 'RTM_PENDING');
+    if (foreignPending && foreignPending.length > 0) {
+      throw new Error(
+        `No se puede iniciar la suite: ya existe(n) remito(s) en RTM_PENDING (${foreignPending
+          .map((r) => r.code)
+          .join(', ')}) que esta suite no creó. Esta suite nunca completa remitos ajenos: ` +
+          'resolvé ese RTM pendiente manualmente (o confirmá que es un fixture huérfano y limpialo) antes de correr los tests.'
+      );
+    }
 
     // 1. Obtener listas del sistema
     const salonList = await priceListRepo.getPriceListBySystemRole('SALON_DEFAULT');
@@ -214,12 +228,24 @@ test('FASE 12 — RTO / CONFIRMACIÓN DE VENTA: Suite de pruebas obligatorias', 
   });
 
   // Helper para liberar el gate RTM_PENDING al terminar un test
+  // IMPORTANTE: nunca barre RTM_PENDING globalmente. Solo opera sobre IDs que esta
+  // suite creó (remittanceId explícito, o createdRemittanceIds cuando se omite),
+  // para no poder tocar jamás un remito real/ajeno a la suite.
   const releaseRtmPendingGate = async (remittanceId?: string) => {
     if (remittanceId) {
-      await supabase.from('remittances').update({ status: 'COMPLETED' }).eq('id', remittanceId);
-    } else {
-      await supabase.from('remittances').update({ status: 'COMPLETED' }).eq('status', 'RTM_PENDING');
+      await supabase
+        .from('remittances')
+        .update({ status: 'COMPLETED' })
+        .eq('id', remittanceId)
+        .eq('status', 'RTM_PENDING');
+      return;
     }
+    if (createdRemittanceIds.length === 0) return;
+    await supabase
+      .from('remittances')
+      .update({ status: 'COMPLETED' })
+      .in('id', createdRemittanceIds)
+      .eq('status', 'RTM_PENDING');
   };
 
   t.beforeEach(async () => {

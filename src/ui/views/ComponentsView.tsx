@@ -7,6 +7,7 @@ import { EditComponentModal } from '../modals/EditComponentModal';
 import { toggleComponentActiveAction } from '@/actions/master-item.actions';
 import type { ComponentDTO, SupplierOptionDTO } from '@/actions/master-item.dto';
 import { Search, Edit3, Power, AlertTriangle } from 'lucide-react';
+import { formatArs } from '@/lib/format';
 
 interface ComponentsViewProps {
   components: ComponentDTO[];
@@ -78,16 +79,14 @@ export const ComponentsView: React.FC<ComponentsViewProps> = ({
       return {
         usd: usdStr,
         ars: '-',
-        grossArs: c.theoreticalCostGrossArs
-          ? `$ ${Math.round(parseFloat(c.theoreticalCostGrossArs)).toLocaleString('es-AR')}`
-          : '-',
+        grossArs: c.theoreticalCostGrossArs ? formatArs(c.theoreticalCostGrossArs) : '-',
       };
     }
 
-    const netArs = `$ ${Math.round(num).toLocaleString('es-AR')}`;
+    const netArs = formatArs(num);
     const grossArs = c.theoreticalCostGrossArs
-      ? `$ ${Math.round(parseFloat(c.theoreticalCostGrossArs)).toLocaleString('es-AR')}`
-      : `$ ${Math.round(num * 1.21).toLocaleString('es-AR')}`;
+      ? formatArs(c.theoreticalCostGrossArs)
+      : formatArs(num * 1.21);
     return {
       usd: '-',
       ars: netArs,

@@ -11,7 +11,11 @@ export const metadata = {
   description: 'Gestión y administración comercial de clientes de Steffen Cosmética Capilar.',
 };
 
-export default async function ClientesPage() {
+export default async function ClientesPage(props: {
+  searchParams: Promise<{ customerId?: string }>;
+}) {
+  const searchParams = await props.searchParams;
+
   // 1. Guard obligatorio de servidor: valida sesión activa del usuario
   const user = await getAuthenticatedUser();
   if (!user || !isUserAuthorized(user)) {
@@ -25,5 +29,10 @@ export default async function ClientesPage() {
   // 3. Serialización estricta a DTO JSON-safe: Decimal convertido a string exacto, nunca a Number
   const initialCustomers = customerRecords.map(serializeCustomer);
 
-  return <CustomersView initialCustomers={initialCustomers} />;
+  return (
+    <CustomersView
+      initialCustomers={initialCustomers}
+      initialSelectedCustomerId={searchParams?.customerId}
+    />
+  );
 }

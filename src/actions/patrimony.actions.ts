@@ -363,6 +363,7 @@ export async function getCustomerMovementsAction(customerId: string): Promise<{
         amountArs: toNumericString(m.amountArs),
         isPayment: m.isPayment,
         paymentId: m.paymentId,
+        remittanceId: m.remittanceId,
       })),
     };
   } catch (error: any) {

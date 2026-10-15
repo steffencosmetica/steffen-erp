@@ -10,6 +10,7 @@ import {
   type FormRowDTO,
   getInitialFormulaRows,
 } from '@/actions/formula.dto';
+import { formatArs } from '@/lib/format';
 
 interface NewFormulaVersionModalProps {
   isOpen: boolean;
@@ -69,10 +70,10 @@ export const NewFormulaVersionModal: React.FC<NewFormulaVersionModalProps> = ({
       unitCost,
       lineCost,
       unitCostFormatted: unitCost > 0
-        ? `$ ${Math.round(unitCost).toLocaleString('es-AR')}`
+        ? formatArs(unitCost)
         : mpr ? 'Sin cotización' : 'Automatico',
       lineCostFormatted: lineCost > 0
-        ? `$ ${Math.round(lineCost).toLocaleString('es-AR')}`
+        ? formatArs(lineCost)
         : 'Automatico',
     };
   };
@@ -318,7 +319,7 @@ export const NewFormulaVersionModal: React.FC<NewFormulaVersionModalProps> = ({
             <div className="flex items-center gap-2">
               <span className="font-bold text-black uppercase tracking-wider">Costo Granel:</span>
               <span className="font-mono font-bold text-black">
-                {totalCost > 0 ? `$ ${Math.round(totalCost).toLocaleString('es-AR')}` : '$ 0'}
+                {totalCost > 0 ? formatArs(totalCost) : formatArs(0)}
               </span>
             </div>
           </div>

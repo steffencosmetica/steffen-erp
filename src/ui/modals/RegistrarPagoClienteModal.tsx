@@ -7,7 +7,7 @@ import {
   getCustomerPaymentOptionsAction,
 } from '@/actions/patrimony.actions';
 import type { AccountPaymentOptionDTO } from '@/actions/patrimony.dto';
-import { formatArsInteger } from '@/actions/administracion.dto';
+import { formatArs } from '@/lib/format';
 
 interface RegistrarPagoClienteModalProps {
   isOpen: boolean;
@@ -158,7 +158,7 @@ export const RegistrarPagoClienteModal: React.FC<RegistrarPagoClienteModalProps>
               ) : (
                 visibleOptions.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.name} | SALDO: {formatArsInteger(c.balanceArs)}
+                    {c.name} | SALDO: {formatArs(c.balanceArs)}
                   </option>
                 ))
               )}
@@ -174,7 +174,7 @@ export const RegistrarPagoClienteModal: React.FC<RegistrarPagoClienteModalProps>
                   selectedCustomer.hasDebt ? 'text-[#008102]' : 'text-gray-700'
                 }`}
               >
-                {formatArsInteger(selectedCustomer.balanceArs)}
+                {formatArs(selectedCustomer.balanceArs)}
               </span>
             </div>
           )}

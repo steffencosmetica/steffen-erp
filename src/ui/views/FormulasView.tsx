@@ -10,6 +10,7 @@ import { NewFormulaModal } from '../modals/NewFormulaModal';
 import { NewFormulaVersionModal } from '../modals/NewFormulaVersionModal';
 import { FormulaHistoryModal } from '../modals/FormulaHistoryModal';
 import { ConfirmDialog } from '../components/UIComponents';
+import { formatArs as formatArsCanonical } from '@/lib/format';
 
 interface FormulasViewProps {
   initialBaseProducts?: BaseProductDTO[];
@@ -65,12 +66,7 @@ export const FormulasView: React.FC<FormulasViewProps> = ({
     filteredBaseProducts[0] ||
     null;
 
-  const formatArs = (str: string | null | undefined) => {
-    if (!str) return '$ 0';
-    const num = parseFloat(str);
-    if (isNaN(num)) return '$ 0';
-    return `$ ${Math.round(num).toLocaleString('es-AR')}`;
-  };
+  const formatArs = (str: string | null | undefined) => formatArsCanonical(str);
 
   const formatKg = (str: string | null | undefined) => {
     if (!str) return '0 kg';

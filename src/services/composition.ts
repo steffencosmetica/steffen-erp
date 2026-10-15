@@ -34,6 +34,7 @@ import { PlanningRepository } from '@/repositories/planning.repository';
 import { PlanningDomainService } from '@/services/planning.service';
 import { RemittanceRepository } from '@/repositories/remittance.repository';
 import { RemittanceDomainService } from '@/services/remittance.service';
+import { MarginRemittanceRepository } from '@/repositories/margin-remittance.repository';
 
 /**
  * Composition Root para instanciación controlada y unificada de servicios
@@ -296,7 +297,15 @@ export function getRemittanceService(): RemittanceDomainService {
     const remittanceRepo = getRemittanceRepository();
     const orderRepo = getOrderRepository();
     const stockRepo = new StockRepository(serverSupabase);
-    remittanceServiceInstance = new RemittanceDomainService(remittanceRepo, orderRepo, stockRepo);
+    const marginRemittanceRepo = new MarginRemittanceRepository(serverSupabase);
+    const costEngineService = getCostEngineService();
+    remittanceServiceInstance = new RemittanceDomainService(
+      remittanceRepo,
+      orderRepo,
+      stockRepo,
+      marginRemittanceRepo,
+      costEngineService
+    );
   }
   return remittanceServiceInstance;
 }

@@ -17,6 +17,7 @@ import { ProductsView } from './ProductsView';
 import { NewProductModal } from '../modals/NewProductModal';
 import { StockAdjustmentModal, type StockAdjustableItem } from '../modals/StockAdjustmentModal';
 import type { StockMovementDTO } from '@/actions/stock.dto';
+import { formatArs, formatKg } from '@/lib/format';
 import {
   Search,
   Edit3,
@@ -159,8 +160,8 @@ export const RawMaterialsView: React.FC<RawMaterialsViewProps> = ({
       };
     }
 
-    const netArs = `$ ${Math.round(num).toLocaleString('es-AR')}`;
-    const grossArs = `$ ${Math.round(num * 1.21).toLocaleString('es-AR')}`;
+    const netArs = formatArs(num);
+    const grossArs = formatArs(num * 1.21);
     return {
       usd: '-',
       ars: netArs,

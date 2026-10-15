@@ -68,11 +68,23 @@ export interface ConfirmedRemittanceResult {
   businessDate: string;
 }
 
+export interface MonthlySaleRecord {
+  remittanceId: string;
+  rtoCode: string;
+  rtmCode: string;
+  businessDate: string;
+  customerSource: CustomerSource;
+  customerDisplayName: string;
+  totalOrderArs: Decimal;
+  gainArs: Decimal;
+}
+
 export interface IRemittanceRepository {
   confirmOrderToRemittanceAtomic(orderId: string, businessDate?: string): Promise<ConfirmedRemittanceResult>;
   getRemittanceById(id: string): Promise<RemittanceRecord | null>;
   getRemittanceByOrderId(orderId: string): Promise<RemittanceRecord | null>;
   getPendingRtmRemittance(): Promise<RemittanceRecord | null>;
+  listCompletedSalesForMonth(year: number, month: number): Promise<MonthlySaleRecord[]>;
 }
 
 export class RemittanceRepository extends BaseSupabaseRepository implements IRemittanceRepository {
@@ -292,5 +304,74 @@ export class RemittanceRepository extends BaseSupabaseRepository implements IRem
       items,
       discountSteps,
     };
+  }
+
+  /**
+   * Ventas del mes (Administración): únicamente RTO status=COMPLETED con su RTM
+   * asociado (margin_remittances), filtradas por la fecha funcional del propio
+   * RTO/venta (business_operations.business_date de la operación SALE_RTO vía
+   * remittances.operation_id) — nunca por created_at del RTM. Usa exclusivamente
+   * los snapshots definitivos (total_order_ars, gain_ars), sin recalcular nada.
+   */
+  async listCompletedSalesForMonth(year: number, month: number): Promise<MonthlySaleRecord[]> {
+    const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+    const endDateExclusive =
+      month === 12
+        ? `${year + 1}-01-01`
+        : `${year}-${String(month + 1).padStart(2, '0')}-01`;
+
+    const { data, error } = await this.client
+      .from('remittances')
+      .select(`
+        id,
+        code,
+        customer_source,
+        customer_id,
+        recipient_name_snapshot,
+        total_order_ars,
+        customers (name),
+        business_operations (business_date),
+        margin_remittances (code, gain_ars)
+      `)
+      .eq('status', 'COMPLETED')
+      .gte('business_operations.business_date', startDate)
+      .lt('business_operations.business_date', endDateExclusive);
+
+    if (error) {
+      throw new DomainError(`Error listando ventas del mes: ${error.message}`);
+    }
+
+    const results: MonthlySaleRecord[] = [];
+
+    for (const row of (data || []) as any[]) {
+      const bo = Array.isArray(row.business_operations) ? row.business_operations[0] : row.business_operations;
+      const mr = Array.isArray(row.margin_remittances) ? row.margin_remittances[0] : row.margin_remittances;
+
+      // Defensivo: solo RTO COMPLETED con RTM real asociado y fecha funcional dentro del mes.
+      if (!bo?.business_date || !mr) continue;
+
+      let customerDisplayName = 'Consumidor Final';
+      if (row.customer_source === 'REGISTERED_CUSTOMER') {
+        customerDisplayName = row.customers?.name || row.recipient_name_snapshot || 'Cliente Registrado';
+      } else if (row.customer_source === 'MERCADO_LIBRE') {
+        customerDisplayName = 'Mercado Libre';
+      } else if (row.customer_source === 'CONSUMER_FINAL') {
+        customerDisplayName = row.recipient_name_snapshot || 'Consumidor Final';
+      }
+
+      results.push({
+        remittanceId: row.id,
+        rtoCode: row.code,
+        rtmCode: mr.code,
+        businessDate: bo.business_date,
+        customerSource: row.customer_source as CustomerSource,
+        customerDisplayName,
+        totalOrderArs: new Decimal(row.total_order_ars),
+        gainArs: new Decimal(mr.gain_ars),
+      });
+    }
+
+    results.sort((a, b) => b.businessDate.localeCompare(a.businessDate));
+    return results;
   }
 }

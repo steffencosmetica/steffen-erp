@@ -104,6 +104,7 @@ export interface AccountMovementRecord {
   isPayment: boolean;
   paymentId?: string;
   purchaseId?: string;
+  remittanceId?: string;
   paymentMode?: string;
   currencyCodeSnapshot?: string;
   totalNetSourceCurrency?: string;
@@ -113,6 +114,12 @@ export interface AdminSupplierDebtRecord {
   supplierId: string;
   name: string;
   balanceArs: Decimal;
+  lastPaymentDate: string | null;
+  lastPurchaseDate: string | null;
+}
+
+export interface CustomerLastActivityRecord {
+  customerId: string;
   lastPaymentDate: string | null;
   lastPurchaseDate: string | null;
 }
@@ -150,6 +157,7 @@ export interface IPatrimonyRepository {
   listCustomerAccountMovements(customerId: string): Promise<AccountMovementRecord[]>;
   listSupplierAccountMovements(supplierId: string): Promise<AccountMovementRecord[]>;
   listSupplierDebtsWithActivity(): Promise<AdminSupplierDebtRecord[]>;
+  getCustomerLastActivityMap(): Promise<Map<string, CustomerLastActivityRecord>>;
 }
 
 export function formatPatrimonialVariationFromEntries(
@@ -275,6 +283,28 @@ export class PatrimonyRepository extends BaseSupabaseRepository implements IPatr
       lastPaymentDate: row.last_payment_date ? String(row.last_payment_date) : null,
       lastPurchaseDate: row.last_purchase_date ? String(row.last_purchase_date) : null,
     }));
+  }
+
+  /**
+   * Última actividad (Último Pago / Última Compra) de todos los clientes con
+   * al menos una, en una única consulta batch (sin N+1). Fecha funcional
+   * (business_operations.business_date), nunca created_at.
+   */
+  async getCustomerLastActivityMap(): Promise<Map<string, CustomerLastActivityRecord>> {
+    const { data, error } = await (this.client.rpc as any)('get_customer_last_activity');
+    if (error) {
+      throw new DomainError(`Error obteniendo última actividad de clientes: ${error.message}`);
+    }
+
+    const map = new Map<string, CustomerLastActivityRecord>();
+    for (const row of data || []) {
+      map.set(row.customer_id, {
+        customerId: row.customer_id,
+        lastPaymentDate: row.last_payment_date ? String(row.last_payment_date) : null,
+        lastPurchaseDate: row.last_purchase_date ? String(row.last_purchase_date) : null,
+      });
+    }
+    return map;
   }
 
   async listRecentMovements(limit = 10): Promise<PatrimonialMovementFullRecord[]> {
@@ -578,7 +608,8 @@ export class PatrimonyRepository extends BaseSupabaseRepository implements IPatr
   }
 
   async listCustomerAccountMovements(customerId: string): Promise<AccountMovementRecord[]> {
-    const { data, error } = await this.client
+    // 1. Pagos del cliente (editables)
+    const { data: paymentsData, error: paymentsError } = await this.client
       .from('payments')
       .select(`
         id,
@@ -589,11 +620,11 @@ export class PatrimonyRepository extends BaseSupabaseRepository implements IPatr
       `)
       .eq('customer_id', customerId);
 
-    if (error) {
-      throw new DomainError(`Error listando pagos de cliente: ${error.message}`);
+    if (paymentsError) {
+      throw new DomainError(`Error listando pagos de cliente: ${paymentsError.message}`);
     }
 
-    const opIds = (data || []).map((r: any) => r.operation_id).filter(Boolean);
+    const opIds = (paymentsData || []).map((r: any) => r.operation_id).filter(Boolean);
     const movCodeMap = new Map<string, string>();
 
     if (opIds.length > 0) {
@@ -607,19 +638,52 @@ export class PatrimonyRepository extends BaseSupabaseRepository implements IPatr
       }
     }
 
-    const movements: AccountMovementRecord[] = (data || []).map((row: any) => {
-      const code = movCodeMap.get(row.operation_id) || '';
+    // 2. Ventas (RTO) del cliente registrado (no editables). La deuda se genera al
+    // confirmar el RTO (Fase 12), independientemente de si el RTM ya se completó,
+    // por lo que se listan todos sin filtrar por status. Se usa exclusivamente el
+    // snapshot definitivo total_order_ars: nunca total_to_collect_ars ni saldo anterior.
+    const { data: remittancesData, error: remittancesError } = await this.client
+      .from('remittances')
+      .select(`
+        id,
+        code,
+        total_order_ars,
+        created_at,
+        business_operations(business_date)
+      `)
+      .eq('customer_id', customerId);
 
-      return {
-        id: row.id,
-        date: row.business_operations?.business_date || row.created_at?.split('T')[0] || '',
+    if (remittancesError) {
+      throw new DomainError(`Error listando ventas (RTO) de cliente: ${remittancesError.message}`);
+    }
+
+    const movements: AccountMovementRecord[] = [];
+
+    for (const p of paymentsData || []) {
+      const code = movCodeMap.get((p as any).operation_id) || '';
+
+      movements.push({
+        id: p.id,
+        date: (p as any).business_operations?.business_date || p.created_at?.split('T')[0] || '',
         type: 'PAGO',
         documentCode: code,
-        amountArs: new Decimal(row.amount_ars),
+        amountArs: new Decimal(p.amount_ars),
         isPayment: true,
-        paymentId: row.id,
-      };
-    });
+        paymentId: p.id,
+      });
+    }
+
+    for (const r of remittancesData || []) {
+      movements.push({
+        id: r.id,
+        date: (r as any).business_operations?.business_date || r.created_at?.split('T')[0] || '',
+        type: 'VENTA',
+        documentCode: r.code,
+        amountArs: new Decimal(r.total_order_ars),
+        isPayment: false,
+        remittanceId: r.id,
+      });
+    }
 
     movements.sort((a, b) => b.date.localeCompare(a.date));
     return movements;

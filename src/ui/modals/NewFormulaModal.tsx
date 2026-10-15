@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { createBaseProductWithFormulaAction } from '@/actions/formula.actions';
 import type { ActiveRawMaterialDTO, BaseProductDTO } from '@/actions/formula.dto';
+import { formatArs } from '@/lib/format';
 
 interface NewFormulaModalProps {
   isOpen: boolean;
@@ -62,10 +63,10 @@ export const NewFormulaModal: React.FC<NewFormulaModalProps> = ({
       unitCost,
       lineCost,
       unitCostFormatted: unitCost > 0
-        ? `$ ${Math.round(unitCost).toLocaleString('es-AR')}`
+        ? formatArs(unitCost)
         : mpr ? 'Sin cotización' : 'Automatico',
       lineCostFormatted: lineCost > 0
-        ? `$ ${Math.round(lineCost).toLocaleString('es-AR')}`
+        ? formatArs(lineCost)
         : 'Automatico',
     };
   };
@@ -328,7 +329,7 @@ export const NewFormulaModal: React.FC<NewFormulaModalProps> = ({
             <div className="flex items-center gap-2">
               <span className="font-bold text-black uppercase tracking-wider">Costo Granel:</span>
               <span className="font-mono font-bold text-black">
-                {totalCost > 0 ? `$ ${Math.round(totalCost).toLocaleString('es-AR')}` : 'Automatico'}
+                {totalCost > 0 ? formatArs(totalCost) : 'Automatico'}
               </span>
             </div>
           </div>

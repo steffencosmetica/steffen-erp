@@ -7,6 +7,7 @@ import {
   manufactureBulkLotAction,
 } from '@/actions/factory.actions';
 import type { BulkManufacturingPreviewDTO } from '@/actions/factory.dto';
+import { formatKg } from '@/lib/format';
 
 export interface BaseProductOption {
   id: string;
@@ -219,7 +220,7 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
               </h3>
               {preview && (
                 <span className="text-[11px] text-gray-500 font-mono">
-                  Fórmula v{preview.formulaVersionNumber} (Base: {preview.baseFormulaKg} kg)
+                  Fórmula v{preview.formulaVersionNumber} (Base: {formatKg(preview.baseFormulaKg)} kg)
                 </span>
               )}
             </div>
@@ -251,10 +252,10 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
                           {it.rawMaterialName} <span className="text-gray-400 font-mono">({it.rawMaterialCode})</span>
                         </td>
                         <td className="py-1.5 px-2 text-right font-mono font-semibold">
-                          {it.requiredKg} kg
+                          {formatKg(it.requiredKg)} kg
                         </td>
                         <td className="py-1.5 px-2 text-right font-mono text-gray-600">
-                          {it.availableKg} kg
+                          {formatKg(it.availableKg)} kg
                         </td>
                         <td className="py-1.5 px-2 text-center">
                           {it.isSufficient ? (

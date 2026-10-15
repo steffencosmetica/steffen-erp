@@ -3,6 +3,7 @@ import type {
   RemittanceItemRecord,
   RemittanceDiscountStepRecord,
   ConfirmedRemittanceResult,
+  MonthlySaleRecord,
 } from '@/repositories/remittance.repository';
 import type { RtoPreviewResult, RtoPreviewLine, RtoDiscountStepPreview } from '@/services/remittance.service';
 
@@ -231,5 +232,29 @@ export function serializeRtoPreview(preview: RtoPreviewResult): RtoPreviewDTO {
     totalToCollectArs: preview.totalToCollectArs.toNumber(),
     totalWeightKg: preview.totalWeightKg.toNumber(),
     packageCount: preview.packageCount,
+  };
+}
+
+export interface MonthlySaleDTO {
+  remittanceId: string;
+  rtoCode: string;
+  rtmCode: string;
+  businessDate: string;
+  customerSource: string;
+  customerDisplayName: string;
+  totalOrderArs: number;
+  gainArs: number;
+}
+
+export function serializeMonthlySale(record: MonthlySaleRecord): MonthlySaleDTO {
+  return {
+    remittanceId: record.remittanceId,
+    rtoCode: record.rtoCode,
+    rtmCode: record.rtmCode,
+    businessDate: record.businessDate,
+    customerSource: record.customerSource,
+    customerDisplayName: record.customerDisplayName,
+    totalOrderArs: record.totalOrderArs.toNumber(),
+    gainArs: record.gainArs.toNumber(),
   };
 }

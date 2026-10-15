@@ -8,6 +8,7 @@ import type {
   ComponentOptionDTO,
   FinalProductDTO,
 } from '@/actions/product.dto';
+import { formatArs } from '@/lib/format';
 
 interface NewProductModalProps {
   isOpen: boolean;
@@ -395,9 +396,7 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
 
                         {/* Costo de línea estimado */}
                         <td className="py-2 px-2 text-right font-mono text-gray-700">
-                          {lineCost > 0
-                            ? `$ ${Math.round(lineCost).toLocaleString('es-AR')}`
-                            : 'Automatico'}
+                          {lineCost > 0 ? formatArs(lineCost) : 'Automatico'}
                         </td>
 
                         {/* Eliminar fila */}

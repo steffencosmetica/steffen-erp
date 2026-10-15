@@ -7,10 +7,12 @@ import {
   RemittanceDetailDTO,
   PendingRtmBannerDTO,
   RtoPreviewDTO,
+  MonthlySaleDTO,
   serializeConfirmedRemittance,
   serializeRemittance,
   serializePendingRtmBanner,
   serializeRtoPreview,
+  serializeMonthlySale,
 } from './remittance.dto';
 
 export interface ActionResponse<T> {
@@ -118,6 +120,26 @@ export async function previewRtoAction(
     return {
       success: false,
       error: err.message || 'Error al calcular previsualización del remito.',
+    };
+  }
+}
+
+export async function getMonthlySalesAction(
+  year: number,
+  month: number
+): Promise<ActionResponse<MonthlySaleDTO[]>> {
+  try {
+    const service = getRemittanceService();
+    const sales = await service.listCompletedSalesForMonth(year, month);
+
+    return {
+      success: true,
+      data: sales.map(serializeMonthlySale),
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || 'Error al consultar ventas del mes.',
     };
   }
 }

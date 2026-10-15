@@ -9,6 +9,7 @@ import {
   OperatingExpenseAtomicRpcResult,
   PatrimonialSummary,
   AdminSupplierDebtRecord,
+  CustomerLastActivityRecord,
   MovementsFilter,
   PaymentDetailRecord,
   AccountMovementRecord,
@@ -83,6 +84,7 @@ export interface IPatrimonyDomainService {
   listCustomerMovements(customerId: string): Promise<AccountMovementRecord[]>;
   listSupplierMovements(supplierId: string): Promise<AccountMovementRecord[]>;
   listSupplierDebtsWithActivity(): Promise<AdminSupplierDebtRecord[]>;
+  getCustomerLastActivityMap(): Promise<Map<string, CustomerLastActivityRecord>>;
 }
 
 export class PatrimonyDomainService implements IPatrimonyDomainService {
@@ -300,5 +302,9 @@ export class PatrimonyDomainService implements IPatrimonyDomainService {
 
   async listSupplierDebtsWithActivity(): Promise<AdminSupplierDebtRecord[]> {
     return this.patrimonyRepo.listSupplierDebtsWithActivity();
+  }
+
+  async getCustomerLastActivityMap(): Promise<Map<string, CustomerLastActivityRecord>> {
+    return this.patrimonyRepo.getCustomerLastActivityMap();
   }
 }

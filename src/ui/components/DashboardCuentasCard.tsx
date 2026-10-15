@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { formatArsInteger } from '@/actions/administracion.dto';
+import { formatArs } from '@/lib/format';
 import { RetiroCajaModal } from '@/ui/modals/RetiroCajaModal';
 
 interface DashboardCuentasCardProps {
@@ -37,33 +37,33 @@ export const DashboardCuentasCard: React.FC<DashboardCuentasCardProps> = ({
             <tr>
               <td className="py-2.5 px-3 font-semibold text-black">CAJA STEFFEN</td>
               <td className="py-2.5 px-3 text-right font-mono font-bold text-[#008102]">
-                {formatArsInteger(cajaSteffen)}
+                {formatArs(cajaSteffen)}
               </td>
             </tr>
             <tr>
               <td className="py-2.5 px-3 font-semibold text-black">CAJA MERCADO LIBRE</td>
               <td className="py-2.5 px-3 text-right font-mono font-bold text-[#008102]">
-                {formatArsInteger(cajaMercadoLibre)}
+                {formatArs(cajaMercadoLibre)}
               </td>
             </tr>
             <tr>
               <td className="py-2.5 px-3 font-semibold text-black">DEUDAS CLIENTES</td>
               <td className="py-2.5 px-3 text-right font-mono font-bold text-[#008102]">
-                {formatArsInteger(deudasClientes)}
+                {formatArs(deudasClientes)}
               </td>
             </tr>
             <tr>
               <td className="py-2.5 px-3 font-semibold text-black">DEUDAS PROVEEDORES</td>
               <td className="py-2.5 px-3 text-right font-mono font-bold text-[#DD0000]">
                 {deudasProveedores && deudasProveedores !== '0'
-                  ? `-${formatArsInteger(deudasProveedores)}`
+                  ? `-${formatArs(deudasProveedores)}`
                   : '$ 0'}
               </td>
             </tr>
             <tr className="border-t-2 border-black font-bold">
               <td className="py-2.5 px-3 text-black uppercase">NETO</td>
               <td className="py-2.5 px-3 text-right font-mono text-sm text-black">
-                {formatArsInteger(neto)}
+                {formatArs(neto)}
               </td>
             </tr>
           </tbody>

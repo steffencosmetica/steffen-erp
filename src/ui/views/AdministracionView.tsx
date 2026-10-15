@@ -10,8 +10,11 @@ import {
 } from 'lucide-react';
 import {
   type AdministracionDashboardDTO,
-  formatArsInteger,
 } from '@/actions/administracion.dto';
+import { formatArs } from '@/lib/format';
+import { Decimal } from '@/domain/decimal';
+import { getMonthlySalesAction } from '@/actions/remittance.actions';
+import type { MonthlySaleDTO } from '@/actions/remittance.dto';
 import { GastoOperativoModal } from '@/ui/modals/GastoOperativoModal';
 import { RetiroCajaModal } from '@/ui/modals/RetiroCajaModal';
 import { RegistrarPagoClienteModal } from '@/ui/modals/RegistrarPagoClienteModal';
@@ -19,17 +22,70 @@ import { RegistrarPagoProveedorModal } from '@/ui/modals/RegistrarPagoProveedorM
 
 interface AdministracionViewProps {
   data: AdministracionDashboardDTO;
+  initialMonthlySales: MonthlySaleDTO[];
+  initialYear: number;
+  initialMonth: number;
 }
 
-export const AdministracionView: React.FC<AdministracionViewProps> = ({ data }) => {
+const MONTH_NAMES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+];
+
+function monthOptionValue(year: number, month: number) {
+  return `${year}-${String(month).padStart(2, '0')}`;
+}
+
+function buildRecentMonthOptions(year: number, month: number, count: number) {
+  const options: { value: string; label: string }[] = [];
+  let y = year;
+  let m = month;
+  for (let i = 0; i < count; i++) {
+    options.push({ value: monthOptionValue(y, m), label: `${MONTH_NAMES[m - 1]} ${y}` });
+    m -= 1;
+    if (m < 1) {
+      m = 12;
+      y -= 1;
+    }
+  }
+  return options;
+}
+
+export const AdministracionView: React.FC<AdministracionViewProps> = ({
+  data,
+  initialMonthlySales,
+  initialYear,
+  initialMonth,
+}) => {
   const router = useRouter();
-  const [selectedMonth, setSelectedMonth] = useState('2026-10');
+  const [selectedMonth, setSelectedMonth] = useState(monthOptionValue(initialYear, initialMonth));
+  const [monthlySales, setMonthlySales] = useState<MonthlySaleDTO[]>(initialMonthlySales);
+  const [isLoadingSales, setIsLoadingSales] = useState(false);
   const [usdInput, setUsdInput] = useState(data.currentUsdRate || '1350');
 
   const [isGastoOperativoOpen, setIsGastoOperativoOpen] = useState(false);
   const [isRetiroCajaOpen, setIsRetiroCajaOpen] = useState(false);
   const [isPagoClienteOpen, setIsPagoClienteOpen] = useState(false);
   const [isPagoProveedorOpen, setIsPagoProveedorOpen] = useState(false);
+
+  const monthOptions = buildRecentMonthOptions(initialYear, initialMonth, 6);
+
+  const handleMonthChange = (value: string) => {
+    setSelectedMonth(value);
+    const [yStr, mStr] = value.split('-');
+    const year = parseInt(yStr, 10);
+    const month = parseInt(mStr, 10);
+    setIsLoadingSales(true);
+    getMonthlySalesAction(year, month).then((res) => {
+      setIsLoadingSales(false);
+      if (res.success && res.data) {
+        setMonthlySales(res.data);
+      }
+    });
+  };
+
+  const totalFacturadoMes = monthlySales.reduce((acc, s) => acc.plus(s.totalOrderArs), new Decimal(0));
+  const gananciaMes = monthlySales.reduce((acc, s) => acc.plus(s.gainArs), new Decimal(0));
 
   return (
     <div className="max-w-[1600px] mx-auto pb-16 space-y-5">
@@ -45,12 +101,14 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({ data }) 
               <div className="flex items-center gap-2">
                 <select
                   value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  onChange={(e) => handleMonthChange(e.target.value)}
                   className="h-8 px-3 text-xs border border-[#D9D9D9] rounded-[5px] bg-white text-gray-700 focus:outline-none focus:border-[#0E50A0] cursor-pointer"
                 >
-                  <option value="2026-10">Octubre 2026</option>
-                  <option value="2026-09">Septiembre 2026</option>
-                  <option value="2026-08">Agosto 2026</option>
+                  {monthOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -60,20 +118,63 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({ data }) 
               <table className="w-full text-xs">
                 <thead>
                   <tr className="bg-[#D9D9D9] text-black font-bold uppercase text-[11px] sticky top-0 z-10">
-                    <th className="py-2.5 px-3 text-left w-[14%]">FECHA</th>
-                    <th className="py-2.5 px-3 text-left w-[32%]">CLIENTE</th>
-                    <th className="py-2.5 px-3 text-right w-[18%]">TOTAL</th>
-                    <th className="py-2.5 px-3 text-right w-[18%]">GANANCIA</th>
+                    <th className="py-2.5 px-3 text-left w-[13%]">FECHA</th>
+                    <th className="py-2.5 px-3 text-left w-[27%]">CLIENTE / ORIGEN</th>
+                    <th className="py-2.5 px-3 text-right w-[16%]">TOTAL</th>
+                    <th className="py-2.5 px-3 text-right w-[16%]">GANANCIA</th>
                     <th className="py-2.5 px-3 text-center w-[12%]">Nro REMITO</th>
-                    <th className="py-2.5 px-3 text-center w-[6%]">RTO</th>
+                    <th className="py-2.5 px-3 text-center w-[8%]">RTO</th>
+                    <th className="py-2.5 px-3 text-center w-[8%]">RTM</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E5E5E5]">
-                  <tr>
-                    <td colSpan={6} className="py-12 text-center text-xs text-neutral-400">
-                      Sin ventas registradas en el período seleccionado
-                    </td>
-                  </tr>
+                  {isLoadingSales ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-xs text-neutral-400">
+                        Cargando ventas...
+                      </td>
+                    </tr>
+                  ) : monthlySales.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-xs text-neutral-400">
+                        Sin ventas registradas en el período seleccionado
+                      </td>
+                    </tr>
+                  ) : (
+                    monthlySales.map((s) => (
+                      <tr key={s.remittanceId} className="hover:bg-gray-50/80 transition-colors">
+                        <td className="py-2.5 px-3 text-black whitespace-nowrap">{s.businessDate}</td>
+                        <td className="py-2.5 px-3 text-black font-semibold">{s.customerDisplayName}</td>
+                        <td className="py-2.5 px-3 text-right font-mono font-bold text-black">
+                          {formatArs(s.totalOrderArs)}
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-mono font-bold text-[#008102]">
+                          {formatArs(s.gainArs)}
+                        </td>
+                        <td className="py-2.5 px-3 text-center text-gray-700">{s.rtoCode}</td>
+                        <td className="py-2.5 px-3 text-center">
+                          <button
+                            type="button"
+                            disabled
+                            title="PDF del RTO disponible en Fase 14"
+                            className="p-1 rounded text-gray-300 cursor-not-allowed inline-flex"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                        <td className="py-2.5 px-3 text-center">
+                          <button
+                            type="button"
+                            disabled
+                            title="PDF del RTM disponible en Fase 14"
+                            className="p-1 rounded text-gray-300 cursor-not-allowed inline-flex"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -82,13 +183,13 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({ data }) 
           <div className="flex items-center justify-between pt-3 mt-3 border-t border-[#E5E5E5] text-xs">
             <div className="flex items-center gap-6">
               <span className="font-bold uppercase tracking-wider text-black">TOTAL</span>
-              <span className="font-bold font-mono text-black">$ 0</span>
-              <span className="font-bold font-mono text-[#008102]">$ 0</span>
+              <span className="font-bold font-mono text-black">{formatArs(totalFacturadoMes)}</span>
+              <span className="font-bold font-mono text-[#008102]">{formatArs(gananciaMes)}</span>
             </div>
             <button
               type="button"
               className="text-xs font-bold text-[#0E50A0] opacity-80 cursor-not-allowed inline-flex items-center gap-1"
-              title="Módulo de Ventas próximo en Fase 4"
+              title="Módulo de Reportes próximo en Fase 17"
             >
               <span>IR A VENTAS</span>
               <ArrowRight className="w-3 h-3" />
@@ -157,33 +258,33 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({ data }) 
                 <tr>
                   <td className="py-2 px-3 font-semibold text-black">CAJA STEFFEN</td>
                   <td className="py-2 px-3 text-right font-mono font-bold text-[#008102]">
-                    {formatArsInteger(data.cajaSteffenArs)}
+                    {formatArs(data.cajaSteffenArs)}
                   </td>
                 </tr>
                 <tr>
                   <td className="py-2 px-3 font-semibold text-black">CAJA MERCADO LIBRE</td>
                   <td className="py-2 px-3 text-right font-mono font-bold text-[#008102]">
-                    {formatArsInteger(data.cajaMercadoLibreArs)}
+                    {formatArs(data.cajaMercadoLibreArs)}
                   </td>
                 </tr>
                 <tr>
                   <td className="py-2 px-3 font-semibold text-black">DEUDAS CLIENTES</td>
                   <td className="py-2 px-3 text-right font-mono font-bold text-[#008102]">
-                    {formatArsInteger(data.deudasClientesArs)}
+                    {formatArs(data.deudasClientesArs)}
                   </td>
                 </tr>
                 <tr>
                   <td className="py-2 px-3 font-semibold text-black">DEUDAS PROVEEDORES</td>
                   <td className="py-2 px-3 text-right font-mono font-bold text-[#DD0000]">
                     {data.deudasProveedoresArs && data.deudasProveedoresArs !== '0'
-                      ? `-${formatArsInteger(data.deudasProveedoresArs)}`
+                      ? `-${formatArs(data.deudasProveedoresArs)}`
                       : '$ 0'}
                   </td>
                 </tr>
                 <tr className="border-t-2 border-black font-bold">
                   <td className="py-2 px-3 text-black">NETO</td>
                   <td className="py-2 px-3 text-right font-mono text-black">
-                    {formatArsInteger(data.netoArs)}
+                    {formatArs(data.netoArs)}
                   </td>
                 </tr>
               </tbody>
@@ -240,7 +341,7 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({ data }) 
                           {c.name}
                         </td>
                         <td className="py-2.5 px-3 text-right font-mono font-bold text-[#008102] whitespace-nowrap">
-                          {formatArsInteger(c.balanceArs)}
+                          {formatArs(c.balanceArs)}
                         </td>
                         <td className="py-2.5 px-3 text-center text-gray-500 whitespace-nowrap">
                           {c.lastPaymentDate || '—'}
@@ -249,7 +350,7 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({ data }) 
                           {c.lastPurchaseDate || '—'}
                         </td>
                         <td className="py-2.5 px-3 text-center">
-                          <Link href={`/clientes`} title="Ver cliente">
+                          <Link href={`/clientes?customerId=${c.id}`} title="Ver cuenta del cliente">
                             <FileText className="w-4 h-4 text-gray-600 inline-block hover:text-black" />
                           </Link>
                         </td>
@@ -271,7 +372,7 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({ data }) 
             <div className="flex items-center gap-4">
               <span className="font-bold uppercase tracking-wider text-black">TOTAL</span>
               <span className="font-bold font-mono text-[#008102]">
-                {formatArsInteger(data.deudasClientesArs)}
+                {formatArs(data.deudasClientesArs)}
               </span>
             </div>
             <Link
@@ -320,7 +421,7 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({ data }) 
                           {s.name}
                         </td>
                         <td className="py-2.5 px-3 text-right font-mono font-bold text-[#DD0000] whitespace-nowrap">
-                          {formatArsInteger(s.balanceArs)}
+                          {formatArs(s.balanceArs)}
                         </td>
                         <td className="py-2.5 px-3 text-center text-gray-500 whitespace-nowrap">
                           {s.lastPaymentDate || '—'}
@@ -351,7 +452,7 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({ data }) 
             <div className="flex items-center gap-4">
               <span className="font-bold uppercase tracking-wider text-black">TOTAL</span>
               <span className="font-bold font-mono text-[#DD0000]">
-                {formatArsInteger(data.totalDeudasProveedoresTablaArs || data.deudasProveedoresArs)}
+                {formatArs(data.totalDeudasProveedoresTablaArs || data.deudasProveedoresArs)}
               </span>
             </div>
             <Link
@@ -398,7 +499,7 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({ data }) 
                       <td className="py-2.5 px-3 font-semibold text-black whitespace-nowrap">{m.type}</td>
                       <td className="py-2.5 px-3 text-gray-700 truncate max-w-0">{m.description}</td>
                       <td className="py-2.5 px-3 text-right font-mono font-bold text-black whitespace-nowrap">
-                        {formatArsInteger(m.amountArs)}
+                        {formatArs(m.amountArs)}
                       </td>
                       <td className="py-2.5 px-3 text-right font-mono text-[11px] text-gray-600 whitespace-nowrap">
                         {m.patrimonialVariation}

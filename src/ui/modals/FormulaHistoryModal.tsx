@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { X, History, CheckCircle2, Clock } from 'lucide-react';
 import { getBaseProductVersionsAction } from '@/actions/formula.actions';
 import type { BaseProductDTO, FormulaVersionDTO } from '@/actions/formula.dto';
+import { formatArs as formatArsCanonical } from '@/lib/format';
 
 interface FormulaHistoryModalProps {
   isOpen: boolean;
@@ -58,12 +59,7 @@ export const FormulaHistoryModal: React.FC<FormulaHistoryModalProps> = ({
 
   const activeVersion = versions.find((v) => v.id === selectedVersionId);
 
-  const formatArs = (str: string | null | undefined) => {
-    if (!str) return '$ 0';
-    const num = parseFloat(str);
-    if (isNaN(num)) return '$ 0';
-    return `$ ${Math.round(num).toLocaleString('es-AR')}`;
-  };
+  const formatArs = (str: string | null | undefined) => formatArsCanonical(str);
 
   const formatKg = (str: string | null | undefined) => {
     if (!str) return '0 kg';

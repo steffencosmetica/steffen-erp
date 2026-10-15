@@ -18,6 +18,7 @@ import type { BaseProductOption } from '@/ui/modals/RegistrarFabricacionModal';
 import type { PackagingProductOption } from '@/ui/modals/RegistrarEnvasadoModal';
 import { DashboardQuickAccess } from '@/ui/components/DashboardQuickAccess';
 import { DashboardCuentasCard } from '@/ui/components/DashboardCuentasCard';
+import { formatArs, formatKg } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -78,11 +79,6 @@ export default async function ErpHomePage() {
   const totalSupplierDebt = suppliers.reduce((acc, s) => {
     return acc.plus(s.balance.gt(0) ? s.balance : new Decimal(0));
   }, new Decimal(0));
-
-  const formatArs = (dec: Decimal) => {
-    const num = Math.round(dec.toNumber());
-    return `$ ${num.toLocaleString('es-AR')}`;
-  };
 
   const supplierOptions = suppliers.map((s) => ({
     id: s.id,
@@ -234,7 +230,7 @@ export default async function ErpHomePage() {
                         <td className="py-2 px-1.5 font-medium text-black truncate max-w-[100px]">{it.name}</td>
                         <td className="py-2 px-1.5 text-gray-700">{it.referenceSupplierCode || '-'}</td>
                         <td className="py-2 px-1.5 text-right font-bold text-[#DD0000]">
-                          {it.balance.toNumber()} kg
+                          {formatKg(it.balance)} kg
                         </td>
                         <td className="py-2 px-1.5 text-center">
                           <span className="px-1.5 py-0.5 border border-gray-300 rounded bg-gray-50 font-mono text-[11px]">
@@ -242,7 +238,7 @@ export default async function ErpHomePage() {
                           </span>
                         </td>
                         <td className="py-2 px-1.5 text-right font-mono font-bold text-black">
-                          $ {Math.round(approxTotal).toLocaleString('es-AR')}
+                          {formatArs(approxTotal)}
                         </td>
                       </tr>
                     );

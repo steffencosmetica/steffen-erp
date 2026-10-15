@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Search, Filter } from 'lucide-react';
 import type { PatrimonialMovementDTO } from '@/actions/patrimony.dto';
-import { formatArsInteger } from '@/actions/administracion.dto';
+import { formatArs } from '@/lib/format';
 
 interface MovimientosViewProps {
   initialMovements: PatrimonialMovementDTO[];
@@ -178,7 +178,7 @@ export const MovimientosView: React.FC<MovimientosViewProps> = ({
                       {m.description}
                     </td>
                     <td className="py-2.5 px-3 text-right font-mono font-bold text-black whitespace-nowrap">
-                      {formatArsInteger(m.amountArs)}
+                      {formatArs(m.amountArs)}
                     </td>
                     <td className="py-2.5 px-3 text-right font-mono text-[11px] text-gray-700 whitespace-nowrap">
                       {m.patrimonialVariation || '—'}

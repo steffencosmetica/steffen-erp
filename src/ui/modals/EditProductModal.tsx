@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X, Save, AlertCircle, Lock } from 'lucide-react';
 import { updateFinalProductMetadataAction } from '@/actions/product.actions';
 import type { FinalProductDTO } from '@/actions/product.dto';
+import { formatArs, formatKg } from '@/lib/format';
 
 interface EditProductModalProps {
   isOpen: boolean;
@@ -27,13 +28,6 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
-
-  const formatArs = (str: string | null | undefined) => {
-    if (!str) return '$ 0';
-    const num = parseFloat(str);
-    if (isNaN(num)) return '$ 0';
-    return `$ ${Math.round(num).toLocaleString('es-AR')}`;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -160,7 +154,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
                   Peso / Contenido en Granel (Inmutable)
                 </label>
                 <div className="px-3 py-2 bg-gray-50 border border-[#D9D9D9] text-xs font-mono font-bold text-gray-700 rounded-[2px]">
-                  {product.weightKg} kg
+                  {formatKg(product.weightKg)} kg
                 </div>
               </div>
             </div>
@@ -249,7 +243,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
                       {product.baseProductCode}
                     </td>
                     <td className="py-2.5 px-3 text-right font-mono text-black">
-                      {product.weightKg} kg
+                      {formatKg(product.weightKg)} kg
                     </td>
                     <td className="py-2.5 px-3 font-semibold text-black">
                       {product.baseProductName} <span className="text-gray-500 font-normal">(Granel PBA)</span>

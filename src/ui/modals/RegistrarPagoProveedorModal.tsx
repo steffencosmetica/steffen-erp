@@ -7,7 +7,7 @@ import {
   getSupplierPaymentOptionsAction,
 } from '@/actions/patrimony.actions';
 import type { AccountPaymentOptionDTO } from '@/actions/patrimony.dto';
-import { formatArsInteger } from '@/actions/administracion.dto';
+import { formatArs } from '@/lib/format';
 
 interface RegistrarPagoProveedorModalProps {
   isOpen: boolean;
@@ -163,7 +163,7 @@ export const RegistrarPagoProveedorModal: React.FC<RegistrarPagoProveedorModalPr
               ) : (
                 visibleOptions.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.name} | DEUDA: {formatArsInteger(s.balanceArs)}
+                    {s.name} | DEUDA: {formatArs(s.balanceArs)}
                   </option>
                 ))
               )}
@@ -179,7 +179,7 @@ export const RegistrarPagoProveedorModal: React.FC<RegistrarPagoProveedorModalPr
                   selectedSupplier.hasDebt ? 'text-[#DD0000]' : 'text-gray-700'
                 }`}
               >
-                {formatArsInteger(selectedSupplier.balanceArs)}
+                {formatArs(selectedSupplier.balanceArs)}
               </span>
             </div>
           )}

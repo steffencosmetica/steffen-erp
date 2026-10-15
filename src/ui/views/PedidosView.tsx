@@ -9,6 +9,7 @@ import type { PendingRtmBannerDTO } from '@/actions/remittance.dto';
 import { reorderProductPrioritiesAction, reorderOrderPrioritiesAction } from '@/actions/planning.actions';
 import { NuevoPedidoModal } from '@/ui/modals/NuevoPedidoModal';
 import { VerPedidoModal } from '@/ui/modals/VerPedidoModal';
+import { CompletarRtmModal } from '@/ui/modals/CompletarRtmModal';
 
 interface PedidosViewProps {
   orders: OrderListItemDTO[];
@@ -21,6 +22,7 @@ export const PedidosView: React.FC<PedidosViewProps> = ({ orders, initialPlannin
   const [isPending, startTransition] = useTransition();
   const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [isRtmModalOpen, setIsRtmModalOpen] = useState(false);
   const [planning, setPlanning] = useState<PlanningMatrixDTO>(initialPlanning);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
@@ -104,14 +106,18 @@ export const PedidosView: React.FC<PedidosViewProps> = ({ orders, initialPlannin
                 Remito {pendingRtm.code} pendiente de procesar transporte (RTM_PENDING)
               </p>
               <p className="text-xs text-amber-800 mt-0.5">
-                Destinatario: <strong>{pendingRtm.customerDisplayName}</strong>. 
-                El sistema no permite generar nuevos remitos hasta completar el despacho en Fase 13 (RTM).
+                Destinatario: <strong>{pendingRtm.customerDisplayName}</strong>.
+                No se puede generar un nuevo remito hasta completar el RTM de esta venta.
               </p>
             </div>
           </div>
-          <span className="self-start sm:self-center px-2.5 py-1 bg-amber-200/90 text-amber-950 font-bold text-[11px] rounded-[2px] uppercase shrink-0">
-            RTM PENDIENTE
-          </span>
+          <button
+            type="button"
+            onClick={() => setIsRtmModalOpen(true)}
+            className="self-start sm:self-center px-4 py-2 bg-[#0E50A0] hover:bg-[#0c4386] text-white font-bold text-xs rounded-[2px] transition-colors cursor-pointer shrink-0"
+          >
+            COMPLETAR RTM
+          </button>
         </div>
       )}
 
@@ -390,6 +396,16 @@ export const PedidosView: React.FC<PedidosViewProps> = ({ orders, initialPlannin
           handleRefresh();
         }}
         onOrderDeleted={() => {
+          handleRefresh();
+        }}
+      />
+
+      <CompletarRtmModal
+        remittanceId={pendingRtm ? pendingRtm.id : null}
+        isOpen={isRtmModalOpen}
+        onClose={() => setIsRtmModalOpen(false)}
+        onCompleted={() => {
+          setIsRtmModalOpen(false);
           handleRefresh();
         }}
       />

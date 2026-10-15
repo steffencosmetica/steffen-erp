@@ -4,9 +4,11 @@ import {
   getCustomerService,
   getPatrimonyService,
   getSupplierItemRepository,
+  getRemittanceService,
 } from '@/services/composition';
 import { AdministracionView } from '@/ui/views/AdministracionView';
 import { type AdministracionDashboardDTO } from '@/actions/administracion.dto';
+import { serializeMonthlySale } from '@/actions/remittance.dto';
 import { Decimal, toNumericString } from '@/domain/decimal';
 
 export const dynamic = 'force-dynamic';
@@ -27,10 +29,16 @@ export default async function AdministracionPage() {
   const customerService = getCustomerService();
   const patrimonyService = getPatrimonyService();
   const supplierItemRepo = getSupplierItemRepository();
+  const remittanceService = getRemittanceService();
 
-  const [customerRecords, supplierDebts, summary, recentMovements, usdRate] =
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+
+  const [customerRecords, customerLastActivityMap, supplierDebts, summary, recentMovements, usdRate, monthlySales] =
     await Promise.all([
       customerService.listCustomers(true).catch(() => []),
+      patrimonyService.getCustomerLastActivityMap().catch(() => new Map()),
       patrimonyService.listSupplierDebtsWithActivity().catch(() => []),
       patrimonyService.getSummary().catch(() => ({
         cajaSteffen: new Decimal(0),
@@ -41,6 +49,7 @@ export default async function AdministracionPage() {
       })),
       patrimonyService.listRecentMovements(10).catch(() => []),
       supplierItemRepo.getCurrentUsdExchangeRate().catch(() => null),
+      remittanceService.listCompletedSalesForMonth(currentYear, currentMonth).catch(() => []),
     ]);
 
   // Total de la tabla Deudas Proveedores: suma únicamente los saldos > 0 mostrados
@@ -62,8 +71,8 @@ export default async function AdministracionPage() {
       id: c.id,
       name: c.name,
       balanceArs: toNumericString(c.balanceArs),
-      lastPaymentDate: null,
-      lastPurchaseDate: null,
+      lastPaymentDate: customerLastActivityMap.get(c.id)?.lastPaymentDate ?? null,
+      lastPurchaseDate: customerLastActivityMap.get(c.id)?.lastPurchaseDate ?? null,
     })),
     supplierRows: supplierDebts.map((s) => ({
       id: s.supplierId,
@@ -83,5 +92,12 @@ export default async function AdministracionPage() {
     })),
   };
 
-  return <AdministracionView data={dashboardDTO} />;
+  return (
+    <AdministracionView
+      data={dashboardDTO}
+      initialMonthlySales={monthlySales.map(serializeMonthlySale)}
+      initialYear={currentYear}
+      initialMonth={currentMonth}
+    />
+  );
 }

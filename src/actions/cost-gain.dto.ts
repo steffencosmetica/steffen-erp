@@ -114,43 +114,6 @@ export function serializeCostGainAnalysis(result: CostGainAnalysisResult): CostG
   };
 }
 
-/**
- * Formatea un valor monetario en ARS con 2 decimales sin usar JS float.
- * Utiliza Decimal.js con toFixed(2, ROUND_HALF_UP) y aplica separadores de miles y coma decimal (es-AR).
- */
-export function formatArsDecimals(val: string | null | undefined): string {
-  if (val === null || val === undefined || val.trim() === '') {
-    return '—';
-  }
-  try {
-    const d = new Decimal(val);
-    const isNegative = d.isNegative();
-    const absFixed = d.abs().toFixed(2);
-    const [intPart, decPart] = absFixed.split('.');
-    const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    return `${isNegative ? '-$ ' : '$ '}${formattedInt},${decPart}`;
-  } catch {
-    return val;
-  }
-}
-
-/**
- * Formatea un valor monetario entero en ARS (para precios de lista Salón que son enteros).
- */
-export function formatArsInteger(val: string | null | undefined): string {
-  if (val === null || val === undefined || val.trim() === '') {
-    return '—';
-  }
-  try {
-    const d = new Decimal(val);
-    const isNegative = d.isNegative();
-    const absFixed = d.abs().toFixed(0);
-    const formattedInt = absFixed.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    return `${isNegative ? '-$ ' : '$ '}${formattedInt}`;
-  } catch {
-    return val;
-  }
-}
 
 /**
  * Formatea el factor multiplicador sobre el costo (ej. "1.50" -> "1,50x").
