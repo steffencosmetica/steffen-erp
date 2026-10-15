@@ -40,6 +40,13 @@ Ante conflicto:
 6. `PDFS.md`
 7. `IMPLEMENTATION_PLAN.md`
 
+Autoridad por dominio:
+
+- `BUSINESS_RULES.md` / `FLOWS.md` → comportamiento;
+- `DESIGN.md` / `COMPONENTS.md` / nuevo Figma → apariencia;
+- `IMPLEMENTATION_PLAN.md` → secuencia de implementación;
+- `PDFS.md` → contrato documental/histórico.
+
 `PROJECT.md` define contexto y alcance.
 
 `AUDIT.md` documenta la revisión final.

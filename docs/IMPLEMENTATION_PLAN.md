@@ -695,9 +695,11 @@ todos los PED OPEN, sin filtro mensual.
 
 # 21. FASE 18 — Responsive
 
-Aplicar las reglas ya definidas.
+`DESIGN.md` contiene lineamientos responsive **preliminares** (§3.0–§3.24).
 
-No recortar funciones mobile.
+Esta fase hace la definición y adaptación responsive **definitiva** sobre el lenguaje visual vigente.
+
+No recortar funciones mobile: mobile no elimina funcionalidades.
 
 Validar al menos:
 

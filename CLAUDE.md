@@ -26,6 +26,12 @@ Jerarquía funcional:
 5. Figma / referencias visuales
 6. implementación existente
 
+Autoridad por dominio:
+- BUSINESS_RULES / FLOWS → comportamiento.
+- DESIGN / COMPONENTS / nuevo Figma → apariencia.
+- IMPLEMENTATION_PLAN → secuencia de implementación.
+- PDFS → contrato documental/histórico.
+
 No inventar reglas de negocio.
 
 ## Arquitectura
@@ -90,11 +96,15 @@ Secuencia:
 
 ## Diseño
 
-- Gold #D2AB68
-- Blue #0E50A0
-- Red #DD0000
-- Salmon #FFA8A8
-- Header tabla #D9D9D9
+Fuente de verdad visual: docs/DESIGN.md + docs/COMPONENTS.md + nuevo Figma (docs/visual-references/figma/).
+
+- UI general dark (fondo #000000) según DESIGN.md / COMPONENTS.md.
+- Gold (Primary) #C38926 — único dorado normativo. Obsoletos: #D2AB68, #B99D22.
+- Blue #0E50A0 (hover #6E96C6)
+- Green #008102 (hover #015C02)
+- Red #DD0000 (hover #B10000)
+- Headers de tabla: normalmente gris oscuro (ver DESIGN.md §12), no claros.
+- #D9D9D9 queda como Border / superficie clara; no es el color global de header de tabla.
 - botones rounded-[2px]
 - contenedores rounded-[5px]
 - sin shadows

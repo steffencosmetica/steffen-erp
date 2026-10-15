@@ -33,26 +33,35 @@ como controles visualmente diferentes si todos pueden usar el mismo componente `
 
 # 3. Tokens base
 
+Fuente única de verdad: `DESIGN.md` §4–§7. Interfaz predominantemente dark (`DESIGN.md` §4.2).
+
 ## Colores
 
-- Primary: `#B99D22`
-- Secondary: `#000000`
-- Surface: `#FBFBFB`
+- Primary (dorado): `#C38926` — único dorado normativo
+- Background: `#000000`
+- Surface (clara/invertida): `#FBFBFB`
 - Border: `#D9D9D9`
-- Tertiary: `#0E50A0`
-- Tertiary Hover: `#6E96C6`
-- Text: `#393939`
+- Gray (gris oscuro de superficie: encabezados de tabla, rellenos): `#393939` — no como texto auxiliar principal sobre negro si no cumple contraste (`DESIGN.md` §4.3)
+- Blue: `#0E50A0`
+- Blue Hover: `#6E96C6`
 - Green: `#008102`
 - Green Hover: `#015C02`
 - Red: `#DD0000`
 - Red Hover: `#B10000`
+
+Obsoletos: `#B99D22`, `#D2AB68`.
+
+Equivalencias de nombres anteriores: `Secondary` → `Background`; `Tertiary`/`Tertiary Hover` → `Blue`/`Blue Hover`; `Text` → `Gray` (ahora superficie gris oscura); texto principal sobre fondo oscuro → `Surface`.
+
+Decisiones provisionales (rojo oscuro de alerta `#B10000`, uso de `#393939`, atajos de granel y Listas de precios): `DESIGN.md` §4.3.
 
 ## Tipografía
 
 `Inter`
 
 - H1 — 32 px Bold
-- H2 — 22 px Bold
+- H2 — 28 px Semi-bold
+- H3 — 20 px Regular
 - B1 — 16 px Semi-bold
 - B2 — 16 px Regular
 - B3 — 14 px Semi-bold
@@ -64,13 +73,21 @@ como controles visualmente diferentes si todos pueden usar el mismo componente `
 - 12 px
 - 20 px
 
+## Superficies
+
+- sin sombras decorativas;
+- bordes finos;
+- radius discreto (vigente: botones `2 px`, contenedores `5 px`, salvo que el Figma defina otro valor).
+
 ---
 
 # 4. Button
 
 ## 4.1 Variantes
 
-### Principal
+El rediseño cambia la apariencia de cada variante, no su semántica: un botón existente conserva su acción y su variante de uso.
+
+### Primary (Principal)
 
 Uso:
 
@@ -79,7 +96,12 @@ Uso:
 - registrar;
 - actualizar.
 
-### Secundario
+Visual:
+
+- Default: fondo negro + borde/identidad dorada (`Primary`);
+- Hover / Selected: fondo dorado `#C38926`.
+
+### Secondary (Secundario)
 
 Uso:
 
@@ -87,19 +109,50 @@ Uso:
 - acción alternativa;
 - navegación secundaria.
 
-### Verde
+Visual:
+
+- Default: fondo negro + borde claro;
+- Hover: estado diferenciado pero sobrio.
+
+### Success (Verde)
 
 Uso:
 
 - acción positiva explícita cuando el diseño lo requiera.
 
-### Rojo
+Visual:
+
+- Default: `Green` `#008102`;
+- Hover: `Green Hover` `#015C02`.
+
+### Danger (Rojo)
 
 Uso:
 
 - acción destructiva;
 - borrar;
 - desactivar cuando implique confirmación.
+
+Visual:
+
+- Default: `Red` `#DD0000`;
+- Hover: `Red Hover` `#B10000`.
+
+Variantes específicas: Nav (§5), List item (§7) y Back (§8).
+
+### Add (circular)
+
+Uso: crear un elemento nuevo dentro de una colección visual (en el Figma: `+` junto a las cards de Pedidos abiertos y a los tiles de `GRANELES`).
+
+Visual: botón circular claro (`Surface`) con signo `+` oscuro.
+
+Dispara exactamente la misma operación que el botón equivalente del módulo (Nuevo Pedido, Registrar Fabricación); no crea flujos nuevos.
+
+### Icon-only
+
+Uso: acciones compactas (Acceso Rápido, Simular, documento/PDF, Nueva Cuenta).
+
+Visual: misma familia que Secondary con icono; la acción PDF usa icono de documento PDF rojo. Debe conservar touch target y un label accesible (tooltip/aria-label) porque no muestra texto.
 
 ---
 
@@ -124,8 +177,8 @@ Altura:
 Referencia:
 
 - horizontal: `20 px`
-- vertical compacto: `6 px`
-- vertical estándar: `10 px`
+- vertical chico: `6 px`
+- vertical grande: `10 px`
 
 La altura definida del botón tiene prioridad.
 
@@ -145,7 +198,7 @@ No usar Selected en una acción momentánea si no representa estado persistente.
 
 # 5. MenuButton
 
-Botón de navegación principal.
+Botón de navegación principal (variante Nav).
 
 Estados:
 
@@ -154,6 +207,22 @@ Estados:
 - Selected
 
 Selected indica el módulo activo.
+
+Visual:
+
+- navegación horizontal superior;
+- icono dorado (`Primary`); texto dorado cuando corresponda;
+- línea inferior (underline) dorada;
+- estado activo claramente visible;
+- variantes **icon-only** e **icon + texto** según contexto;
+- salida/logout visualmente separada de los módulos.
+
+Variantes de barra (`DESIGN.md` §9.0):
+
+- pantallas principales: activo icon + texto con línea larga; resto icon-only con línea corta; logo a la izquierda; logout al extremo derecho;
+- pantallas secundarias: todos icon + texto; activo con línea resaltada; `Volver` + título debajo.
+
+Conserva las rutas funcionales actuales (`DESIGN.md` §9). No se agregan ítems por aparecer en frames viejos (por ejemplo `FÓRMULAS` como ítem superior).
 
 No usar para acciones de formulario.
 
@@ -174,6 +243,8 @@ Estados:
 
 Solo una pestaña del mismo grupo puede estar Selected.
 
+Visual (según el frame Stock): botones con icono + texto en patrón List item: Default negro con borde claro; Selected invertido (`Surface`, contenido oscuro).
+
 ---
 
 # 7. ListSelectorButton
@@ -192,6 +263,15 @@ Estados:
 
 Puede acompañarse por `VER MÁS`.
 
+Visual (variante List item):
+
+- Default: fondo negro;
+- Selected: blanco/invertido (`Surface`, contenido oscuro).
+
+Puede incluir icono a la izquierda (persona en Clientes/Proveedores, producto en Fórmulas/Productos Finales).
+
+Forma card (según el frame Pedidos): los PED abiertos se muestran como cards seleccionables con borde dorado (icono, código, cliente/origen, fecha e importe final potencial), con el mismo comportamiento Default/Selected. Es un selector de entidad, no una Card KPI (§19).
+
 ---
 
 # 8. BackButton
@@ -203,6 +283,8 @@ Etiqueta:
 Uso exclusivo:
 
 volver a la pantalla anterior.
+
+Visual (variante Back): `Blue` `#0E50A0`; hover `Blue Hover` `#6E96C6`. El mismo tratamiento azul se usa para enlaces y navegación secundaria (por ejemplo `IR A …`, `Ver todos >`).
 
 No utilizar como Cancelar dentro de formularios.
 
@@ -228,11 +310,17 @@ Estados visuales mínimos:
 - Disabled
 - Error
 
-MVP:
+Visual (rediseño, input dark):
 
+- Default → fondo oscuro (`Background`), borde claro/gris, texto claro (`Surface`);
 - Focus → borde `Primary`;
-- Disabled → fondo `Surface`, borde `Border`, interacción bloqueada;
+- Disabled → interacción bloqueada, contraste reducido (manteniendo legibilidad);
 - Error → borde `Red` + mensaje B4 `Red`.
+
+Variante invertida/clara:
+
+- fondo `Surface` `#FBFBFB`;
+- texto oscuro.
 
 No crear una nueva identidad visual fuera de estos tokens.
 
@@ -363,6 +451,8 @@ Debe admitir contenido compuesto, por ejemplo:
 
 `CLIENTE | SALDO`
 
+Visual: misma familia que los inputs (§9): dark por defecto, borde `Red` en error, variante invertida/clara disponible.
+
 ---
 
 # 18. SearchInput
@@ -394,6 +484,14 @@ Estructura:
 2. valor principal;
 3. contexto secundario opcional.
 
+Variantes KPI (rediseño):
+
+- **Default:** fondo negro, borde dorado (`Primary`);
+- **Seleccionada / invertida:** fondo claro (`Surface`), contenido oscuro;
+- **Destacada positiva:** fondo `Green` sólido.
+
+Numerales grandes y labels compactos.
+
 No usar Card para reemplazar una tabla de gestión.
 
 ---
@@ -414,6 +512,26 @@ Debe soportar:
 
 El componente no decide la lógica de orden.
 
+Visual (rediseño):
+
+- compacta, densidad alta;
+- encabezado gris oscuro (`Gray`) con texto blanco (`Surface`);
+- filas sobre fondo oscuro con texto blanco;
+- separadores horizontales finos;
+- alineación numérica consistente;
+- sin zebra striping decorativo salvo que el diseño lo requiera;
+- valores críticos pueden ir en `Red`; valores positivos en `Green`.
+
+Variantes de encabezado (según el Figma):
+
+- **Default:** fondo `Gray`, texto `Surface`;
+- **Destacada:** fondo `Primary`, texto `Surface` (tabla de líneas del Pedido);
+- **Alerta:** fondo `Red`, texto `Surface` (tablas de la sección `BAJO STOCK`).
+
+Una fila `TOTAL` puede cerrar la tabla con el total alineado a su columna y un enlace de navegación secundaria (`IR A …`, `Blue`) en la misma franja.
+
+Se preservan ordenamientos, búsquedas, filtros e interacciones existentes.
+
 ---
 
 # 21. CriticalRow
@@ -428,6 +546,10 @@ Aplicaciones:
 - otras alertas confirmadas.
 
 La fila recibe el estado desde negocio.
+
+Visual: fondo rojo oscuro con texto `Surface`, o valor crítico en `Red` según la pantalla. El rojo oscuro del Figma no está en la paleta: se incorpora como token en `DESIGN.md` §4.1 con su valor exacto; hasta entonces, `Red Hover` `#B10000`.
+
+En el Figma se usa en: filas `URG PARA PEDIDOS`, filas de stock bajo el mínimo y fila `SALDO ACTUALIZADO` con deuda.
 
 No calcula internamente `stock_actual / stock_minimum`.
 
@@ -507,7 +629,9 @@ Footer:
 - Cancelar;
 - Confirmar.
 
-El comportamiento responsive se define en `DESIGN.md` y en la sección Responsive de este documento.
+Visual (rediseño): contenedor dark (`Background`), borde fino, sin sombras, título H2/H3, inputs dark.
+
+El comportamiento responsive final se resuelve en Fase 18 (`DESIGN.md` §3.0); §56–§58 de este documento son pautas preliminares.
 
 ---
 
@@ -889,6 +1013,8 @@ Ventas:
 - año;
 - mes.
 
+Selector de período (según el frame Ventas): año + doce meses como fila de botones; el mes seleccionado con fondo `Blue`.
+
 Stock:
 - proveedor;
 - búsqueda.
@@ -953,7 +1079,7 @@ Relación visual:
 Estado vacío MVP:
 
 - texto B2/B4 según densidad;
-- color `Text`;
+- color de texto con contraste suficiente sobre fondo oscuro (no `#393939` sobre negro; ver `DESIGN.md` §4.3);
 - sin ilustraciones;
 - sin nuevos colores;
 - mensaje específico al contexto;
@@ -1048,10 +1174,9 @@ El MVP ya define comportamiento suficiente para implementar:
 - Error;
 - Loading;
 - Empty State;
-- responsive;
-- navegación mobile;
-- tablas mobile;
 - PDFs.
+
+Responsive, navegación mobile y tablas mobile se resuelven en Fase 18; §56–§58 son pautas preliminares.
 
 Quedan como refinamiento visual posterior:
 
@@ -1066,6 +1191,8 @@ Estos refinamientos no deben modificar reglas funcionales ni bloquear el MVP.
 ---
 
 # 56. Responsive behavior
+
+> Pautas preliminares, insumo para Fase 18. No son normativas hasta que esa fase las revise contra el nuevo lenguaje visual (`DESIGN.md` §3.0). Desktop es la referencia primaria; los componentes deben construirse sin dimensiones rígidas innecesarias para permitir esta adaptación.
 
 ## Button
 
@@ -1164,7 +1291,7 @@ Mobile:
 
 # 57. MobileFullScreenForm
 
-Variante de contenedor para operaciones complejas en mobile.
+Variante de contenedor para operaciones complejas en mobile (pauta preliminar, Fase 18).
 
 Estructura:
 
@@ -1190,7 +1317,7 @@ Uso:
 
 # 58. PriorityReorderSheet
 
-Alternativa mobile al drag dentro de PlanningMatrix.
+Alternativa mobile al drag dentro de PlanningMatrix (pauta preliminar, Fase 18).
 
 Contenido:
 
@@ -1239,20 +1366,21 @@ Contenido:
 1. valor;
 2. label.
 
-Variantes del MVP:
+Variantes (rediseño; ver Card §19):
 
-### NeutralPrimaryBorder
+### Default (antes NeutralPrimaryBorder)
 
 Uso:
 
 - Ventas del mes;
-- Total facturado.
+- Total facturado;
+- Pedidos abiertos.
 
 Visual:
 
-- fondo `Surface`;
+- fondo negro (`Background`);
 - borde `Primary`;
-- texto `Secondary/Text`.
+- texto `Surface`.
 
 ### Positive
 
@@ -1262,19 +1390,12 @@ Uso:
 
 Visual:
 
-- fondo `Green`;
+- fondo `Green` sólido;
 - texto de alto contraste.
 
-### Dark
+La variante `Dark` anterior (Pedidos abiertos) se integra en Default, como en el bloque `REPORTE MENSUAL` del Dashboard del Figma; puede incluir icono junto al numeral.
 
-Uso:
-
-- Pedidos abiertos.
-
-Visual:
-
-- fondo `Secondary`;
-- texto de alto contraste.
+El Figma rotula la card verde como `MARGEN NETO`: se mantiene el label normativo `GANANCIA`.
 
 Labels exactos:
 
@@ -1284,3 +1405,44 @@ Labels exactos:
 - `PEDIDOS ABIERTOS`
 
 No utilizar `MARGEN NETO`.
+
+---
+
+# 61. SectionHeader
+
+Encabezado de sección del rediseño.
+
+Estructura:
+
+`TÍTULO DE SECCIÓN ———————— línea horizontal`
+
+- título en mayúsculas (H2/H3 según jerarquía);
+- línea horizontal fina que ocupa el ancho restante;
+- acciones de la sección (por ejemplo `Ver todos >`) al extremo, sin competir con el título.
+
+Ejemplos: `GRANELES`, `PRÓXIMA FABRICACIÓN`, `COSTO-GANANCIA`, `MOVIMIENTOS DE FÁBRICA`, `CUENTAS`.
+
+Variantes (según el Figma):
+
+- con control a la derecha: `Buscar`, selector o acción (`REGISTRAR PAGO`) alineados al extremo de la línea;
+- **alerta:** título y línea en `Red` (sección `BAJO STOCK`).
+
+Solo presenta: el contenido y el orden de cada sección siguen definidos por `DESIGN.md` y `BUSINESS_RULES.md`.
+
+---
+
+# 62. Panel (contenedor)
+
+Contenedor plano para agrupar secciones.
+
+Visual:
+
+- fondo `Background` (negro/gris muy oscuro);
+- borde fino gris;
+- radius discreto;
+- sin sombras;
+- padding interno según la escala de gaps (`6 / 12 / 20 px`).
+
+Preferir pocos Panels grandes antes que muchas cards fragmentadas.
+
+Variante **alerta:** borde `Red` (sección `BAJO STOCK`).

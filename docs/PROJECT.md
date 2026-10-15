@@ -105,6 +105,13 @@ La documentación del proyecto se divide en:
 
 La lógica de negocio tiene prioridad sobre el diseño visual.
 
+Autoridad por dominio:
+
+- `BUSINESS_RULES.md` / `FLOWS.md` → comportamiento;
+- `DESIGN.md` / `COMPONENTS.md` / nuevo Figma → apariencia;
+- `IMPLEMENTATION_PLAN.md` → secuencia de implementación;
+- `PDFS.md` → contrato documental/histórico.
+
 ---
 
 ## 4. Módulos principales
