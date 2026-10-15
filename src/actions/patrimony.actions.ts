@@ -364,6 +364,7 @@ export async function getCustomerMovementsAction(customerId: string): Promise<{
         isPayment: m.isPayment,
         paymentId: m.paymentId,
         remittanceId: m.remittanceId,
+        rtoDocumentStatus: m.rtoDocumentStatus,
       })),
     };
   } catch (error: any) {

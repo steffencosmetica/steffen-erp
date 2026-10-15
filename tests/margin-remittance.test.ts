@@ -16,6 +16,7 @@ import { PatrimonyDomainService } from '../src/services/patrimony.service';
 import { CostEngineService } from '../src/services/cost-engine.service';
 import { Decimal } from '../src/domain/decimal';
 import type { Database } from '../src/database/types';
+import { snapshotSharedAccounts, restoreSharedAccounts, type SharedAccountsSnapshot } from './helpers/shared-accounts-guard';
 
 const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -68,7 +69,11 @@ test('FASE 13 — RTM / REMITO DE MARGEN: Suite de pruebas obligatorias', async 
   let pro2Id: string; // weight 1.0kg, sin componentes
   let customerId: string;
 
+  let sharedSnapshot: SharedAccountsSnapshot | undefined;
+
   t.before(async () => {
+    sharedSnapshot = await snapshotSharedAccounts(supabase);
+
     // 0. Precondición de seguridad: esta suite NUNCA debe completar un remito que no creó
     // ella misma (real o de otra corrida). Si el gate ya está ocupado, abortar en vez de
     // barrerlo a ciegas (incidente: esto llegó a completar RTO0182, un remito real de
@@ -277,6 +282,46 @@ test('FASE 13 — RTM / REMITO DE MARGEN: Suite de pruebas obligatorias', async 
       }
       await supabase.from('financial_accounts').delete().eq('customer_id', cId);
       await supabase.from('customers').delete().eq('id', cId);
+    }
+
+    // 8. Verificación: 0 artefactos propios.
+    const ownOperationIds = [...createdRtoOperationIds, ...createdRtmOperationIds];
+    const countRows = async (
+      query: PromiseLike<{ count: number | null; error: { message: string } | null }>
+    ): Promise<number> => {
+      const { count, error } = await query;
+      assert.ifError(error);
+      return count ?? 0;
+    };
+    const head = { count: 'exact', head: true } as const;
+    assert.deepStrictEqual(
+      {
+        margin_remittances: await countRows(supabase.from('margin_remittances').select('id', head).in('id', createdMarginRemittanceIds)),
+        remittances: await countRows(supabase.from('remittances').select('id', head).in('id', createdRemittanceIds)),
+        orders: await countRows(supabase.from('orders').select('id', head).in('id', createdOrderIds)),
+        payments: await countRows(supabase.from('payments').select('id', head).in('customer_id', createdCustomerIds)),
+        patrimonial_movements: await countRows(supabase.from('patrimonial_movements').select('id', head).in('operation_id', ownOperationIds)),
+        business_operations: await countRows(supabase.from('business_operations').select('id', head).in('id', ownOperationIds)),
+        customers: await countRows(supabase.from('customers').select('id', head).in('id', createdCustomerIds)),
+        suppliers: await countRows(supabase.from('suppliers').select('id', head).in('id', createdSupplierIds)),
+        stock_items: await countRows(supabase.from('stock_items').select('id', head).in('id', [...createdProductIds, ...createdMasterStockItemIds])),
+      },
+      {
+        margin_remittances: 0,
+        remittances: 0,
+        orders: 0,
+        payments: 0,
+        patrimonial_movements: 0,
+        business_operations: 0,
+        customers: 0,
+        suppliers: 0,
+        stock_items: 0,
+      },
+      'tests/margin-remittance.test.ts no debe dejar fixtures propios en la base'
+    );
+
+    if (sharedSnapshot) {
+      await restoreSharedAccounts(supabase, sharedSnapshot, 'tests/margin-remittance.test.ts');
     }
   });
 
@@ -891,7 +936,7 @@ test('FASE 13 — RTM / REMITO DE MARGEN: Suite de pruebas obligatorias', async 
     assert.match(itemEditErr!.message, /inmutable/i);
   });
 
-  await t.test('36. No se genera PDF todavía en Fase 13', async () => {
+  await t.test('36. Fase 14: completar el RTM (transacción atómica) no genera PDF; el PDF se genera después del commit en la acción', async () => {
     const rtoRes = await createAndConfirmRto([{ productId: pro1Id, qty: 1 }]);
     const result = await remittanceService.completeRtm(rtoRes.remittanceId, 0);
     createdMarginRemittanceIds.push(result.marginRemittanceId);
@@ -901,13 +946,15 @@ test('FASE 13 — RTM / REMITO DE MARGEN: Suite de pruebas obligatorias', async 
       .from('generated_documents')
       .select('id')
       .eq('source_id', result.marginRemittanceId);
-    assert.strictEqual(docs?.length ?? 0, 0, 'No debe generarse ningún generated_documents para el RTM en Fase 13');
+    assert.strictEqual(docs?.length ?? 0, 0, 'La transacción comercial del RTM nunca debe crear generated_documents');
 
     const actionsSource = (await import('node:fs')).readFileSync(
       (await import('node:path')).resolve(process.cwd(), 'src/actions/margin-remittance.actions.ts'),
       'utf-8'
     );
-    assert.doesNotMatch(actionsSource, /pdf/i, 'No debe existir ninguna acción de generación de PDF para el RTM todavía');
+    const completeIdx = actionsSource.indexOf('completeRtm(');
+    const pdfIdx = actionsSource.indexOf('ensureRtmDocument(');
+    assert.ok(completeIdx > -1 && pdfIdx > completeIdx, 'El PDF del RTM debe generarse en la acción, después del commit comercial');
   });
 
   // =========================================================================
@@ -1238,7 +1285,7 @@ test('FASE 13 — RTM / REMITO DE MARGEN: Suite de pruebas obligatorias', async 
     await releaseRtmPendingGate(rtoRes.remittanceId);
   });
 
-  await t.test('62. Cuenta Cliente: la acción de documento del RTO queda deshabilitada hasta que exista PDF (reservado a Fase 14)', async () => {
+  await t.test('62. Cuenta Cliente: la acción de documento del RTO usa el PDF generado y queda deshabilitada mientras no exista (Fase 14)', async () => {
     const fs = await import('node:fs');
     const path = await import('node:path');
     const source = fs.readFileSync(
@@ -1248,12 +1295,18 @@ test('FASE 13 — RTM / REMITO DE MARGEN: Suite de pruebas obligatorias', async 
     const idx = source.indexOf('!m.isPayment && m.remittanceId');
     assert.ok(idx > -1, 'Debe existir la rama de acción de documento para filas de VENTA/RTO');
     const snippet = source.slice(idx, idx + 400);
-    assert.match(snippet, /disabled/, 'La acción de documento del RTO debe estar deshabilitada en Fase 13');
-    assert.match(
-      snippet,
-      /PDF RTO disponible en Fase 14/,
-      'Debe indicar claramente que el PDF del RTO llega en Fase 14'
+    assert.match(snippet, /<DocumentPdfButton/, 'La fila de VENTA/RTO debe usar DocumentPdfButton');
+    assert.match(snippet, /sourceType="RTO"/);
+    assert.match(snippet, /sourceId=\{m\.remittanceId\}/);
+    assert.match(snippet, /knownStatus=\{m\.rtoDocumentStatus \|\| 'MISSING'\}/, 'Sin estado conocido debe asumirse MISSING');
+
+    const buttonSource = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/ui/components/DocumentPdfButton.tsx'),
+      'utf-8'
     );
+    const missingIdx = buttonSource.indexOf("knownStatus === 'MISSING'");
+    assert.ok(missingIdx > -1, 'DocumentPdfButton debe contemplar el estado MISSING');
+    assert.match(buttonSource.slice(missingIdx, missingIdx + 300), /disabled/, 'Sin PDF la acción debe quedar deshabilitada');
   });
 
   await t.test('63-68. Resumen: Último Pago y Última Compra usan la fecha funcional (MAX business_date) más reciente, nunca created_at ni la fecha del RTM', async () => {

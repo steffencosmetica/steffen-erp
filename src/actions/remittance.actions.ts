@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getRemittanceService } from '@/services/composition';
+import { getRemittanceService, getDocumentService } from '@/services/composition';
 import {
   ConfirmedRemittanceDTO,
   RemittanceDetailDTO,
@@ -14,6 +14,7 @@ import {
   serializeRtoPreview,
   serializeMonthlySale,
 } from './remittance.dto';
+import type { DocumentGenerationOutcome } from '@/services/document.service';
 
 export interface ActionResponse<T> {
   success: boolean;
@@ -37,9 +38,20 @@ export async function confirmOrderToRemittanceAction(
     revalidatePath('/movimientos');
     revalidatePath('/');
 
+    // Generación del PDF del RTO: SIEMPRE después del commit comercial, nunca
+    // dentro de la transacción atómica. Un fallo de PDF nunca revierte la venta
+    // ya confirmada (businessSuccess=true se mantiene aunque el documento falle).
+    let documentOutcome: DocumentGenerationOutcome;
+    try {
+      documentOutcome = await getDocumentService().ensureRtoDocument(result.remittanceId);
+    } catch (docErr: unknown) {
+      const errorMessage = docErr instanceof Error && docErr.message ? docErr.message : 'Error generando el PDF del RTO.';
+      documentOutcome = { documentId: '', status: 'FAILED', errorMessage };
+    }
+
     return {
       success: true,
-      data: serializeConfirmedRemittance(result),
+      data: serializeConfirmedRemittance(result, documentOutcome),
     };
   } catch (err: any) {
     return {

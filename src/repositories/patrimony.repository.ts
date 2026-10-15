@@ -105,6 +105,7 @@ export interface AccountMovementRecord {
   paymentId?: string;
   purchaseId?: string;
   remittanceId?: string;
+  rtoDocumentStatus?: string;
   paymentMode?: string;
   currencyCodeSnapshot?: string;
   totalNetSourceCurrency?: string;
@@ -657,6 +658,29 @@ export class PatrimonyRepository extends BaseSupabaseRepository implements IPatr
       throw new DomainError(`Error listando ventas (RTO) de cliente: ${remittancesError.message}`);
     }
 
+    // Estado del PDF del RTO (generated_documents), por remito, para activar el
+    // ícono de documento en Cuenta Cliente (Fase 14). Nunca renderiza: solo lectura.
+    const remittanceIds = (remittancesData || []).map((r) => r.id);
+    const rtoDocStatusMap = new Map<string, string>();
+    if (remittanceIds.length > 0) {
+      const { data: docsData, error: docsError } = await this.client
+        .from('generated_documents')
+        .select('source_id, generation_status, created_at')
+        .eq('source_type', 'RTO')
+        .in('source_id', remittanceIds)
+        .order('created_at', { ascending: false });
+
+      if (docsError) {
+        throw new DomainError(`Error listando estados de PDF RTO de cliente: ${docsError.message}`);
+      }
+
+      for (const d of docsData || []) {
+        if (!rtoDocStatusMap.has(d.source_id)) {
+          rtoDocStatusMap.set(d.source_id, d.generation_status);
+        }
+      }
+    }
+
     const movements: AccountMovementRecord[] = [];
 
     for (const p of paymentsData || []) {
@@ -682,6 +706,7 @@ export class PatrimonyRepository extends BaseSupabaseRepository implements IPatr
         amountArs: new Decimal(r.total_order_ars),
         isPayment: false,
         remittanceId: r.id,
+        rtoDocumentStatus: rtoDocStatusMap.get(r.id) || 'MISSING',
       });
     }
 

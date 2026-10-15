@@ -14,8 +14,15 @@ import {
 import { IOrderRepository, OrderRepository } from '@/repositories/order.repository';
 import { IStockRepository, StockRepository } from '@/repositories/stock.repository';
 import { ICostEngineService, CostEngineService } from '@/services/cost-engine.service';
+import { IDocumentRepository, DocumentRepository } from '@/repositories/document.repository';
 import { DomainError } from '@/domain/errors';
 import { Decimal, toKgPrecision, toWholePesos } from '@/domain/decimal';
+import type { GenerationStatus } from '@/database/domain-types';
+
+export interface MonthlySaleWithDocumentsRecord extends MonthlySaleRecord {
+  rtoDocumentStatus: GenerationStatus | 'MISSING';
+  rtmDocumentStatus: GenerationStatus | 'MISSING';
+}
 
 export interface RtoPreviewLine {
   productId: string;
@@ -97,7 +104,7 @@ export interface IRemittanceDomainService {
   previewRtm(remittanceId: string, transportCostArs?: Decimal.Value): Promise<RtmPreviewResult>;
   completeRtm(remittanceId: string, transportCostArs: Decimal.Value): Promise<CompletedRtmResult>;
   getMarginRemittanceByRemittanceId(remittanceId: string): Promise<MarginRemittanceRecord | null>;
-  listCompletedSalesForMonth(year: number, month: number): Promise<MonthlySaleRecord[]>;
+  listCompletedSalesForMonth(year: number, month: number): Promise<MonthlySaleWithDocumentsRecord[]>;
 }
 
 export class RemittanceDomainService implements IRemittanceDomainService {
@@ -106,7 +113,8 @@ export class RemittanceDomainService implements IRemittanceDomainService {
     private readonly orderRepo: IOrderRepository = new OrderRepository(),
     private readonly stockRepo: IStockRepository = new StockRepository(),
     private readonly marginRemittanceRepo: IMarginRemittanceRepository = new MarginRemittanceRepository(),
-    private readonly costEngineService: ICostEngineService = new CostEngineService()
+    private readonly costEngineService: ICostEngineService = new CostEngineService(),
+    private readonly documentRepo: IDocumentRepository = new DocumentRepository()
   ) {}
 
   async confirmOrderToRemittance(orderId: string, businessDate?: string): Promise<ConfirmedRemittanceResult> {
@@ -358,10 +366,22 @@ export class RemittanceDomainService implements IRemittanceDomainService {
     return this.marginRemittanceRepo.getMarginRemittanceByRemittanceId(remittanceId);
   }
 
-  async listCompletedSalesForMonth(year: number, month: number): Promise<MonthlySaleRecord[]> {
+  async listCompletedSalesForMonth(year: number, month: number): Promise<MonthlySaleWithDocumentsRecord[]> {
     if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
       throw new DomainError('Año y mes inválidos para consultar ventas del mes.');
     }
-    return this.remittanceRepo.listCompletedSalesForMonth(year, month);
+    const sales = await this.remittanceRepo.listCompletedSalesForMonth(year, month);
+    if (sales.length === 0) return [];
+
+    const [rtoStatuses, rtmStatuses] = await Promise.all([
+      this.documentRepo.listStatusesBySourceIds('RTO', sales.map((s) => s.remittanceId)),
+      this.documentRepo.listStatusesBySourceIds('RTM', sales.map((s) => s.marginRemittanceId)),
+    ]);
+
+    return sales.map((s) => ({
+      ...s,
+      rtoDocumentStatus: rtoStatuses.get(s.remittanceId) || 'MISSING',
+      rtmDocumentStatus: rtmStatuses.get(s.marginRemittanceId) || 'MISSING',
+    }));
   }
 }

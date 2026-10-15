@@ -8,6 +8,7 @@ import {
   ArrowRight,
   ShieldCheck,
 } from 'lucide-react';
+import { DocumentPdfButton } from '@/ui/components/DocumentPdfButton';
 import {
   type AdministracionDashboardDTO,
 } from '@/actions/administracion.dto';
@@ -153,24 +154,10 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({
                         </td>
                         <td className="py-2.5 px-3 text-center text-gray-700">{s.rtoCode}</td>
                         <td className="py-2.5 px-3 text-center">
-                          <button
-                            type="button"
-                            disabled
-                            title="PDF del RTO disponible en Fase 14"
-                            className="p-1 rounded text-gray-300 cursor-not-allowed inline-flex"
-                          >
-                            <FileText className="w-3.5 h-3.5" />
-                          </button>
+                          <DocumentPdfButton sourceType="RTO" sourceId={s.remittanceId} knownStatus={s.rtoDocumentStatus} />
                         </td>
                         <td className="py-2.5 px-3 text-center">
-                          <button
-                            type="button"
-                            disabled
-                            title="PDF del RTM disponible en Fase 14"
-                            className="p-1 rounded text-gray-300 cursor-not-allowed inline-flex"
-                          >
-                            <FileText className="w-3.5 h-3.5" />
-                          </button>
+                          <DocumentPdfButton sourceType="RTM" sourceId={s.marginRemittanceId} knownStatus={s.rtmDocumentStatus} />
                         </td>
                       </tr>
                     ))

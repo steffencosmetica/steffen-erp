@@ -13,6 +13,7 @@ import { ProductRepository } from '../src/repositories/product.repository';
 import { MasterItemDomainService } from '../src/services/master-item.service';
 import { Decimal } from '../src/domain/decimal';
 import type { Database } from '../src/database/types';
+import { snapshotSharedAccounts, restoreSharedAccounts, type SharedAccountsSnapshot } from './helpers/shared-accounts-guard';
 
 const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -53,7 +54,11 @@ test('FASE 8 — COMPRAS: Pruebas integrales de flujo real, ledger MST, patrimon
   const createdSuppliers: string[] = [];
   const createdStockItems: string[] = [];
 
+  let sharedSnapshot: SharedAccountsSnapshot | undefined;
+
   t.before(async () => {
+    sharedSnapshot = await snapshotSharedAccounts(supabase);
+
     // 1. Proveedor ARS activo
     const { data: supArs, error: supArsErr } = await supabase
       .from('suppliers')
@@ -238,6 +243,32 @@ test('FASE 8 — COMPRAS: Pruebas integrales de flujo real, ledger MST, patrimon
       await supabase.from('supplier_items').delete().eq('supplier_id', supId);
       await supabase.from('financial_accounts').delete().eq('supplier_id', supId);
       await supabase.from('suppliers').delete().eq('id', supId);
+    }
+
+    // Verificación: 0 artefactos propios.
+    const countRows = async (
+      query: PromiseLike<{ count: number | null; error: { message: string } | null }>
+    ): Promise<number> => {
+      const { count, error } = await query;
+      assert.ifError(error);
+      return count ?? 0;
+    };
+    const head = { count: 'exact', head: true } as const;
+    assert.deepStrictEqual(
+      {
+        purchases: await countRows(supabase.from('purchases').select('id', head).in('supplier_id', createdSuppliers)),
+        patrimonial_movements: await countRows(supabase.from('patrimonial_movements').select('id', head).in('operation_id', createdOps)),
+        business_operations: await countRows(supabase.from('business_operations').select('id', head).in('id', createdOps)),
+        financial_accounts: await countRows(supabase.from('financial_accounts').select('id', head).in('supplier_id', createdSuppliers)),
+        suppliers: await countRows(supabase.from('suppliers').select('id', head).in('id', createdSuppliers)),
+        stock_items: await countRows(supabase.from('stock_items').select('id', head).in('id', createdStockItems)),
+      },
+      { purchases: 0, patrimonial_movements: 0, business_operations: 0, financial_accounts: 0, suppliers: 0, stock_items: 0 },
+      'tests/purchases.test.ts no debe dejar fixtures propios en la base'
+    );
+
+    if (sharedSnapshot) {
+      await restoreSharedAccounts(supabase, sharedSnapshot, 'tests/purchases.test.ts');
     }
   });
 

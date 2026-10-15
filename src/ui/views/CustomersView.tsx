@@ -10,7 +10,6 @@ import {
   ChevronLeft,
   ChevronDown,
   Edit3,
-  FileText,
   Power,
   RefreshCw,
   Search,
@@ -23,6 +22,7 @@ import { getCustomerMovementsAction } from '@/actions/patrimony.actions';
 import type { AccountMovementDTO } from '@/actions/patrimony.dto';
 import { formatArs } from '@/lib/format';
 import { resolveInitialSelectedId } from '@/lib/selection';
+import { DocumentPdfButton } from '@/ui/components/DocumentPdfButton';
 
 interface CustomersViewProps {
   initialCustomers: CustomerDTO[];
@@ -434,14 +434,11 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
                                 <Edit3 className="w-3.5 h-3.5" />
                               </button>
                             ) : !m.isPayment && m.remittanceId ? (
-                              <button
-                                type="button"
-                                disabled
-                                title="PDF RTO disponible en Fase 14"
-                                className="p-1 rounded text-gray-300 cursor-not-allowed inline-flex"
-                              >
-                                <FileText className="w-3.5 h-3.5" />
-                              </button>
+                              <DocumentPdfButton
+                                sourceType="RTO"
+                                sourceId={m.remittanceId}
+                                knownStatus={m.rtoDocumentStatus || 'MISSING'}
+                              />
                             ) : null}
                           </td>
                         </tr>

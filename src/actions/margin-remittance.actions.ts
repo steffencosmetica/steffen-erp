@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getRemittanceService } from '@/services/composition';
+import { getRemittanceService, getDocumentService } from '@/services/composition';
 import {
   CompletedRtmDTO,
   MarginRemittanceDetailDTO,
@@ -10,6 +10,7 @@ import {
   serializeMarginRemittance,
   serializeRtmPreview,
 } from './margin-remittance.dto';
+import type { DocumentGenerationOutcome } from '@/services/document.service';
 
 export interface ActionResponse<T> {
   success: boolean;
@@ -52,9 +53,20 @@ export async function completeRtmAction(
     revalidatePath('/costo-ganancia');
     revalidatePath('/');
 
+    // Generación del PDF del RTM: SIEMPRE después del commit comercial, nunca
+    // dentro de la transacción atómica. Un fallo de PDF nunca revierte el RTM
+    // ya confirmado (businessSuccess=true se mantiene aunque el documento falle).
+    let documentOutcome: DocumentGenerationOutcome;
+    try {
+      documentOutcome = await getDocumentService().ensureRtmDocument(result.remittanceId);
+    } catch (docErr: unknown) {
+      const errorMessage = docErr instanceof Error && docErr.message ? docErr.message : 'Error generando el PDF del RTM.';
+      documentOutcome = { documentId: '', status: 'FAILED', errorMessage };
+    }
+
     return {
       success: true,
-      data: serializeCompletedRtm(result),
+      data: serializeCompletedRtm(result, documentOutcome),
     };
   } catch (err: any) {
     return {

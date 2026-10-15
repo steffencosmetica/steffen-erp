@@ -70,6 +70,7 @@ export interface AccountMovementDTO {
   paymentId?: string;
   purchaseId?: string;
   remittanceId?: string;
+  rtoDocumentStatus?: string;
   paymentMode?: string;
   currencyCodeSnapshot?: string;
   totalNetSourceCurrency?: string;

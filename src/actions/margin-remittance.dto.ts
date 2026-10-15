@@ -4,6 +4,18 @@ import type {
   CompletedRtmResult,
 } from '@/repositories/margin-remittance.repository';
 import type { RtmPreviewResult, RtmPreviewLine } from '@/services/remittance.service';
+import type { DocumentGenerationOutcome } from '@/services/document.service';
+
+export interface DocumentOutcomeDTO {
+  status: string;
+  documentId?: string;
+  errorMessage?: string | null;
+}
+
+function serializeDocumentOutcome(outcome?: DocumentGenerationOutcome): DocumentOutcomeDTO | undefined {
+  if (!outcome) return undefined;
+  return { status: outcome.status, documentId: outcome.documentId, errorMessage: outcome.errorMessage };
+}
 
 export interface MarginRemittanceItemDTO {
   id: string;
@@ -38,6 +50,7 @@ export interface CompletedRtmDTO {
   movCode: string | null;
   businessDate: string;
   rtoStatus: 'COMPLETED';
+  document?: DocumentOutcomeDTO;
 }
 
 export interface RtmPreviewLineDTO {
@@ -93,7 +106,10 @@ export function serializeMarginRemittance(record: MarginRemittanceRecord): Margi
   };
 }
 
-export function serializeCompletedRtm(result: CompletedRtmResult): CompletedRtmDTO {
+export function serializeCompletedRtm(
+  result: CompletedRtmResult,
+  documentOutcome?: DocumentGenerationOutcome
+): CompletedRtmDTO {
   return {
     marginRemittanceId: result.marginRemittanceId,
     code: result.code,
@@ -106,6 +122,7 @@ export function serializeCompletedRtm(result: CompletedRtmResult): CompletedRtmD
     movCode: result.movCode,
     businessDate: result.businessDate,
     rtoStatus: result.rtoStatus,
+    document: serializeDocumentOutcome(documentOutcome),
   };
 }
 

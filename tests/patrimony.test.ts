@@ -8,6 +8,7 @@ import { SupplierRepository } from '../src/repositories/supplier.repository';
 import { Decimal } from '../src/domain/decimal';
 import { serializeSupplier } from '../src/actions/supplier.dto';
 import type { Database } from '../src/database/types';
+import { snapshotSharedAccounts, restoreSharedAccounts, type SharedAccountsSnapshot } from './helpers/shared-accounts-guard';
 
 const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -30,7 +31,11 @@ test('FASE 9 — CUENTAS Y MOVIMIENTOS PATRIMONIALES (Suite Integral)', async (t
   const createdSupplierIds: string[] = [];
   const createdOperations: string[] = [];
 
+  let sharedSnapshot: SharedAccountsSnapshot | undefined;
+
   t.before(async () => {
+    sharedSnapshot = await snapshotSharedAccounts(supabase);
+
     // Asegurar que existan cuentas canónicas en financial_accounts
     const { data: steffenAcc } = await supabase
       .from('financial_accounts')
@@ -100,11 +105,14 @@ test('FASE 9 — CUENTAS Y MOVIMIENTOS PATRIMONIALES (Suite Integral)', async (t
   });
 
   t.after(async () => {
-    // Cleanup de registros creados en test
+    // Cleanup de registros creados en test, solo por UUIDs propios y en orden de
+    // FKs: documentos de la operación (RESTRICT) -> MOV (financial_entries en
+    // cascada) -> business_operations. `financial_entries` no tiene operation_id.
     if (createdOperations.length > 0) {
-      await supabase.from('financial_entries').delete().in('operation_id', createdOperations);
-      await supabase.from('patrimonial_movements').delete().in('operation_id', createdOperations);
       await supabase.from('payments').delete().in('operation_id', createdOperations);
+      await supabase.from('withdrawals').delete().in('operation_id', createdOperations);
+      await supabase.from('operating_expenses').delete().in('operation_id', createdOperations);
+      await supabase.from('patrimonial_movements').delete().in('operation_id', createdOperations);
       await supabase.from('business_operations').delete().in('id', createdOperations);
     }
     for (const cid of createdCustomerIds) {
@@ -114,6 +122,33 @@ test('FASE 9 — CUENTAS Y MOVIMIENTOS PATRIMONIALES (Suite Integral)', async (t
     for (const sid of createdSupplierIds) {
       await supabase.from('financial_accounts').delete().eq('supplier_id', sid);
       await supabase.from('suppliers').delete().eq('id', sid);
+    }
+
+    // Verificación: 0 artefactos propios.
+    const countRows = async (
+      query: PromiseLike<{ count: number | null; error: { message: string } | null }>
+    ): Promise<number> => {
+      const { count, error } = await query;
+      assert.ifError(error);
+      return count ?? 0;
+    };
+    const head = { count: 'exact', head: true } as const;
+    assert.deepStrictEqual(
+      {
+        payments: await countRows(supabase.from('payments').select('id', head).in('operation_id', createdOperations)),
+        withdrawals: await countRows(supabase.from('withdrawals').select('id', head).in('operation_id', createdOperations)),
+        operating_expenses: await countRows(supabase.from('operating_expenses').select('id', head).in('operation_id', createdOperations)),
+        patrimonial_movements: await countRows(supabase.from('patrimonial_movements').select('id', head).in('operation_id', createdOperations)),
+        business_operations: await countRows(supabase.from('business_operations').select('id', head).in('id', createdOperations)),
+        customers: await countRows(supabase.from('customers').select('id', head).in('id', createdCustomerIds)),
+        suppliers: await countRows(supabase.from('suppliers').select('id', head).in('id', createdSupplierIds)),
+      },
+      { payments: 0, withdrawals: 0, operating_expenses: 0, patrimonial_movements: 0, business_operations: 0, customers: 0, suppliers: 0 },
+      'tests/patrimony.test.ts no debe dejar fixtures propios en la base'
+    );
+
+    if (sharedSnapshot) {
+      await restoreSharedAccounts(supabase, sharedSnapshot, 'tests/patrimony.test.ts');
     }
   });
 

@@ -1,6 +1,8 @@
 import { BaseSupabaseRepository } from './base.repository';
 import { DomainError } from '@/domain/errors';
 import { Decimal } from '@/domain/decimal';
+import { readSaleBusinessDate } from './business-operation-date';
+import { readExactDecimal } from './exact-numeric';
 
 export interface MarginRemittanceItemRecord {
   id: string;
@@ -19,6 +21,8 @@ export interface MarginRemittanceRecord {
   productsCostTotalArs: Decimal;
   transportCostArs: Decimal;
   gainArs: Decimal;
+  /** business_operations.business_date de la operación SALE_RTM (fecha comercial normativa). */
+  businessDate: string;
   createdAt: string;
   items: MarginRemittanceItemRecord[];
 }
@@ -37,6 +41,12 @@ export interface CompletedRtmResult {
   rtoStatus: 'COMPLETED';
 }
 
+export interface MarginRemittanceCodeRecord {
+  id: string;
+  code: string;
+  remittanceId: string;
+}
+
 export interface IMarginRemittanceRepository {
   completeRtmAtomic(
     remittanceId: string,
@@ -44,6 +54,7 @@ export interface IMarginRemittanceRepository {
     businessDate?: string
   ): Promise<CompletedRtmResult>;
   getMarginRemittanceByRemittanceId(remittanceId: string): Promise<MarginRemittanceRecord | null>;
+  listAllMarginRemittanceCodes(): Promise<MarginRemittanceCodeRecord[]>;
 }
 
 export class MarginRemittanceRepository extends BaseSupabaseRepository implements IMarginRemittanceRepository {
@@ -82,14 +93,25 @@ export class MarginRemittanceRepository extends BaseSupabaseRepository implement
     const { data, error } = await this.client
       .from('margin_remittances')
       .select(`
-        *,
+        id,
+        code,
+        operation_id,
+        remittance_id,
+        products_cost_total_ars::text,
+        transport_cost_ars::text,
+        gain_ars::text,
+        created_at,
         margin_remittance_items (
           id,
           margin_remittance_id,
           product_id,
           quantity_sent,
-          unit_cost_theoretical_snapshot_ars,
-          total_cost_snapshot_ars
+          unit_cost_theoretical_snapshot_ars::text,
+          total_cost_snapshot_ars::text
+        ),
+        business_operations (
+          business_date,
+          operation_type
         )
       `)
       .eq('remittance_id', remittanceId)
@@ -104,14 +126,28 @@ export class MarginRemittanceRepository extends BaseSupabaseRepository implement
     return this.mapMarginRemittanceRecord(data);
   }
 
+  async listAllMarginRemittanceCodes(): Promise<MarginRemittanceCodeRecord[]> {
+    const { data, error } = await this.client
+      .from('margin_remittances')
+      .select('id, code, remittance_id')
+      .order('created_at', { ascending: true });
+    if (error) {
+      throw new DomainError(`Error listando RTMs: ${error.message}`);
+    }
+    return (data || []).map((r) => ({ id: r.id, code: r.code, remittanceId: r.remittance_id }));
+  }
+
   private mapMarginRemittanceRecord(row: any): MarginRemittanceRecord {
     const items: MarginRemittanceItemRecord[] = (row.margin_remittance_items || []).map((it: any) => ({
       id: it.id,
       marginRemittanceId: it.margin_remittance_id,
       productId: it.product_id,
       quantitySent: Number(it.quantity_sent),
-      unitCostTheoreticalSnapshotArs: new Decimal(it.unit_cost_theoretical_snapshot_ars),
-      totalCostSnapshotArs: new Decimal(it.total_cost_snapshot_ars),
+      unitCostTheoreticalSnapshotArs: readExactDecimal(
+        it.unit_cost_theoretical_snapshot_ars,
+        'margin_remittance_items.unit_cost_theoretical_snapshot_ars'
+      ),
+      totalCostSnapshotArs: readExactDecimal(it.total_cost_snapshot_ars, 'margin_remittance_items.total_cost_snapshot_ars'),
     }));
 
     return {
@@ -119,9 +155,10 @@ export class MarginRemittanceRepository extends BaseSupabaseRepository implement
       code: row.code,
       operationId: row.operation_id,
       remittanceId: row.remittance_id,
-      productsCostTotalArs: new Decimal(row.products_cost_total_ars),
-      transportCostArs: new Decimal(row.transport_cost_ars),
-      gainArs: new Decimal(row.gain_ars),
+      productsCostTotalArs: readExactDecimal(row.products_cost_total_ars, 'margin_remittances.products_cost_total_ars'),
+      transportCostArs: readExactDecimal(row.transport_cost_ars, 'margin_remittances.transport_cost_ars'),
+      gainArs: readExactDecimal(row.gain_ars, 'margin_remittances.gain_ars'),
+      businessDate: readSaleBusinessDate(row.business_operations, 'SALE_RTM', `RTM ${row.code}`),
       createdAt: row.created_at,
       items,
     };

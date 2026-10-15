@@ -15,6 +15,7 @@ import { PlanningDomainService } from '../src/services/planning.service';
 import { Decimal, toWholePesos, toKgPrecision } from '../src/domain/decimal';
 import { DomainError } from '../src/domain/errors';
 import type { Database } from '../src/database/types';
+import { snapshotSharedAccounts, restoreSharedAccounts, type SharedAccountsSnapshot } from './helpers/shared-accounts-guard';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -53,7 +54,11 @@ test('FASE 12 — RTO / CONFIRMACIÓN DE VENTA: Suite de pruebas obligatorias', 
   const createdProductIds: string[] = [];
   const createdRemittanceIds: string[] = [];
 
+  let sharedSnapshot: SharedAccountsSnapshot | undefined;
+
   t.before(async () => {
+    sharedSnapshot = await snapshotSharedAccounts(supabase);
+
     // 0. Precondición de seguridad: esta suite NUNCA debe completar un remito que no creó
     // ella misma (real o de otra corrida). Si el gate ya está ocupado, abortar en vez de
     // barrerlo a ciegas (incidente: esto llegó a completar RTO0182, un remito real de
@@ -188,11 +193,57 @@ test('FASE 12 — RTO / CONFIRMACIÓN DE VENTA: Suite de pruebas obligatorias', 
   });
 
   t.after(async () => {
-    // Limpieza de datos creados en orden de claves foráneas
+    // Limpieza de datos creados en orden de claves foráneas. Todo se resuelve a
+    // partir de UUIDs que esta suite creó (nunca por nombre/LIKE ni globalmente).
+    //
+    // Causa del leak histórico "Cliente Sec43 RTO_...": el test 56 registra un
+    // Pago Cliente; `payments.customer_id` es ON DELETE RESTRICT, la limpieza no
+    // borraba ese pago y el DELETE del cliente fallaba en silencio (sin chequear
+    // `error`). Tampoco se borraban las business_operations / MOV de cada RTO.
+
+    // Operaciones de negocio propias: las de cada RTO creado y las de los Pagos
+    // Cliente de los clientes creados por la suite.
+    const rtoOperationIds: string[] = [];
+    if (createdRemittanceIds.length > 0) {
+      const { data: rems, error } = await supabase
+        .from('remittances')
+        .select('operation_id')
+        .in('id', createdRemittanceIds);
+      assert.ifError(error);
+      rtoOperationIds.push(...(rems || []).map((r) => r.operation_id));
+    }
+    const paymentIds: string[] = [];
+    const paymentOperationIds: string[] = [];
+    if (createdCustomerIds.length > 0) {
+      const { data: pays, error } = await supabase
+        .from('payments')
+        .select('id, operation_id')
+        .in('customer_id', createdCustomerIds);
+      assert.ifError(error);
+      for (const p of pays || []) {
+        paymentIds.push(p.id);
+        paymentOperationIds.push(p.operation_id);
+      }
+    }
+
     for (const remId of createdRemittanceIds) {
       await supabase.from('remittance_discount_steps').delete().eq('remittance_id', remId);
       await supabase.from('remittance_items').delete().eq('remittance_id', remId);
       await supabase.from('remittances').delete().eq('id', remId);
+    }
+
+    // Pagos Cliente (RESTRICT sobre customers y business_operations)
+    if (paymentIds.length > 0) {
+      await supabase.from('payments').delete().in('id', paymentIds);
+    }
+
+    // MST/MOV de las operaciones propias (financial_entries cascade desde
+    // patrimonial_movements) y luego las business_operations.
+    const ownOperationIds = [...rtoOperationIds, ...paymentOperationIds];
+    if (ownOperationIds.length > 0) {
+      await supabase.from('stock_movements').delete().in('operation_id', ownOperationIds);
+      await supabase.from('patrimonial_movements').delete().in('operation_id', ownOperationIds);
+      await supabase.from('business_operations').delete().in('id', ownOperationIds);
     }
 
     for (const orderId of createdOrderIds) {
@@ -224,6 +275,44 @@ test('FASE 12 — RTO / CONFIRMACIÓN DE VENTA: Suite de pruebas obligatorias', 
       // Nota: no existe la tabla "customer_discount_steps" en el esquema (los descuentos
       // viven directamente en customers.discount_1_pct/2/3); se elimina esa llamada muerta.
       await supabase.from('customers').delete().eq('id', cId);
+    }
+
+    // Verificación: la corrida no deja ningún fixture propio.
+    const countRows = async (
+      query: PromiseLike<{ count: number | null; error: { message: string } | null }>
+    ): Promise<number> => {
+      const { count, error } = await query;
+      assert.ifError(error);
+      return count ?? 0;
+    };
+    const head = { count: 'exact', head: true } as const;
+    const leftovers = {
+      customers: await countRows(supabase.from('customers').select('id', head).in('id', createdCustomerIds)),
+      financial_accounts: await countRows(supabase.from('financial_accounts').select('id', head).in('customer_id', createdCustomerIds)),
+      payments: await countRows(supabase.from('payments').select('id', head).in('customer_id', createdCustomerIds)),
+      orders: await countRows(supabase.from('orders').select('id', head).in('id', createdOrderIds)),
+      remittances: await countRows(supabase.from('remittances').select('id', head).in('id', createdRemittanceIds)),
+      patrimonial_movements: await countRows(supabase.from('patrimonial_movements').select('id', head).in('operation_id', ownOperationIds)),
+      business_operations: await countRows(supabase.from('business_operations').select('id', head).in('id', ownOperationIds)),
+      stock_items: await countRows(supabase.from('stock_items').select('id', head).in('id', createdProductIds)),
+    };
+    assert.deepStrictEqual(
+      leftovers,
+      {
+        customers: 0,
+        financial_accounts: 0,
+        payments: 0,
+        orders: 0,
+        remittances: 0,
+        patrimonial_movements: 0,
+        business_operations: 0,
+        stock_items: 0,
+      },
+      'tests/remittance.test.ts no debe dejar fixtures propios en la base'
+    );
+
+    if (sharedSnapshot) {
+      await restoreSharedAccounts(supabase, sharedSnapshot, 'tests/remittance.test.ts');
     }
   });
 

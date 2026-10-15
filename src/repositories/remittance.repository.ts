@@ -2,6 +2,8 @@ import { BaseSupabaseRepository } from './base.repository';
 import { DomainError } from '@/domain/errors';
 import { Decimal, toNumericString, toKgPrecision, toWholePesos } from '@/domain/decimal';
 import type { CustomerSource } from '@/database/domain-types';
+import { readSaleBusinessDate } from './business-operation-date';
+import { readExactDecimal } from './exact-numeric';
 
 export interface RemittanceDiscountStepRecord {
   id: string;
@@ -46,6 +48,8 @@ export interface RemittanceRecord {
   totalOrderArs: Decimal;
   priorBalanceSnapshotArs: Decimal;
   totalToCollectArs: Decimal;
+  /** business_operations.business_date de la operación SALE_RTO (fecha comercial normativa). */
+  businessDate: string;
   createdAt: string;
   items: RemittanceItemRecord[];
   discountSteps: RemittanceDiscountStepRecord[];
@@ -70,6 +74,7 @@ export interface ConfirmedRemittanceResult {
 
 export interface MonthlySaleRecord {
   remittanceId: string;
+  marginRemittanceId: string;
   rtoCode: string;
   rtmCode: string;
   businessDate: string;
@@ -79,12 +84,18 @@ export interface MonthlySaleRecord {
   gainArs: Decimal;
 }
 
+export interface RemittanceCodeRecord {
+  id: string;
+  code: string;
+}
+
 export interface IRemittanceRepository {
   confirmOrderToRemittanceAtomic(orderId: string, businessDate?: string): Promise<ConfirmedRemittanceResult>;
   getRemittanceById(id: string): Promise<RemittanceRecord | null>;
   getRemittanceByOrderId(orderId: string): Promise<RemittanceRecord | null>;
   getPendingRtmRemittance(): Promise<RemittanceRecord | null>;
   listCompletedSalesForMonth(year: number, month: number): Promise<MonthlySaleRecord[]>;
+  listAllRemittanceCodes(): Promise<RemittanceCodeRecord[]>;
 }
 
 export class RemittanceRepository extends BaseSupabaseRepository implements IRemittanceRepository {
@@ -121,7 +132,27 @@ export class RemittanceRepository extends BaseSupabaseRepository implements IRem
     const { data, error } = await this.client
       .from('remittances')
       .select(`
-        *,
+        id,
+        code,
+        operation_id,
+        order_id,
+        status,
+        customer_source,
+        customer_id,
+        recipient_name_snapshot,
+        address_snapshot,
+        locality_snapshot,
+        province_snapshot,
+        phone_snapshot,
+        transport_name_snapshot,
+        transport_address_snapshot,
+        package_count_snapshot,
+        weight_kg_snapshot::text,
+        subtotal_ars::text,
+        total_order_ars::text,
+        prior_balance_snapshot_ars::text,
+        total_to_collect_ars::text,
+        created_at,
         customers (
           id,
           name,
@@ -134,17 +165,21 @@ export class RemittanceRepository extends BaseSupabaseRepository implements IRem
           product_code_snapshot,
           product_name_snapshot,
           presentation_snapshot,
-          weight_kg_snapshot,
+          weight_kg_snapshot::text,
           quantity_sent,
-          unit_price_ars_snapshot,
-          line_total_ars
+          unit_price_ars_snapshot::text,
+          line_total_ars::text
         ),
         remittance_discount_steps (
           id,
           remittance_id,
           position,
-          percent,
-          amount_ars_snapshot
+          percent::text,
+          amount_ars_snapshot::text
+        ),
+        business_operations (
+          business_date,
+          operation_type
         )
       `)
       .eq('id', id)
@@ -163,7 +198,27 @@ export class RemittanceRepository extends BaseSupabaseRepository implements IRem
     const { data, error } = await this.client
       .from('remittances')
       .select(`
-        *,
+        id,
+        code,
+        operation_id,
+        order_id,
+        status,
+        customer_source,
+        customer_id,
+        recipient_name_snapshot,
+        address_snapshot,
+        locality_snapshot,
+        province_snapshot,
+        phone_snapshot,
+        transport_name_snapshot,
+        transport_address_snapshot,
+        package_count_snapshot,
+        weight_kg_snapshot::text,
+        subtotal_ars::text,
+        total_order_ars::text,
+        prior_balance_snapshot_ars::text,
+        total_to_collect_ars::text,
+        created_at,
         customers (
           id,
           name,
@@ -176,17 +231,21 @@ export class RemittanceRepository extends BaseSupabaseRepository implements IRem
           product_code_snapshot,
           product_name_snapshot,
           presentation_snapshot,
-          weight_kg_snapshot,
+          weight_kg_snapshot::text,
           quantity_sent,
-          unit_price_ars_snapshot,
-          line_total_ars
+          unit_price_ars_snapshot::text,
+          line_total_ars::text
         ),
         remittance_discount_steps (
           id,
           remittance_id,
           position,
-          percent,
-          amount_ars_snapshot
+          percent::text,
+          amount_ars_snapshot::text
+        ),
+        business_operations (
+          business_date,
+          operation_type
         )
       `)
       .eq('order_id', orderId)
@@ -205,7 +264,27 @@ export class RemittanceRepository extends BaseSupabaseRepository implements IRem
     const { data, error } = await this.client
       .from('remittances')
       .select(`
-        *,
+        id,
+        code,
+        operation_id,
+        order_id,
+        status,
+        customer_source,
+        customer_id,
+        recipient_name_snapshot,
+        address_snapshot,
+        locality_snapshot,
+        province_snapshot,
+        phone_snapshot,
+        transport_name_snapshot,
+        transport_address_snapshot,
+        package_count_snapshot,
+        weight_kg_snapshot::text,
+        subtotal_ars::text,
+        total_order_ars::text,
+        prior_balance_snapshot_ars::text,
+        total_to_collect_ars::text,
+        created_at,
         customers (
           id,
           name,
@@ -218,17 +297,21 @@ export class RemittanceRepository extends BaseSupabaseRepository implements IRem
           product_code_snapshot,
           product_name_snapshot,
           presentation_snapshot,
-          weight_kg_snapshot,
+          weight_kg_snapshot::text,
           quantity_sent,
-          unit_price_ars_snapshot,
-          line_total_ars
+          unit_price_ars_snapshot::text,
+          line_total_ars::text
         ),
         remittance_discount_steps (
           id,
           remittance_id,
           position,
-          percent,
-          amount_ars_snapshot
+          percent::text,
+          amount_ars_snapshot::text
+        ),
+        business_operations (
+          business_date,
+          operation_type
         )
       `)
       .eq('status', 'RTM_PENDING')
@@ -262,10 +345,10 @@ export class RemittanceRepository extends BaseSupabaseRepository implements IRem
       productCodeSnapshot: it.product_code_snapshot,
       productNameSnapshot: it.product_name_snapshot,
       presentationSnapshot: it.presentation_snapshot,
-      weightKgSnapshot: new Decimal(it.weight_kg_snapshot),
+      weightKgSnapshot: readExactDecimal(it.weight_kg_snapshot, 'remittance_items.weight_kg_snapshot'),
       quantitySent: Number(it.quantity_sent),
-      unitPriceArsSnapshot: new Decimal(it.unit_price_ars_snapshot),
-      lineTotalArs: new Decimal(it.line_total_ars),
+      unitPriceArsSnapshot: readExactDecimal(it.unit_price_ars_snapshot, 'remittance_items.unit_price_ars_snapshot'),
+      lineTotalArs: readExactDecimal(it.line_total_ars, 'remittance_items.line_total_ars'),
     }));
 
     const discountSteps: RemittanceDiscountStepRecord[] = (row.remittance_discount_steps || [])
@@ -273,8 +356,8 @@ export class RemittanceRepository extends BaseSupabaseRepository implements IRem
         id: ds.id,
         remittanceId: ds.remittance_id,
         position: Number(ds.position),
-        percent: new Decimal(ds.percent),
-        amountArsSnapshot: new Decimal(ds.amount_ars_snapshot),
+        percent: readExactDecimal(ds.percent, 'remittance_discount_steps.percent'),
+        amountArsSnapshot: readExactDecimal(ds.amount_ars_snapshot, 'remittance_discount_steps.amount_ars_snapshot'),
       }))
       .sort((a: RemittanceDiscountStepRecord, b: RemittanceDiscountStepRecord) => a.position - b.position);
 
@@ -295,11 +378,12 @@ export class RemittanceRepository extends BaseSupabaseRepository implements IRem
       transportNameSnapshot: row.transport_name_snapshot,
       transportAddressSnapshot: row.transport_address_snapshot,
       packageCountSnapshot: row.package_count_snapshot !== null ? Number(row.package_count_snapshot) : null,
-      weightKgSnapshot: new Decimal(row.weight_kg_snapshot),
-      subtotalArs: new Decimal(row.subtotal_ars),
-      totalOrderArs: new Decimal(row.total_order_ars),
-      priorBalanceSnapshotArs: new Decimal(row.prior_balance_snapshot_ars),
-      totalToCollectArs: new Decimal(row.total_to_collect_ars),
+      weightKgSnapshot: readExactDecimal(row.weight_kg_snapshot, 'remittances.weight_kg_snapshot'),
+      subtotalArs: readExactDecimal(row.subtotal_ars, 'remittances.subtotal_ars'),
+      totalOrderArs: readExactDecimal(row.total_order_ars, 'remittances.total_order_ars'),
+      priorBalanceSnapshotArs: readExactDecimal(row.prior_balance_snapshot_ars, 'remittances.prior_balance_snapshot_ars'),
+      totalToCollectArs: readExactDecimal(row.total_to_collect_ars, 'remittances.total_to_collect_ars'),
+      businessDate: readSaleBusinessDate(row.business_operations, 'SALE_RTO', `Remito ${row.code}`),
       createdAt: row.created_at,
       items,
       discountSteps,
@@ -331,7 +415,7 @@ export class RemittanceRepository extends BaseSupabaseRepository implements IRem
         total_order_ars,
         customers (name),
         business_operations (business_date),
-        margin_remittances (code, gain_ars)
+        margin_remittances (id, code, gain_ars)
       `)
       .eq('status', 'COMPLETED')
       .gte('business_operations.business_date', startDate)
@@ -361,6 +445,7 @@ export class RemittanceRepository extends BaseSupabaseRepository implements IRem
 
       results.push({
         remittanceId: row.id,
+        marginRemittanceId: mr.id,
         rtoCode: row.code,
         rtmCode: mr.code,
         businessDate: bo.business_date,
@@ -373,5 +458,13 @@ export class RemittanceRepository extends BaseSupabaseRepository implements IRem
 
     results.sort((a, b) => b.businessDate.localeCompare(a.businessDate));
     return results;
+  }
+
+  async listAllRemittanceCodes(): Promise<RemittanceCodeRecord[]> {
+    const { data, error } = await this.client.from('remittances').select('id, code').order('created_at', { ascending: true });
+    if (error) {
+      throw new DomainError(`Error listando remitos: ${error.message}`);
+    }
+    return (data || []).map((r) => ({ id: r.id, code: r.code }));
   }
 }

@@ -35,6 +35,11 @@ import { PlanningDomainService } from '@/services/planning.service';
 import { RemittanceRepository } from '@/repositories/remittance.repository';
 import { RemittanceDomainService } from '@/services/remittance.service';
 import { MarginRemittanceRepository } from '@/repositories/margin-remittance.repository';
+import { DocumentRepository } from '@/repositories/document.repository';
+import { DocumentDomainService } from '@/services/document.service';
+import { DocumentBackfillService } from '@/services/document-backfill.service';
+import { InternalHtmlPdfRenderer } from '@/pdf/internal-html-pdf-renderer';
+import type { PdfRenderer } from '@/pdf/renderer';
 
 /**
  * Composition Root para instanciación controlada y unificada de servicios
@@ -299,15 +304,61 @@ export function getRemittanceService(): RemittanceDomainService {
     const stockRepo = new StockRepository(serverSupabase);
     const marginRemittanceRepo = new MarginRemittanceRepository(serverSupabase);
     const costEngineService = getCostEngineService();
+    const documentRepo = new DocumentRepository(serverSupabase);
     remittanceServiceInstance = new RemittanceDomainService(
       remittanceRepo,
       orderRepo,
       stockRepo,
       marginRemittanceRepo,
-      costEngineService
+      costEngineService,
+      documentRepo
     );
   }
   return remittanceServiceInstance;
+}
+
+let pdfRendererInstance: PdfRenderer | null = null;
+let documentServiceInstance: DocumentDomainService | null = null;
+
+export function getPdfRenderer(): PdfRenderer {
+  if (!pdfRendererInstance) {
+    pdfRendererInstance = new InternalHtmlPdfRenderer();
+  }
+  return pdfRendererInstance;
+}
+
+export function getDocumentService(): DocumentDomainService {
+  if (!documentServiceInstance) {
+    const documentRepo = new DocumentRepository(serverSupabase);
+    const remittanceRepo = getRemittanceRepository();
+    const marginRemittanceRepo = new MarginRemittanceRepository(serverSupabase);
+    const customerRepo = new CustomerRepository(serverSupabase);
+    documentServiceInstance = new DocumentDomainService(
+      documentRepo,
+      remittanceRepo,
+      marginRemittanceRepo,
+      customerRepo,
+      getPdfRenderer()
+    );
+  }
+  return documentServiceInstance;
+}
+
+let documentBackfillServiceInstance: DocumentBackfillService | null = null;
+
+export function getDocumentBackfillService(): DocumentBackfillService {
+  if (!documentBackfillServiceInstance) {
+    const remittanceRepo = getRemittanceRepository();
+    const marginRemittanceRepo = new MarginRemittanceRepository(serverSupabase);
+    const documentRepo = new DocumentRepository(serverSupabase);
+    documentBackfillServiceInstance = new DocumentBackfillService(
+      remittanceRepo,
+      marginRemittanceRepo,
+      documentRepo,
+      getDocumentService()
+    );
+  }
+  return documentBackfillServiceInstance;
 }
 
 

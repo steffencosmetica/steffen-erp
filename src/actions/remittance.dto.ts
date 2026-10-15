@@ -3,9 +3,25 @@ import type {
   RemittanceItemRecord,
   RemittanceDiscountStepRecord,
   ConfirmedRemittanceResult,
-  MonthlySaleRecord,
 } from '@/repositories/remittance.repository';
-import type { RtoPreviewResult, RtoPreviewLine, RtoDiscountStepPreview } from '@/services/remittance.service';
+import type {
+  RtoPreviewResult,
+  RtoPreviewLine,
+  RtoDiscountStepPreview,
+  MonthlySaleWithDocumentsRecord,
+} from '@/services/remittance.service';
+import type { DocumentGenerationOutcome } from '@/services/document.service';
+
+export interface DocumentOutcomeDTO {
+  status: string;
+  documentId?: string;
+  errorMessage?: string | null;
+}
+
+function serializeDocumentOutcome(outcome?: DocumentGenerationOutcome): DocumentOutcomeDTO | undefined {
+  if (!outcome) return undefined;
+  return { status: outcome.status, documentId: outcome.documentId, errorMessage: outcome.errorMessage };
+}
 
 export interface RemittanceItemDTO {
   id: string;
@@ -80,6 +96,7 @@ export interface ConfirmedRemittanceDTO {
   weightKgSnapshot: number;
   movCode: string;
   businessDate: string;
+  document?: DocumentOutcomeDTO;
 }
 
 export interface RtoPreviewLineDTO {
@@ -179,7 +196,10 @@ export function serializePendingRtmBanner(record: RemittanceRecord): PendingRtmB
   };
 }
 
-export function serializeConfirmedRemittance(result: ConfirmedRemittanceResult): ConfirmedRemittanceDTO {
+export function serializeConfirmedRemittance(
+  result: ConfirmedRemittanceResult,
+  documentOutcome?: DocumentGenerationOutcome
+): ConfirmedRemittanceDTO {
   return {
     remittanceId: result.remittanceId,
     code: result.code,
@@ -195,6 +215,7 @@ export function serializeConfirmedRemittance(result: ConfirmedRemittanceResult):
     weightKgSnapshot: result.weightKgSnapshot.toNumber(),
     movCode: result.movCode,
     businessDate: result.businessDate,
+    document: serializeDocumentOutcome(documentOutcome),
   };
 }
 
@@ -237,6 +258,7 @@ export function serializeRtoPreview(preview: RtoPreviewResult): RtoPreviewDTO {
 
 export interface MonthlySaleDTO {
   remittanceId: string;
+  marginRemittanceId: string;
   rtoCode: string;
   rtmCode: string;
   businessDate: string;
@@ -244,11 +266,14 @@ export interface MonthlySaleDTO {
   customerDisplayName: string;
   totalOrderArs: number;
   gainArs: number;
+  rtoDocumentStatus: string;
+  rtmDocumentStatus: string;
 }
 
-export function serializeMonthlySale(record: MonthlySaleRecord): MonthlySaleDTO {
+export function serializeMonthlySale(record: MonthlySaleWithDocumentsRecord): MonthlySaleDTO {
   return {
     remittanceId: record.remittanceId,
+    marginRemittanceId: record.marginRemittanceId,
     rtoCode: record.rtoCode,
     rtmCode: record.rtmCode,
     businessDate: record.businessDate,
@@ -256,5 +281,7 @@ export function serializeMonthlySale(record: MonthlySaleRecord): MonthlySaleDTO 
     customerDisplayName: record.customerDisplayName,
     totalOrderArs: record.totalOrderArs.toNumber(),
     gainArs: record.gainArs.toNumber(),
+    rtoDocumentStatus: record.rtoDocumentStatus,
+    rtmDocumentStatus: record.rtmDocumentStatus,
   };
 }

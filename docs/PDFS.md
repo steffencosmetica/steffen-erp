@@ -75,6 +75,7 @@ Reglas:
 - `template_version` versiona solo la presentación.
 - cambiar colores/logo no exige cambiar `schema_version`.
 - cambiar estructura semántica del JSON sí requiere nueva versión de schema.
+- todo valor NUMERIC (dinero, costos, porcentajes, pesos) se serializa como **string decimal canónico** con la escala de su columna de origen (punto decimal, sin separador de miles; p.ej. `"2000000.386700"`, `"0.350"`, `"30.0000"`), nunca como número JSON: un número JSON se interpreta como float IEEE 754 y puede perder exactitud. Solo los enteros (`quantity`, `position`, `package_count`) son números JSON. El template convierte esos strings a Decimal únicamente para presentación.
 
 ---
 
@@ -217,28 +218,28 @@ No combinar descuentos sucesivos en un único porcentaje.
     "transport_name": "Transporte",
     "transport_address": "Dirección transporte",
     "package_count": 4,
-    "weight_kg": 12.350,
+    "weight_kg": "12.350",
     "items": [
       {
         "quantity": 10,
         "product_code": "PRO0001",
         "product_name": "Producto Final",
         "presentation": "350 cc",
-        "unit_price_ars": 6000,
-        "line_total_ars": 60000
+        "unit_price_ars": "6000",
+        "line_total_ars": "60000.000000"
       }
     ],
-    "subtotal_ars": 60000,
+    "subtotal_ars": "60000.000000",
     "discounts": [
       {
         "position": 1,
-        "percent": 30,
-        "amount_ars": 18000
+        "percent": "30.0000",
+        "amount_ars": "18000.000000"
       }
     ],
-    "total_order_ars": 42000,
-    "prior_balance_ars": 10000,
-    "total_to_collect_ars": 52000
+    "total_order_ars": "42000.000000",
+    "prior_balance_ars": "10000.000000",
+    "total_to_collect_ars": "52000.000000"
   }
 }
 ```
@@ -316,22 +317,22 @@ No mostrar Saldo anterior como parte de la Ganancia.
     "internal_use": true,
     "rto_code": "RTO0001",
     "customer_name": "Cliente Ejemplo",
-    "weight_kg": 12.350,
+    "weight_kg": "12.350",
     "items": [
       {
         "quantity": 10,
         "product_code": "PRO0001",
         "product_name": "Producto Final",
-        "unit_sale_price_ars": 6000,
-        "line_sale_total_ars": 60000,
-        "unit_cost_ars": 2500.456789,
-        "line_cost_total_ars": 25004.567890
+        "unit_sale_price_ars": "6000",
+        "line_sale_total_ars": "60000.000000",
+        "unit_cost_ars": "2500.456789",
+        "line_cost_total_ars": "25004.567890"
       }
     ],
-    "total_order_ars": 42000,
-    "products_cost_total_ars": 25004.567890,
-    "transport_cost_ars": 3000,
-    "gain_ars": 13995.432110
+    "total_order_ars": "42000.000000",
+    "products_cost_total_ars": "25004.567890",
+    "transport_cost_ars": "3000.000000",
+    "gain_ars": "13995.432110"
   }
 }
 ```
