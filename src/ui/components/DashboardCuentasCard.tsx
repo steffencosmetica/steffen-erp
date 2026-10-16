@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatArs } from '@/lib/format';
 import { RetiroCajaModal } from '@/ui/modals/RetiroCajaModal';
+import { IconButton, Panel, tableStyles } from '@/ui/components/UIComponents';
+import { ErpIcon } from '@/ui/components/ErpIcon';
 
 interface DashboardCuentasCardProps {
   cajaSteffen: string;
@@ -11,6 +13,8 @@ interface DashboardCuentasCardProps {
   deudasClientes: string;
   deudasProveedores: string;
   neto: string;
+  /** Acciones patrimoniales ubicadas junto a Retiro Caja (Figma Dashboard). */
+  actions?: ReactNode;
 }
 
 export const DashboardCuentasCard: React.FC<DashboardCuentasCardProps> = ({
@@ -19,65 +23,57 @@ export const DashboardCuentasCard: React.FC<DashboardCuentasCardProps> = ({
   deudasClientes,
   deudasProveedores,
   neto,
+  actions,
 }) => {
   const router = useRouter();
   const [isRetiroOpen, setIsRetiroOpen] = useState(false);
 
   return (
     <>
-      <div className="bg-white rounded-2xl border border-[#D9D9D9] p-4 shadow-xs space-y-4">
-        <table className="w-full text-xs">
+      <Panel>
+        <table className={tableStyles.table}>
           <thead>
-            <tr className="bg-[#D9D9D9] text-black font-bold uppercase text-left">
-              <th className="py-2 px-3">CUENTA</th>
+            <tr className={tableStyles.headRow}>
+              <th className="py-2 px-3 text-left">CUENTA</th>
               <th className="py-2 px-3 text-right">TOTAL</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 text-xs">
-            <tr>
-              <td className="py-2.5 px-3 font-semibold text-black">CAJA STEFFEN</td>
-              <td className="py-2.5 px-3 text-right font-mono font-bold text-[#008102]">
-                {formatArs(cajaSteffen)}
+          <tbody>
+            <tr className={tableStyles.row}>
+              <td className="py-1.5 px-3">CAJA STEFFEN</td>
+              <td className="py-1.5 px-3 text-right tabular-nums text-steffen-green">{formatArs(cajaSteffen)}</td>
+            </tr>
+            <tr className={tableStyles.row}>
+              <td className="py-1.5 px-3">CAJA MERCADO LIBRE</td>
+              <td className="py-1.5 px-3 text-right tabular-nums text-steffen-green">{formatArs(cajaMercadoLibre)}</td>
+            </tr>
+            <tr className={tableStyles.row}>
+              <td className="py-1.5 px-3">DEUDAS CLIENTES</td>
+              <td className="py-1.5 px-3 text-right tabular-nums text-steffen-green">{formatArs(deudasClientes)}</td>
+            </tr>
+            <tr className={tableStyles.row}>
+              <td className="py-1.5 px-3">DEUDAS PROVEEDORES</td>
+              <td className="py-1.5 px-3 text-right tabular-nums text-steffen-red">
+                {deudasProveedores && deudasProveedores !== '0' ? `-${formatArs(deudasProveedores)}` : '$ 0'}
               </td>
             </tr>
-            <tr>
-              <td className="py-2.5 px-3 font-semibold text-black">CAJA MERCADO LIBRE</td>
-              <td className="py-2.5 px-3 text-right font-mono font-bold text-[#008102]">
-                {formatArs(cajaMercadoLibre)}
-              </td>
-            </tr>
-            <tr>
-              <td className="py-2.5 px-3 font-semibold text-black">DEUDAS CLIENTES</td>
-              <td className="py-2.5 px-3 text-right font-mono font-bold text-[#008102]">
-                {formatArs(deudasClientes)}
-              </td>
-            </tr>
-            <tr>
-              <td className="py-2.5 px-3 font-semibold text-black">DEUDAS PROVEEDORES</td>
-              <td className="py-2.5 px-3 text-right font-mono font-bold text-[#DD0000]">
-                {deudasProveedores && deudasProveedores !== '0'
-                  ? `-${formatArs(deudasProveedores)}`
-                  : '$ 0'}
-              </td>
-            </tr>
-            <tr className="border-t-2 border-black font-bold">
-              <td className="py-2.5 px-3 text-black uppercase">NETO</td>
-              <td className="py-2.5 px-3 text-right font-mono text-sm text-black">
-                {formatArs(neto)}
-              </td>
+            <tr className="font-semibold">
+              <td className="py-1.5 px-3 uppercase">NETO</td>
+              <td className="py-1.5 px-3 text-right tabular-nums">{formatArs(neto)}</td>
             </tr>
           </tbody>
         </table>
+      </Panel>
 
-        <div className="flex justify-end pt-1">
-          <button
-            type="button"
-            onClick={() => setIsRetiroOpen(true)}
-            className="h-[38px] px-4 inline-flex items-center justify-center font-bold rounded-[2px] bg-[#DD0000] hover:bg-[#b00000] text-white border border-[#DD0000] w-36 text-xs uppercase shadow-xs transition-colors cursor-pointer"
-          >
-            RETIRO CAJA
-          </button>
-        </div>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        {actions}
+        <IconButton
+          variant="rojo"
+          size="large"
+          label="Retiro caja"
+          onClick={() => setIsRetiroOpen(true)}
+          icon={<ErpIcon name="retiro" tone="light" className="w-8 h-8" />}
+        />
       </div>
 
       <RetiroCajaModal

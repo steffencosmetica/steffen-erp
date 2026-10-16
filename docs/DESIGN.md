@@ -27,7 +27,9 @@ La lógica funcional no se modifica para coincidir con un diseño desactualizado
 
 El rediseño es exclusivamente visual: no agrega ni elimina funciones, no cambia rutas, flujos, reglas ni modelo de datos.
 
-Frames de referencia del nuevo Figma: `docs/visual-references/figma/` (Dashboard, Mi Fábrica, Fórmulas, Pedidos, Pedido, Productos Finales, Stock, Ventas, Administración, Cuentas Clientes, Cuentas Proveedores, y el tablero completo en PDF con el sistema de diseño).
+Frames de referencia del nuevo Figma (rediseño dark definitivo): `docs/visual-references/figma/` — `Frame 1.png` (guía de estilo: paleta, tipografía, márgenes, botones, inputs, cards), Dashboard, Mi Fábrica, Fórmulas, Pedidos, Pedido, Productos Finales, Stock, Ventas, Administración, Cuentas Clientes, Cuentas Proveedores, y el tablero completo en `Pdf.pdf`.
+
+Íconos base: `docs/visual-references/iconos/` (se usan tal cual; solo se adapta color/estilo, ver §4.4).
 
 Estos frames son las referencias visuales **definitivas** y reemplazan a las anteriores, que fueron eliminadas. No deben restaurarse ni usarse como fuente vigente.
 
@@ -168,7 +170,7 @@ Para pantallas informativas simples puede existir un máximo amplio, pero las ta
 
 ### Desktop
 
-Mantener navegación superior completa con los módulos de §9:
+Mantener la barra lateral completa con los módulos de §9:
 
 - Dashboard
 - Mi Fábrica
@@ -180,7 +182,7 @@ Mantener navegación superior completa con los módulos de §9:
 
 ### Tablet
 
-Mantener navegación superior mientras entre correctamente.
+Mantener la barra lateral mientras entre correctamente.
 
 Si deja de entrar sin compresión excesiva:
 
@@ -620,158 +622,144 @@ Mobile landscape puede aprovechar mayor ancho para tablas, pero no debe ser requ
 
 # 4. Sistema visual
 
-## 4.1 Paleta definitiva
+Fuente: frame de estilo definitivo `docs/visual-references/figma/Frame 1.png` (paleta, tipografía, márgenes, botones, inputs, cards) y los frames de pantalla del mismo directorio.
+
+## 4.1 Paleta definitiva (tokens)
 
 | Token | Valor | Uso |
 |---|---|---|
-| Primary | `#C38926` | dorado Steffen: navegación, identidad, acción principal seleccionada/hover, bordes de KPI |
-| Background | `#000000` | fondo principal y superficies internas |
-| Surface | `#FBFBFB` | superficie clara/invertida; texto principal sobre fondo oscuro |
-| Border | `#D9D9D9` | bordes finos y divisores |
-| Gray | `#393939` | gris oscuro de superficie: encabezados de tabla, rellenos y separadores sobre fondo negro (ver §4.3) |
-| Blue | `#0E50A0` | navegación secundaria, enlaces, Volver |
+| Primary | `#C38926` | dorado Steffen: identidad, módulo activo de la navegación, borde de KPI y de card seleccionada, encabezado destacado de tabla |
+| Secondary | `#000000` | fondo de paneles/secciones, barra lateral, superficies internas |
+| Surface | `#FBFBFB` | texto principal sobre dark; superficie clara (modo light futuro) |
+| Fondo | `#EFEFEF` | fondo de página del **modo light** (reservado; no se implementa todavía) |
+| Fondo Dark | `#101010` | fondo de página del modo dark (área de contenido detrás de los paneles) |
+| Border Button | `#D9D9D9` | borde de botones, inputs y selects |
+| Border Contenedor | `#393939` | borde de paneles/secciones; fondo del encabezado de tabla |
+| Tertiary (Blue) | `#0E50A0` | `Volver`, enlaces `IR A …` / `Ver todas ▸`, navegación secundaria |
 | Blue Hover | `#6E96C6` | hover de Blue |
-| Green | `#008102` | acciones positivas / resultados favorables |
-| Green Hover | `#015C02` | hover de Green |
-| Red | `#DD0000` | destructivo, alerta, urgencia, faltante |
-| Red Hover | `#B10000` | hover de Red |
+| Verde | `#008102` | acción positiva (`REGISTRAR PAGO`, `ACTUALIZAR`), resultado favorable |
+| Verde Hover | `#015C02` | hover de Verde |
+| Rojo | `#DD0000` | destructivo, alerta, faltante |
+| Rojo Hover | `#B10000` | hover de Rojo |
+| Surface Dark Degrade | `linear-gradient(180deg, #121212 0%, #000000 100%)` | fondo de botones, inputs, selects, cards de pedido e ítem de lista seleccionado |
 
-`#C38926` es el **único dorado normativo**.
+Tokens derivados (necesarios para reproducir los frames; se documentan aquí antes de usarse):
 
-Quedan **obsoletos** y no deben usarse en UI nueva ni en documentos:
+| Token | Valor | Uso |
+|---|---|---|
+| Text Muted | `#9A9A9A` | títulos de sección (`Reporte mensual`, `VENTAS DEL MES`), labels de navegación inactivos, placeholders |
+| Alert Row | `#6B0000` | fondo de fila de alerta (stock bajo el mínimo, `URG PARA PEDIDOS`, `SALDO ACTUALIZADO` con deuda) |
+| Button Hover | `#393939` | relleno de botón dark en Hover (`PrimaryDark Hover` del frame de estilo) |
 
-- `#B99D22`
-- `#D2AB68`
+`#C38926` es el **único dorado normativo**. Obsoletos: `#B99D22`, `#D2AB68` (este último solo persiste en los PDFs v1.0, ver `PDFS.md`).
 
-Equivalencia con los nombres de token anteriores (solo para migración):
+Equivalencias con nombres anteriores (solo migración): `Background` → `Secondary`; `Border` → `Border Button`; `Gray` → `Border Contenedor`; `Blue` → `Tertiary`.
 
-- `Secondary` (`#000000`) → `Background`;
-- `Tertiary` / `Tertiary Hover` → `Blue` / `Blue Hover`;
-- `Text` (`#393939`, antes texto principal sobre fondo claro) → `Gray` (ahora gris oscuro de superficie); el texto principal sobre fondo oscuro pasa a `Surface`.
+Los tokens se centralizan como variables CSS (`src/app/globals.css`) y utilidades Tailwind (`bg-steffen-*`, `text-steffen-*`, `border-steffen-*`). No se escriben colores sueltos en componentes si existe un token.
 
-No crear colores semánticos nuevos si un token existente cubre el caso. Si el Figma muestra un matiz que no está en esta tabla (por ejemplo, un gris muy oscuro de superficie), se incorpora primero como token en este documento antes de usarse.
+## 4.2 Identidad dark y preparación para modo light
 
-## 4.2 Identidad general: interfaz dark
+- Página: `Fondo Dark` `#101010`; barra lateral y paneles: `Secondary` `#000000`.
+- Paneles con borde `Border Contenedor`; botones e inputs con borde `Border Button` y fondo `Surface Dark Degrade`.
+- Sin sombras.
+- Dorado solo para identidad, módulo activo y énfasis (KPI, card seleccionada, header de líneas del pedido).
+- Texto principal `Surface`; texto secundario `Text Muted`.
 
-El ERP pasa a una interfaz predominantemente **dark**:
+El modo activo se define con `data-theme` en `<html>` (`dark` vigente). Todos los colores se consumen vía variables, de modo que el modo light futuro (`Fondo` `#EFEFEF`, superficies `Surface`) se agregue redefiniendo las variables bajo `[data-theme="light"]`, sin tocar componentes. **Hoy solo se implementa dark.**
 
-- fondo principal negro (`Background`);
-- superficies internas negras/gris muy oscuro (ver §4.1 sobre tokens nuevos);
-- bordes finos (`Border` o `Gray`);
-- sin sombras decorativas;
-- dorado (`Primary`) como color principal de navegación/identidad;
-- `Surface` (blanco) para contenido principal;
-- texto secundario/auxiliar con contraste suficiente sobre negro (token pendiente, ver §4.3);
-- `Green` para acciones positivas/resultados favorables;
-- `Red` para destructivo/alerta/urgencia;
-- `Blue` para navegación secundaria/enlaces/volver.
+## 4.3 Radius
 
-Los contenedores deben sentirse **planos, administrativos y compactos**.
+| Elemento | Radius |
+|---|---|
+| Paneles / secciones / cards | `10 px` |
+| Botones, inputs, selects, ítems de lista | `5 px` |
 
-Radius discreto. Mientras el Figma no defina otro valor se mantienen los vigentes: botones `2 px`, contenedores `5 px`.
+Reemplaza los valores anteriores (`2 px` / `5 px`).
 
-## 4.3 Decisiones visuales provisionales
+## 4.4 Iconografía
 
-Vigentes hasta recibir el valor/definición exacta del Figma:
+Fuente: `docs/visual-references/iconos/`. Se usan esos íconos (no se redibujan); solo se adapta color/estilo:
 
-1. **Rojo oscuro de alerta** (fondo de filas de alerta): `#B10000` (`Red Hover`) hasta incorporar el token exacto del Figma en §4.1.
-2. **`#393939` (`Gray`)**: se usa principalmente como superficie/gris oscuro (encabezados de tabla, rellenos). No debe usarse como color principal de texto auxiliar sobre `#000000` si no cumple contraste. El token de texto secundario queda pendiente; hasta definirlo, el texto secundario usa `Surface` con jerarquía tipográfica (B3/B4) en lugar de un gris de bajo contraste.
-3. **Tocar un granel** en `GRANELES` (Mi Fábrica) puede abrir Envasado de ese lote: es un atajo a la función existente, no un flujo nuevo.
-4. **`Listas de precios`** puede aparecer en Acceso Rápido (Dashboard) como atajo a la pantalla existente de Lista de Precios.
+- **Dentro de botones:** plateado/cromado (degradé claro sobre la silueta del ícono).
+- **Navegación:** módulo activo en `Primary`; inactivos en plateado.
+- Ícono PDF/documento: rojo.
 
-Ninguna de estas decisiones agrega funciones.
+Asignación: `panel` → Dashboard; `fabrica` → Mi Fábrica; `hacer-un-pedido` → Pedidos y cards de pedido; `distribuidor` → Stock; `imac` → Administración; `carrito-de-compras` → Compra; `formula` → Fabricación/Fórmulas/Simular; `envase-de-spa-de-jabon-cremoso` → Envasado, Componentes y lista de productos; `lista` → Listas de precios; `medico` → Gasto operativo; `retiro` → Retiro caja; `orden` → Pedidos abiertos / Ventas (KPI); `ingresos` → Ventas del mes; `productos` → pestaña Productos; `Sin-título-1` → pestaña Materia Prima; `tanque` → tile de granel; `usuario` → lista de clientes/proveedores; `nueva-cuenta` → Nueva cuenta; `boton-mas` → botón `+`.
+
+Donde no hay ícono de referencia se usa un ícono lineal neutro con el mismo tratamiento de color.
+
+## 4.5 Decisiones visuales vigentes
+
+1. **Tocar un granel** en Mi Fábrica abre Envasado de ese lote (atajo a la función existente).
+2. **`Listas de precios`** en Acceso Rápido abre la pantalla existente.
+3. El chip `Admin` del encabezado de página identifica la sesión (muestra el usuario autenticado); no agrega funciones.
 
 ---
 
-# 5. Tipografía
+# 5. Densidad y tipografía
 
-Familia:
+## 5.0 Densidad visual
 
-`Inter`
+La referencia de escala es la **densidad visual del ERP con el navegador al 75 % de zoom**, implementada de forma **nativa** en el sistema de diseño:
 
-Escala del sistema (tokens base):
+- prohibido `zoom: 0.75` y `transform: scale(0.75)`;
+- el layout ocupa `width: 100%` y se adapta al viewport (sin contenedor máximo);
+- controles ~25 % más compactos; tipografía, padding, gaps e íconos reducidos;
+- borders siempre 1 px (no se escalan); radius de panel 10 px y de botón 5 px se conservan;
+- no reducir mecánicamente si perjudica la legibilidad (texto auxiliar mínimo 10–11 px).
 
-| Token | Tamaño | Peso |
-|---|---:|---|
-| H1 | 32 px | Bold |
-| H2 | 28 px | Semi-bold |
-| H3 | 20 px | Regular |
-| B1 | 16 px | Semi-bold |
-| B2 | 16 px | Regular |
-| B3 | 14 px | Semi-bold |
-| B4 | 14 px | Regular |
+Implementación: tokens de Tailwind en `globals.css` (`--spacing: 3px`, escala `--text-*`) más valores fijos de control (botón 30/50 px).
 
-No todos los frames usan todos los tamaños: la escala define los tokens disponibles, no una obligación de uso.
+Esta escala **reemplaza** la escala anterior del rediseño dark (28/24/18/14/12 y botones 40/70).
 
-Regla:
+## 5.1 Tipografía
 
-- títulos de pantalla → H1;
-- títulos de sección → H2 (o H3 en secciones compactas/subordinadas);
-- títulos de bloque, ventana o subsección → H3;
-- labels importantes / encabezados de tabla → B1 o B3 según densidad;
-- contenido general → B2;
-- contenido secundario denso → B4.
+Familia: `Inter` (cargada por la aplicación).
+
+| Token | Tamaño | Peso | Uso |
+|---|---:|---|---|
+| H1 | 22 px | Bold | título de pantalla (`Dashboard`, `Mi Fabrica`) |
+| H2 | 18 px | Semi-bold | título de ventana/pedido (`PEDIDO 0000`) |
+| H3 | 14 px | Regular | título de pantalla secundaria (`CLIENTES`, `FORMULAS`), títulos de bloque |
+| Body semibold | 12 px | Semi-bold | encabezados de tabla, labels, botones, títulos de sección |
+| Body regular | 12 px | Regular | contenido general, filas de tabla |
+| Auxiliar | 11 px | Regular | contenido secundario, placeholders, labels de navegación |
+
+Numerales de KPI: 24 px Bold (display).
 
 ---
 
 # 6. Espaciado
 
-Gaps base:
-
-`6 px`
-
-`12 px`
-
-`20 px`
-
-Deben reutilizarse como escala principal de separación.
-
-No introducir una escala arbitraria distinta sin actualizar este documento.
-
-Mantener densidad alta en tablas y pantallas administrativas.
+Gaps: `4 px`, `8 px`, `15 px` (en Tailwind con `--spacing: 3px`: `gap-1`≈3, `gap-3`=9, `gap-5`=15). No introducir otra escala sin actualizar este documento. Densidad alta en tablas.
 
 ---
 
 # 7. Márgenes / padding
 
-Valores del sistema visual:
-
-- Laterales: `20 px`
-- Superior/inferior compacto: `6 px`
-- Superior/inferior estándar: `10 px`
-
-Botones:
-
-- padding horizontal: `20 px`;
-- padding vertical chico: `6 px`;
-- padding vertical grande: `10 px`.
-
-Uso exacto por componente se define en `COMPONENTS.md`.
+- Contenedores: laterales `15 px`; superior/inferior `8–12 px`.
+- Botones: laterales `~15 px`; superior/inferior `4 px`.
 
 ---
 
 # 8. Botones
 
-Alturas de referencia:
+Alturas: Chico `~30 px`, Grande `~50 px`. Radius `5 px`. Íconos dentro de botones: 18–24 px.
 
-- Chico: `40 px`
-- Grande: `70 px`
-
-Variantes visuales:
-
-| Variante | Default | Hover / Selected |
+| Variante (frame de estilo) | Default | Hover / Selected |
 |---|---|---|
-| Primary | negro + borde/identidad dorada (`Primary`) | fondo dorado `#C38926` |
-| Secondary | negro + borde claro | estado diferenciado y sobrio |
-| Success | `Green` `#008102` | `Green Hover` `#015C02` |
-| Danger | `Red` `#DD0000` | `Red Hover` `#B10000` |
-| Nav | icono/texto dorado + underline | activo claramente visible |
-| Back | `Blue` `#0E50A0` | `Blue Hover` `#6E96C6` |
-| List item | negro | blanco/invertido (`Surface`) cuando está seleccionado |
+| PrimaryDark (Secondary) | fondo `Surface Dark Degrade`, borde `Border Button`, texto `Surface` | fondo `Button Hover` `#393939` |
+| Principal (Grande) | igual que PrimaryDark, 50 px, texto H3 | igual que PrimaryDark |
+| Icon / IconText | PrimaryDark con ícono plateado (± texto) | igual |
+| Verde | `Verde` sólido | `Verde Hover` |
+| Rojo | `Rojo` sólido | `Rojo Hover` |
+| Rojo Foto (icon) | `Rojo` sólido con ícono claro (`Retiro caja`) | `Rojo Hover` |
+| Menu | ícono + label; inactivo plateado/`Text Muted` | activo/hover: ícono y label `Primary` |
+| Lista | transparente, ícono + texto `Surface` | Hover/Selected: fondo `Surface Dark Degrade` |
+| Volver | triángulo + texto `Tertiary` | `Blue Hover` |
+| Add (`+`) | círculo `Surface` con `+` oscuro | `Border Button` |
 
-El rediseño no cambia la semántica funcional de ningún botón existente: cada botón conserva su acción; solo cambia su variante visual.
-
-Las reglas completas están en `COMPONENTS.md`.
+Todos los íconos dentro de botones se ven plateados/cromados (§4.4). El rediseño no cambia la acción de ningún botón.
 
 ---
 
@@ -779,22 +767,16 @@ Las reglas completas están en `COMPONENTS.md`.
 
 ## 9.0 Lenguaje visual
 
-- navegación **horizontal** superior;
-- iconografía dorada (`Primary`);
-- texto dorado cuando corresponda;
-- línea inferior dorada;
-- estado activo claramente visible;
-- existen variantes **icon-only** e **icon + texto** según contexto;
-- salida/logout visualmente separada del resto de los módulos.
+- **Barra lateral izquierda** (`Secondary`, ~78 px) con: logo arriba; los 5 módulos en columna (ícono + label debajo); logout como botón Icon al pie, separado.
+- Módulo activo: ícono y label en `Primary` sólido. Inactivos: ícono plateado y label `Text Muted`; hover: ícono y label en **dorado cromado** (degradé metálico sobre `Primary`).
+- Debajo de los 5 módulos, separados por una línea, **accesos directos** a pantallas existentes: Clientes (`/clientes`), Proveedores (`/proveedores`) y Listas de precios (`/precios`). No son módulos nuevos ni agregan funciones; se resaltan solo en su propia ruta.
+- Área de contenido sobre `Fondo Dark`.
+- **Encabezado de pantalla principal:** título H1 a la izquierda, chip `Admin` (sesión) a la derecha y una línea `Border Contenedor` debajo.
+- **Pantallas secundarias** (Fórmulas, Productos Finales, Clientes, Proveedores, Listas de precios, etc.): sin título H1; `Volver` (Tertiary) a la izquierda, título H3 centrado y acción principal a la derecha.
 
-Variantes observadas en el Figma:
+Los frames `FORMULAS` y `PRODUCTOS FINALES` todavía muestran la navegación superior anterior: se aplica igualmente la barra lateral, por consistencia con el resto de los frames.
 
-- **Pantallas principales** (Dashboard, Mi Fábrica, Pedidos, Stock, Administración): logo a la izquierda; el módulo activo se muestra con icono + texto dorados y una línea inferior dorada larga; los demás módulos se muestran icon-only con línea inferior dorada corta; logout icon-only al extremo derecho, separado.
-- **Pantallas secundarias** (Fórmulas, Productos Finales, Ventas, Clientes, Proveedores): todos los módulos con icono + texto dorados y línea inferior; el módulo padre activo con la línea resaltada; debajo, `Volver` (Blue) a la izquierda y el título de la pantalla.
-
-La navegación conserva las rutas funcionales actuales. No se agregan rutas solo porque aparezcan en algún frame viejo. En particular, algunos frames muestran `FÓRMULAS` como ítem superior: no se agrega (Fórmulas pertenece a Mi Fábrica, ver reglas de abajo). El módulo resaltado en una pantalla secundaria sigue las reglas de abajo aunque un frame resalte otro.
-
-La navegación principal superior vigente del ERP contiene exclusivamente los siguientes 5 módulos principales definidos en Figma:
+Módulos (rutas vigentes, sin agregar ítems):
 
 - DASHBOARD (`/`)
 - MI FÁBRICA (`/fabrica`)
@@ -804,177 +786,93 @@ La navegación principal superior vigente del ERP contiene exclusivamente los si
 
 ### Reglas jerárquicas estrictas:
 
-1. **FÓRMULAS NO es un ítem de la barra de navegación superior**:
+1. **FÓRMULAS NO es un ítem de la navegación principal**:
    - Pertenece jerárquicamente a **Mi Fábrica**.
-   - Dentro de `/fabrica`, el bloque "FORMULAS GRANEL" provee los accesos:
+   - Dentro de `/fabrica`, el bloque "FORMULAS" provee los accesos:
      - *Nueva fórmula* $\rightarrow$ abre el modal de alta reutilizando `/formulas?action=new` sin duplicar `NewFormulaModal`.
      - *Ver todas >* $\rightarrow$ navega a la página secundaria completa `/formulas`.
-   - Cuando el usuario se encuentra en `/formulas`, la pestaña superior **MI FÁBRICA** permanece resaltada como activa.
+   - Cuando el usuario se encuentra en `/formulas`, **MI FÁBRICA** permanece resaltado como activo.
 
 2. **ADMINISTRACIÓN es una página completa directa, NO un menú desplegable (dropdown)**:
    - Al hacer click en `ADMINISTRACIÓN`, navega directamente a `/administracion`.
-   - No contiene menús flotantes ni subítems en el navbar.
    - Las páginas secundarias `/clientes`, `/proveedores` y `/precios` continúan existiendo de forma completa pero se acceden desde los módulos y enlaces internos de `/administracion` (ej. *IR A CLIENTES >*, *IR A PROVEEDORES >*, *LISTA DE PRECIOS*).
    - El acceso a `/system-status` se mantiene como enlace secundario discreto de auditoría al pie de `/administracion`.
-   - Cuando el usuario navega a cualquiera de estas páginas secundarias (`/clientes`, `/proveedores`, `/precios`, `/system-status`), la pestaña superior **ADMINISTRACIÓN** permanece resaltada como activa.
+   - En `/clientes`, `/proveedores`, `/precios` y `/system-status`, **ADMINISTRACIÓN** permanece resaltado como activo.
 
 3. **Productos desde Mi Fábrica**:
    - En `/fabrica`, el botón *Nuevo Producto* enlaza canónicamente a `/stock?tab=productos&action=new` abriendo directamente el modal de alta de PRO.
    - El enlace *Ver todos >* navega canónicamente a `/stock?tab=productos`.
-   - Cuando el usuario se encuentra en `/stock`, la pestaña superior **STOCK** permanece resaltada como activa.
-
+   - En `/stock`, **STOCK** permanece resaltado como activo.
 
 ---
 
 # 10. Patrón general de pantalla
 
-Cada pantalla principal debe mantener:
+Cada pantalla principal mantiene:
 
-1. navegación global superior;
-2. título/contexto del módulo;
+1. barra lateral de navegación;
+2. encabezado de pantalla (H1 + chip de sesión + línea) o, en pantallas secundarias, `Volver` + título;
 3. acciones principales próximas al contenido que modifican;
-4. secciones agrupadas por función;
+4. secciones agrupadas por función en Paneles;
 5. tablas para información densa;
-6. cards para indicadores/resúmenes (KPI) y, cuando el Figma lo define, como selectores de entidad (cards de Pedidos abiertos);
-7. ventanas operativas para crear/registrar acciones;
-8. pantallas secundarias para detalle/historial completo.
+6. cards para KPI y como selectores de entidad (cards de Pedidos);
+7. ventanas operativas para crear/registrar;
+8. pantallas secundarias para detalle/historial.
 
 No convertir información tabular en cards si el Figma la define como tabla.
 
 ## 10.1 Contenedores / secciones
 
-Patrón de título de sección:
-
-`TÍTULO DE SECCIÓN ———————— línea horizontal`
-
-Ejemplos:
-
-- `GRANELES`
-- `PRÓXIMA FABRICACIÓN`
-- `COSTO-GANANCIA`
-- `MOVIMIENTOS DE FÁBRICA`
-- `CUENTAS`
-
-Usar una cantidad reducida de contenedores grandes; no fragmentar la interfaz en muchas cards.
-
-Contenedores:
-
-- fondo `Background` (negro/gris muy oscuro);
-- borde fino gris;
-- radius discreto;
-- sin sombras;
-- espaciado interno consistente con la escala de §6.
+- Panel: fondo `Secondary`, borde 1 px `Border Contenedor`, radius `10 px`, padding `15 px` lateral / `12 px` vertical, sin sombra.
+- Título de sección: `Título ———— línea` en `Text Muted` (B1/H3), línea 1 px `Border Contenedor` (o `Surface` en fichas de Cuentas, según frame) que ocupa el ancho restante; controles opcionales (Buscar, select, `REGISTRAR PAGO`) al extremo.
+- Sección de alerta: título y línea `Rojo`, panel con borde `Rojo`.
 
 ---
 
 # 11. Patrón de ventanas operativas
 
-Las ventanas ubicadas por encima de las pantallas principales en Figma representan acciones disparadas desde botones.
+Ventanas disparadas por botones (Fabricación, Envasado, Nueva Fórmula, Nuevo Producto, Nuevo Pedido, Compra, Pago Cliente, Pago Proveedor, Gasto Operativo, Retiro, Nueva MPR/COM, Nuevo Cliente, Nuevo Proveedor).
 
-Ejemplos:
-
-- Fabricación;
-- Envasado;
-- Nueva Fórmula;
-- Nuevo Producto;
-- Nuevo Pedido;
-- Compra;
-- Pago Cliente;
-- Pago Proveedor;
-- Gasto Operativo;
-- Retiro;
-- Nueva MPR/COM;
-- Nuevo Cliente;
-- Nuevo Proveedor.
-
-Características visuales:
-
-- título claro;
-- labels sobre inputs;
-- valores automáticos visualmente distinguibles de campos editables;
-- acciones al final;
-- `Cancelar` como acción secundaria;
-- acción de confirmación como botón principal/semántico correspondiente.
-
-Tratamiento visual (rediseño): contenedor dark (§10.1), borde fino, sin sombras, título H3/H2, inputs dark (§11.1).
-
-No definir tamaños de modal o breakpoint de modal hasta Fase 18 (responsive).
+Tratamiento: panel dark (§10.1, radius 10), título H2/H3, labels sobre inputs, valores automáticos distinguibles, acciones al final (`Cancelar` PrimaryDark; confirmación en su variante semántica). Overlay negro semitransparente. Sin sombras.
 
 ## 11.1 Inputs y selects
 
-Inputs dark:
-
-- fondo oscuro (`Background`);
-- borde claro/gris;
-- texto claro (`Surface`).
-
-Estado error:
-
-- borde `Red`.
-
-Estado invertido/claro:
-
-- fondo `Surface` `#FBFBFB`;
-- texto oscuro.
-
-Los selects siguen la misma familia visual que los inputs.
-
-Los valores automáticos (§38) siguen distinguiéndose visualmente de los campos editables.
+- Default: fondo `Surface Dark Degrade`, borde `Border Button`, texto `Surface`, placeholder `Text Muted`, radius `5 px`, B2/B4.
+- Error: borde y texto `Rojo`.
+- Variante de borde claro: fondo `Secondary` con borde `Surface` (frame de estilo, tercer input).
+- Select: misma familia, con flecha ▼ clara.
 
 ---
 
 # 12. Patrón de tablas
 
-Las tablas son el componente principal de información del ERP.
+- Encabezado: fondo `Border Contenedor` `#393939`, texto `Surface` B1, sin radius.
+- Encabezado destacado: fondo `Primary` (líneas del Pedido). Encabezado de alerta: fondo `Rojo` (Bajo stock).
+- Filas sobre `Secondary`, texto `Surface` B2, separador inferior 1 px `Surface`.
+- Fila de alerta: fondo `Alert Row` `#6B0000`, texto `Surface`.
+- Valores positivos en `Verde`, críticos en `Rojo`; cobertura con granel `(n)GR` en `Tertiary`.
+- Densidad alta; alineación numérica consistente; sin zebra.
 
-Patrón visual del rediseño:
-
-- compactas, densidad alta;
-- encabezado gris oscuro (`Gray`) con texto blanco (`Surface`);
-- filas sobre fondo oscuro, texto blanco;
-- separadores horizontales finos;
-- alineación numérica consistente;
-- filas de alerta pueden usar fondo rojo oscuro;
-- valores críticos pueden ir en `Red`;
-- valores positivos pueden ir en `Green`;
-- sin zebra striping decorativo salvo que el diseño lo requiera.
-
-Deben mantener:
-
-- encabezados consistentes;
-- alineación numérica coherente;
-- acciones al extremo correspondiente;
-- estados críticos visibles;
-- totales diferenciados.
-
-El rediseño preserva ordenamientos, búsquedas, filtros e interacciones existentes de cada tabla.
-
-Los cálculos y criterios que determinan cada estado pertenecen a `BUSINESS_RULES.md`.
+El rediseño preserva ordenamientos, búsquedas, filtros e interacciones existentes. Los criterios de cada estado pertenecen a `BUSINESS_RULES.md`.
 
 ---
 
 # 13. Estados críticos en rojo
 
-El rojo comunica un problema operativo que requiere atención.
-
-Casos confirmados:
+El rojo comunica un problema operativo que requiere atención:
 
 - stock actual menor que stock mínimo;
 - faltante de cobertura en Resumen de Pedidos;
-- celda de un PED cuya cantidad no puede cubrirse completamente;
-- estados/acciones destructivas cuando corresponda.
+- celda de un PED que no puede cubrirse completamente;
+- acciones destructivas.
 
-Tratamiento visual:
+Tratamiento:
 
-- valor crítico en `Red`;
-- fila de alerta con fondo rojo oscuro y texto `Surface` (en el Figma: filas `URG PARA PEDIDOS`, filas de stock bajo el mínimo, fila `SALDO ACTUALIZADO` con deuda);
-- sección de alerta: título + línea en `Red`, contenedor con borde `Red` y encabezados de tabla con fondo `Red` (bloque `BAJO STOCK` del Dashboard).
+- valor crítico en `Rojo`;
+- fila de alerta con fondo `Alert Row` `#6B0000` y texto `Surface` (`URG PARA PEDIDOS`, stock bajo el mínimo, `SALDO ACTUALIZADO` con deuda);
+- sección de alerta: título + línea `Rojo`, panel con borde `Rojo`, encabezados de tabla en `Rojo` (`Bajo stock`).
 
-El rojo oscuro de fondo de fila que muestra el Figma **no está en la paleta**: debe incorporarse como token en §4.1 con su valor exacto del Figma. Hasta entonces se usa `Red Hover` (`#B10000`); no usar `Red` (`#DD0000`) como fondo de fila completa.
-
-No usar rojo como decoración.
-
-El verde (`Green`) comunica resultado favorable (por ejemplo, Ganancia positiva) y tampoco se usa como decoración.
+No usar rojo ni verde como decoración.
 
 ---
 
@@ -1036,8 +934,8 @@ Deben priorizar:
 Patrón KPI (rediseño):
 
 - **Default:** fondo negro, borde dorado (`Primary`);
-- **Seleccionada / invertida:** fondo claro (`Surface`), contenido oscuro;
-- **Destacada positiva:** fondo `Green` sólido.
+- **Con ícono:** igual que Default, con ícono a la izquierda del numeral;
+- **Destacada positiva:** fondo `Verde` sólido.
 
 Numerales grandes y labels compactos.
 
@@ -1157,7 +1055,7 @@ La pantalla secundaria muestra:
 
 Debe existir acción Editar Fórmula.
 
-Tratamiento visual (rediseño, según el frame Fórmulas): navegación de pantalla secundaria con `Volver` y título `FORMULAS`; `NUEVA FORMULA` (Secondary) arriba a la derecha; lista lateral de PBA con el patrón List item (seleccionado invertido, con icono); panel con Producto Base y código, tabla de composición (Código, Materia Prima, Cantidad (kg), Costo por kilo, Costo final) y totales automáticos (Total kg granel, Costo granel, Costo producto por kg); `Editar Formula` (Secondary) abajo a la derecha.
+Tratamiento visual (rediseño, según el frame Fórmulas): navegación de pantalla secundaria con `Volver` y título `FORMULAS`; `NUEVA FORMULA` (Secondary) arriba a la derecha; lista lateral de PBA con el patrón Lista (seleccionado con fondo degradé, con icono); panel con Producto Base y código, tabla de composición (Código, Materia Prima, Cantidad (kg), Costo por kilo, Costo final) y totales automáticos (Total kg granel, Costo granel, Costo producto por kg); `Editar Formula` (Secondary) abajo a la derecha.
 
 ---
 
@@ -1179,7 +1077,7 @@ Ficha:
 - costo extra variable 2%;
 - costo total.
 
-Tratamiento visual (rediseño, según el frame Productos Finales): navegación de pantalla secundaria con `Volver` y título `PRODUCTOS FINALES`; `NUEVO PRODUCTO` (Secondary) arriba a la derecha; lista lateral de PRO con el patrón List item (seleccionado invertido); panel con la ficha en grilla de pares label/valor, tabla de composición (Código, Cantidad, Componente, Costo), `Costo Extra Variable 2%` y `Costo Total` destacado; `Editar Producto` (Secondary) abajo a la derecha.
+Tratamiento visual (rediseño, según el frame Productos Finales): navegación de pantalla secundaria con `Volver` y título `PRODUCTOS FINALES`; `NUEVO PRODUCTO` (Secondary) arriba a la derecha; lista lateral de PRO con el patrón Lista (seleccionado con fondo degradé); panel con la ficha en grilla de pares label/valor, tabla de composición (Código, Cantidad, Componente, Costo), `Costo Extra Variable 2%` y `Costo Total` destacado; `Editar Producto` (Secondary) abajo a la derecha.
 
 El campo Peso se muestra siempre en kg (`Peso (kg)`), aunque el frame muestre otra unidad.
 
@@ -1245,7 +1143,7 @@ Mantener patrón de pestañas consistente.
 
 Tratamiento visual (rediseño, según el frame Stock):
 
-- pestañas `Productos` / `Materia Prima` / `Componentes` como botones con icono en patrón List item (seleccionada invertida);
+- pestañas `Productos` / `Materia Prima` / `Componentes` como botones con icono en patrón Lista (seleccionada con fondo degradé);
 - `NUEVA MATERIA PRIMA/COMPONENTE` (Secondary) arriba a la derecha;
 - título de sección con línea horizontal y `Buscar` alineado a la derecha;
 - tabla compacta con filas `actual < mínimo` con fondo rojo oscuro (§13);
@@ -1335,7 +1233,7 @@ Solo PED abiertos.
 
 Tratamiento visual de la pantalla Pedidos (rediseño, según el frame Pedidos):
 
-- sección `PEDIDOS`: cada PED abierto como card seleccionable en patrón List item (borde dorado; seleccionada invertida) con icono, código, cliente/origen y fecha; un botón circular `+` crea un Nuevo Pedido;
+- sección `PEDIDOS`: cada PED abierto como card seleccionable (fondo degradé, borde `Border Contenedor`; seleccionada con borde `Primary`) con icono, código, cliente/origen y fecha; un botón circular `+` crea un Nuevo Pedido;
 - al seleccionar una card, el detalle del PED (§19) se muestra en un panel debajo, en la misma pantalla;
 - sección `RESUMEN DE PEDIDOS`: matriz compacta (§12) con faltantes en `Red` y cobertura con granel en tono secundario.
 
@@ -1691,7 +1589,7 @@ El botón PDF del frame no corresponde a un documento vigente de Ventas (los PDF
 ## 25.0 Tratamiento visual (rediseño, según el frame Clientes)
 
 - navegación de pantalla secundaria con `Volver` y título `CLIENTES`; Nueva Cuenta como botón icon-only (persona +) arriba a la derecha;
-- lista lateral de clientes con el patrón List item (icono de persona; negro por defecto, invertido cuando está seleccionado) y `Ver mas` al final;
+- lista lateral de clientes con el patrón Lista (icono de persona; transparente por defecto, fondo degradé cuando está seleccionado) y `Ver mas` al final;
 - `FICHA CLIENTE <nombre>`: título con línea, lápiz de edición a la derecha y datos en grilla de pares label/valor;
 - `MOVIMIENTOS`: título con línea y `Buscar` alineado a la derecha; asiento con tabla compacta (Fecha, Venta, Remito, Pago, Total), acceso al RTO por icono y lápiz en Pagos;
 - fila final `SALDO ACTUALIZADO`, con fondo rojo oscuro cuando hay deuda (§13);

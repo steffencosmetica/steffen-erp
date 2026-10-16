@@ -167,9 +167,9 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="relative w-full max-w-4xl bg-white border border-[#D9D9D9] rounded-[4px] shadow-2xl p-6 max-h-[92vh] overflow-y-auto">
+      <div className="relative w-full max-w-4xl bg-white border border-steffen-border rounded-[5px] shadow-2xl p-6 max-h-[92vh] overflow-y-auto">
         {/* Encabezado según Figma NUEVO-PRODUCTO.png */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#D9D9D9]">
+        <div className="flex items-center justify-between pb-4 border-b border-steffen-border">
           <div>
             <h2 className="text-xl font-bold tracking-tight text-black uppercase">
               NUEVO PRODUCTO
@@ -188,7 +188,7 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
         </div>
 
         {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-[2px] flex items-center gap-2">
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-[5px] flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
             <span>{error}</span>
           </div>
@@ -206,7 +206,7 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
               placeholder="Ej: Shampoo Semi de Lino 1000cc"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border border-[#D9D9D9] text-xs rounded-[2px] focus:outline-none focus:border-[#0E50A0]"
+              className="w-full px-3 py-2 border border-steffen-border text-xs rounded-[5px] focus:outline-none focus:border-steffen-gold"
             />
           </div>
 
@@ -218,7 +218,7 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
                 <label className="block text-xs font-bold text-black uppercase mb-1">
                   Codigo
                 </label>
-                <div className="px-3 py-2 bg-gray-50 border border-[#D9D9D9] text-xs font-mono font-bold text-gray-500 rounded-[2px]">
+                <div className="px-3 py-2 bg-gray-50 border border-steffen-border text-xs font-bold text-gray-500 rounded-[5px]">
                   Automatico (PROxxxx)
                 </div>
               </div>
@@ -231,7 +231,7 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
                   required
                   value={baseProductId}
                   onChange={(e) => setBaseProductId(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#D9D9D9] text-xs rounded-[2px] focus:outline-none focus:border-[#0E50A0] bg-white cursor-pointer"
+                  className="w-full px-3 py-2 border border-steffen-border text-xs rounded-[5px] focus:outline-none focus:border-steffen-gold bg-white cursor-pointer"
                 >
                   <option value="">Seleccionar Producto Base</option>
                   {baseProducts.map((bp) => (
@@ -259,7 +259,7 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
                   placeholder="0.000 (ej: 0.180 para 180g)"
                   value={weightKg}
                   onChange={(e) => setWeightKg(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#D9D9D9] text-xs font-mono rounded-[2px] focus:outline-none focus:border-[#0E50A0]"
+                  className="w-full px-3 py-2 border border-steffen-border text-xs rounded-[5px] focus:outline-none focus:border-steffen-gold"
                 />
               </div>
 
@@ -275,7 +275,7 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
                   placeholder="Ej: 50"
                   value={stockMinimum}
                   onChange={(e) => setStockMinimum(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#D9D9D9] text-xs font-mono rounded-[2px] focus:outline-none focus:border-[#0E50A0]"
+                  className="w-full px-3 py-2 border border-steffen-border text-xs rounded-[5px] focus:outline-none focus:border-steffen-gold"
                 />
               </div>
             </div>
@@ -290,7 +290,7 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
                   type="date"
                   value={createdDate}
                   onChange={(e) => setCreatedDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#D9D9D9] text-xs rounded-[2px] focus:outline-none focus:border-[#0E50A0]"
+                  className="w-full px-3 py-2 border border-steffen-border text-xs rounded-[5px] focus:outline-none focus:border-steffen-gold"
                 />
               </div>
 
@@ -304,7 +304,7 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
                   placeholder="Ej: Botella 1000cc / Pote 180g"
                   value={presentation}
                   onChange={(e) => setPresentation(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#D9D9D9] text-xs rounded-[2px] focus:outline-none focus:border-[#0E50A0]"
+                  className="w-full px-3 py-2 border border-steffen-border text-xs rounded-[5px] focus:outline-none focus:border-steffen-gold"
                 />
               </div>
 
@@ -319,7 +319,7 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
                   placeholder="0"
                   value={initialStock}
                   onChange={(e) => setInitialStock(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#D9D9D9] text-xs font-mono rounded-[2px] focus:outline-none focus:border-[#0E50A0]"
+                  className="w-full px-3 py-2 border border-steffen-border text-xs rounded-[5px] focus:outline-none focus:border-steffen-gold"
                 />
                 <p className="text-[11px] text-gray-500 mt-1">
                   Si es mayor a 0, se creará un movimiento de ajuste inicial (MST) automáticamente.
@@ -329,7 +329,7 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
           </div>
 
           {/* Tabla de BOM de Componentes según Figma NUEVO-PRODUCTO.png */}
-          <div className="border-t border-[#D9D9D9] pt-4">
+          <div className="border-t border-steffen-border pt-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-xs font-bold text-black uppercase tracking-wider">
                 COMPOSICIÓN DE COMPONENTES (BOM)
@@ -337,7 +337,7 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
               <button
                 type="button"
                 onClick={handleAddRow}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black text-[#D2AB68] hover:bg-neutral-800 text-xs font-bold uppercase rounded-[2px] transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black text-steffen-gold hover:bg-neutral-800 text-xs font-bold uppercase rounded-[5px] transition-colors cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Agregar componente
@@ -347,7 +347,7 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-[#D9D9D9] text-black font-bold uppercase text-left">
+                  <tr className="border-b border-steffen-border text-black font-bold uppercase text-left">
                     <th className="py-2 px-2 w-36">Cantidad</th>
                     <th className="py-2 px-2">Componentes</th>
                     <th className="py-2 px-2 w-32 text-right">Costo total</th>
@@ -374,7 +374,7 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
                             placeholder="1"
                             value={row.quantityPerUnit}
                             onChange={(e) => handleRowChange(idx, 'quantityPerUnit', e.target.value)}
-                            className="w-full px-2 py-1.5 border border-[#D9D9D9] text-xs font-mono rounded-[2px] focus:outline-none focus:border-[#0E50A0]"
+                            className="w-full px-2 py-1.5 border border-steffen-border text-xs rounded-[5px] focus:outline-none focus:border-steffen-gold"
                           />
                         </td>
 
@@ -383,7 +383,7 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
                           <select
                             value={row.componentId}
                             onChange={(e) => handleRowChange(idx, 'componentId', e.target.value)}
-                            className="w-full px-2 py-1.5 border border-[#D9D9D9] text-xs rounded-[2px] focus:outline-none focus:border-[#0E50A0] bg-white cursor-pointer"
+                            className="w-full px-2 py-1.5 border border-steffen-border text-xs rounded-[5px] focus:outline-none focus:border-steffen-gold bg-white cursor-pointer"
                           >
                             <option value="">Seleccionar Componente</option>
                             {components.map((c) => (
@@ -395,7 +395,7 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
                         </td>
 
                         {/* Costo de línea estimado */}
-                        <td className="py-2 px-2 text-right font-mono text-gray-700">
+                        <td className="py-2 px-2 text-right text-gray-700">
                           {lineCost > 0 ? formatArs(lineCost) : 'Automatico'}
                         </td>
 
@@ -420,7 +420,7 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
             </div>
 
             {/* Fila de Totales informativos según Figma NUEVO-PRODUCTO.png */}
-            <div className="pt-4 mt-2 border-t border-[#D9D9D9] flex flex-wrap items-center justify-between text-xs text-gray-700 font-semibold">
+            <div className="pt-4 mt-2 border-t border-steffen-border flex flex-wrap items-center justify-between text-xs text-gray-700 font-semibold">
               <div className="flex items-center gap-2">
                 <span>Costo extra variable:</span>
                 <span className="font-bold text-black">2% fijo</span>
@@ -428,7 +428,7 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
 
               <div className="flex items-center gap-2">
                 <span>Costo total:</span>
-                <span className="font-mono font-bold text-[#0E50A0]">
+                <span className="font-bold text-steffen-blue">
                   Automatico por CostEngine
                 </span>
               </div>
@@ -436,12 +436,12 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
           </div>
 
           {/* Botones Inferiores según Figma NUEVO-PRODUCTO.png */}
-          <div className="pt-4 border-t border-[#D9D9D9] flex items-center justify-end gap-3">
+          <div className="pt-4 border-t border-steffen-border flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-6 py-2.5 bg-[#DD0000] text-white hover:bg-red-700 text-xs font-bold uppercase rounded-[2px] transition-colors cursor-pointer"
+              className="px-6 py-2.5 bg-steffen-red text-white hover:bg-red-700 text-xs font-bold uppercase rounded-[5px] transition-colors cursor-pointer"
             >
               Cancelar
             </button>
@@ -449,7 +449,7 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0E50A0] text-white hover:bg-blue-800 text-xs font-bold uppercase rounded-[2px] transition-colors cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-steffen-blue text-white hover:bg-blue-800 text-xs font-bold uppercase rounded-[5px] transition-colors cursor-pointer disabled:opacity-50"
             >
               <Plus className="w-4 h-4" />
               {isSubmitting ? 'Creando...' : 'Crear producto'}

@@ -105,8 +105,8 @@ Fuente de verdad visual: docs/DESIGN.md + docs/COMPONENTS.md + nuevo Figma (docs
 - Red #DD0000 (hover #B10000)
 - Headers de tabla: normalmente gris oscuro (ver DESIGN.md §12), no claros.
 - #D9D9D9 queda como Border / superficie clara; no es el color global de header de tabla.
-- botones rounded-[2px]
-- contenedores rounded-[5px]
+- botones / inputs rounded-[5px], fondo Surface Dark Degrade (#121212→#000000), borde Border Button #D9D9D9
+- paneles / contenedores rounded-[10px], fondo #000000, borde Border Contenedor #393939; fondo de página #101010
 - sin shadows
 
 Seguir Figma antes de inventar UI.

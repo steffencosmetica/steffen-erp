@@ -114,9 +114,9 @@ export const OrdersView: React.FC<{
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-lg border border-[#D9D9D9]">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-[5px] border border-steffen-border">
         <div>
-          <h1 className="text-2xl font-bold text-[#000000]">Pedidos</h1>
+          <h1 className="text-2xl font-bold text-steffen-surface">Pedidos</h1>
           <p className="text-xs text-gray-500">
             Gestión de pedidos comerciales abiertos, matriz de planificación virtual y confirmación de Remito (RTO).
           </p>
@@ -128,7 +128,7 @@ export const OrdersView: React.FC<{
 
       {/* Mandatory Pending RTM Banner */}
       {pendingRtm && (
-        <div className="p-4 bg-amber-100 border-2 border-amber-500 rounded-lg flex items-center justify-between shadow-sm animate-pulse">
+        <div className="p-4 bg-amber-100 border-2 border-amber-500 rounded-[5px] flex items-center justify-between shadow-sm animate-pulse">
           <div className="flex items-center gap-3">
             <AlertTriangle className="w-6 h-6 text-amber-700" />
             <div>
@@ -147,15 +147,15 @@ export const OrdersView: React.FC<{
       )}
 
       {/* Table of Open Orders */}
-      <div className="bg-white p-5 rounded-lg border border-[#D9D9D9] shadow-xs">
-        <h2 className="text-base font-bold text-[#000000] mb-3">Pedidos Abiertos</h2>
+      <div className="bg-white p-5 rounded-[5px] border border-steffen-border shadow-xs">
+        <h2 className="text-base font-bold text-steffen-surface mb-3">Pedidos Abiertos</h2>
         {openOrders.length === 0 ? (
           <p className="text-sm text-gray-400 py-6 text-center">No hay pedidos abiertos actualmente.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-[#D9D9D9] text-gray-500 font-semibold text-left">
+                <tr className="border-b border-steffen-border text-gray-500 font-semibold text-left">
                   <th className="py-2.5">CÓDIGO</th>
                   <th className="py-2.5">FECHA</th>
                   <th className="py-2.5">CLIENTE / CANAL</th>
@@ -195,11 +195,11 @@ export const OrdersView: React.FC<{
 
                   return (
                     <tr key={o.id} className="hover:bg-gray-50">
-                      <td className="py-3 font-bold text-[#B99D22]">{o.code}</td>
+                      <td className="py-3 font-bold text-steffen-gold">{o.code}</td>
                       <td className="py-3 text-gray-600">{new Date(o.business_date || o.created_at).toLocaleDateString('es-AR')}</td>
-                      <td className="py-3 font-semibold text-[#000]">{custName}</td>
+                      <td className="py-3 font-semibold text-steffen-surface">{custName}</td>
                       <td className="py-3 text-gray-500">{priceList?.name}</td>
-                      <td className="py-3 text-right font-bold text-base text-[#393939]">
+                      <td className="py-3 text-right font-bold text-base text-steffen-surface/80">
                         $ {Math.round(totalEst).toLocaleString('es-AR')}
                       </td>
                       <td className="py-3 text-center">
@@ -217,10 +217,10 @@ export const OrdersView: React.FC<{
       </div>
 
       {/* Planning Matrix (Matriz de Planificación de Pedidos) */}
-      <div className="bg-white p-5 rounded-lg border border-[#D9D9D9] shadow-xs space-y-4">
+      <div className="bg-white p-5 rounded-[5px] border border-steffen-border shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
           <div>
-            <h2 className="text-base font-bold text-[#000000] uppercase tracking-wider">
+            <h2 className="text-base font-bold text-steffen-surface uppercase tracking-wider">
               Resumen de Pedidos (Matriz de Planificación)
             </h2>
             <p className="text-xs text-gray-500">
@@ -236,16 +236,16 @@ export const OrdersView: React.FC<{
           <p className="text-sm text-gray-400 py-6 text-center">No hay productos en pedidos abiertos para simular.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-xs border border-[#D9D9D9] border-collapse">
+            <table className="w-full text-xs border border-steffen-border border-collapse">
               <thead>
-                <tr className="bg-gray-100 text-[#000] border-b border-[#D9D9D9]">
-                  <th className="py-2.5 px-3 text-left sticky left-0 bg-gray-100 border-r border-[#D9D9D9] z-10 w-64">
+                <tr className="bg-gray-100 text-steffen-surface border-b border-steffen-border">
+                  <th className="py-2.5 px-3 text-left sticky left-0 bg-gray-100 border-r border-steffen-border z-10 w-64">
                     PRODUCTO / PRIORIDAD
                   </th>
                   {planningData.openOrders.map((o) => (
-                    <th key={o.orderId} className="py-2 px-3 text-center border-r border-[#D9D9D9] min-w-[120px]">
-                      <div className="font-bold text-[#B99D22]">{o.code}</div>
-                      <div className="truncate max-w-[110px] text-gray-600 font-normal">{o.customerName}</div>
+                    <th key={o.orderId} className="py-2 px-3 text-center border-r border-steffen-border min-w-[90px]">
+                      <div className="font-bold text-steffen-gold">{o.code}</div>
+                      <div className="truncate max-w-[83px] text-gray-600 font-normal">{o.customerName}</div>
                       <div className="flex justify-center gap-1 mt-1">
                         <button
                           onClick={() => moveOrderPriority(o.orderId, 'LEFT')}
@@ -270,13 +270,13 @@ export const OrdersView: React.FC<{
                   <th className="py-2 px-3 text-right bg-gray-200 font-bold">FALTANTE</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#D9D9D9]">
+              <tbody className="divide-y divide-steffen-border">
                 {planningData.products.map((p) => (
                   <tr key={p.productId} className="hover:bg-gray-50">
                     {/* Sticky Product Column with up/down priority arrows */}
-                    <td className="py-2.5 px-3 sticky left-0 bg-white border-r border-[#D9D9D9] z-10 flex items-center justify-between">
+                    <td className="py-2.5 px-3 sticky left-0 bg-white border-r border-steffen-border z-10 flex items-center justify-between">
                       <div>
-                        <span className="font-bold text-[#393939]">{p.productName}</span>
+                        <span className="font-bold text-steffen-surface/80">{p.productName}</span>
                         <span className="block text-[11px] text-gray-400">{p.productCode}</span>
                       </div>
                       <div className="flex items-center gap-1 ml-2">
@@ -301,15 +301,15 @@ export const OrdersView: React.FC<{
                     {planningData.openOrders.map((o) => {
                       const cov = p.ordersCoverage[o.orderId];
                       if (!cov || cov.requested === 0) {
-                        return <td key={o.orderId} className="py-2 px-3 text-center border-r border-[#D9D9D9] text-gray-300">-</td>;
+                        return <td key={o.orderId} className="py-2 px-3 text-center border-r border-steffen-border text-gray-300">-</td>;
                       }
 
                       return (
                         <td
                           key={o.orderId}
-                          className={`py-2 px-3 text-center border-r border-[#D9D9D9] font-bold ${
+                          className={`py-2 px-3 text-center border-r border-steffen-border font-bold ${
                             cov.hasShortage
-                              ? 'bg-red-100 text-[#DD0000] border-red-300'
+                              ? 'bg-red-100 text-steffen-red border-red-300'
                               : 'text-gray-800'
                           }`}
                           title={`Solicitado: ${cov.requested} un | Cubierto: ${cov.covered} un`}
@@ -325,7 +325,7 @@ export const OrdersView: React.FC<{
                     <td className="py-2.5 px-3 text-right text-blue-700 font-semibold">{p.coveredFromBulk} un</td>
                     <td
                       className={`py-2.5 px-3 text-right font-bold text-sm ${
-                        p.finalShortage > 0 ? 'text-[#DD0000] bg-red-50' : 'text-[#008102]'
+                        p.finalShortage > 0 ? 'text-steffen-red bg-red-50' : 'text-steffen-green'
                       }`}
                     >
                       {p.finalShortage > 0 ? `${p.finalShortage} un` : '0'}
@@ -341,10 +341,10 @@ export const OrdersView: React.FC<{
       {/* Selected Order Detail Panel / Modal */}
       {selectedOrder && (
         <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
-          <div className="bg-white rounded-lg shadow-2xl border border-[#D9D9D9] max-w-4xl w-full my-6 max-h-[92vh] flex flex-col">
-            <div className="flex justify-between items-center px-6 py-4 border-b border-[#D9D9D9] bg-[#FBFBFB]">
+          <div className="bg-white rounded-[5px] shadow-2xl border border-steffen-border max-w-4xl w-full my-6 max-h-[92vh] flex flex-col">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-steffen-border bg-steffen-bg">
               <div>
-                <h2 className="text-xl font-bold text-[#000]">Preparación y Confirmación — {selectedOrder.code}</h2>
+                <h2 className="text-xl font-bold text-steffen-surface">Preparación y Confirmación — {selectedOrder.code}</h2>
                 <span className="text-xs text-gray-500">
                   {selectedOrder.customer_source === 'REGISTERED_CUSTOMER'
                     ? state.customers[selectedOrder.customer_id!]?.name
@@ -360,7 +360,7 @@ export const OrdersView: React.FC<{
             </div>
 
             <div className="p-6 overflow-y-auto space-y-4 flex-1">
-              {errorMsg && <div className="p-3 bg-red-100 text-[#DD0000] rounded text-sm font-semibold">{errorMsg}</div>}
+              {errorMsg && <div className="p-3 bg-red-100 text-steffen-red rounded text-sm font-semibold">{errorMsg}</div>}
 
               <div className="p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-900">
                 <strong>Regla de negocio (AG):</strong> Ingrese en la columna <strong>AG (Cantidad Enviada)</strong> las
@@ -372,7 +372,7 @@ export const OrdersView: React.FC<{
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="bg-gray-100 border-b border-[#D9D9D9] text-left">
+                    <tr className="bg-gray-100 border-b border-steffen-border text-left">
                       <th className="py-2 px-3">PRODUCTO</th>
                       <th className="py-2 px-3 text-right">SOLICITADO</th>
                       <th className="py-2 px-3 text-right">STOCK FÍSICO ACTUAL</th>
@@ -399,7 +399,7 @@ export const OrdersView: React.FC<{
                               {stockItem?.name} ({product?.presentation})
                             </td>
                             <td className="py-3 px-3 text-right font-bold">{item.requested_quantity} un</td>
-                            <td className={`py-3 px-3 text-right font-medium ${currentStock < currentAg ? 'text-[#DD0000] font-bold' : ''}`}>
+                            <td className={`py-3 px-3 text-right font-medium ${currentStock < currentAg ? 'text-steffen-red font-bold' : ''}`}>
                               {currentStock} un
                             </td>
                             <td className="py-3 px-3 text-center bg-amber-50">
@@ -429,8 +429,8 @@ export const OrdersView: React.FC<{
               </div>
 
               {/* Total Breakdown */}
-              <div className="flex justify-between items-start pt-4 border-t border-[#D9D9D9]">
-                <Button variant="secundario" onClick={() => setDeleteConfirmOpen(true)} className="text-[#DD0000] flex items-center gap-1">
+              <div className="flex justify-between items-start pt-4 border-t border-steffen-border">
+                <Button variant="secundario" onClick={() => setDeleteConfirmOpen(true)} className="text-steffen-red flex items-center gap-1">
                   <Trash2 className="w-4 h-4" /> Cancelar / Borrar Pedido
                 </Button>
 
@@ -449,7 +449,7 @@ export const OrdersView: React.FC<{
 
                   <div className="flex justify-between font-bold text-sm pt-2 border-t border-gray-200">
                     <span>Total Pedido a Facturar:</span>
-                    <span className="text-[#B99D22]">
+                    <span className="text-steffen-gold">
                       ${' '}
                       {Math.round(
                         Object.values(state.orderItems)
@@ -462,7 +462,7 @@ export const OrdersView: React.FC<{
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 px-6 py-4 border-t border-[#D9D9D9] bg-gray-50">
+            <div className="flex justify-end gap-3 px-6 py-4 border-t border-steffen-border bg-gray-50">
               <Button variant="secundario" onClick={() => setSelectedOrderId(null)}>
                 Volver
               </Button>

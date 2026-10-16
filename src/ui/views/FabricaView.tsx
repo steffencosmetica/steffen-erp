@@ -3,13 +3,9 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import {
-  Factory,
-  Package,
-  Plus,
-  ArrowRight,
-  FlaskConical,
-} from 'lucide-react';
+import { Plus } from 'lucide-react';
+import { ErpIcon } from '@/ui/components/ErpIcon';
+import { Panel, SectionHeader, CreateButton, tableStyles, forwardLinkClass, ForwardArrow } from '@/ui/components/UIComponents';
 import { type CostGainAnalysisDTO } from '@/actions/cost-gain.dto';
 import { CostGainView } from './CostGainView';
 import { RegistrarFabricacionModal, type BaseProductOption } from '@/ui/modals/RegistrarFabricacionModal';
@@ -63,162 +59,98 @@ export const FabricaView: React.FC<FabricaViewProps> = ({
 
   const activeFormula = formulaOptions.find((f) => f.id === selectedFormulaId) || formulaOptions[0] || null;
 
+  // Atajo visual: tocar un granel abre Envasado con ese lote preseleccionado (DESIGN.md §4.3).
+  const [envasadoLotId, setEnvasadoLotId] = useState<string | undefined>(undefined);
+  const openEnvasadoForLot = (lotId: string) => {
+    setEnvasadoLotId(lotId);
+    setIsEnvasadoModalOpen(true);
+  };
+
   return (
-    <div className="max-w-[1600px] mx-auto pb-16 space-y-5">
-      {/* 1. Fila Superior: Disponible en granel + Registrar */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Disponible en granel (2 columnas en desktop, altura fija con scroll interno) */}
-        <div className="lg:col-span-2 bg-white border border-[#D9D9D9] rounded-[5px] p-5 h-[240px] flex flex-col justify-between">
-          <div className="flex-1 flex flex-col min-h-0">
-            <div className="flex justify-between items-center mb-3 pb-1 border-b border-black">
-              <h2 className="text-base font-bold text-black uppercase tracking-wider">
-                Disponible en granel
-              </h2>
-              <span className="text-xs text-neutral-400">Lotes abiertos de fabricación</span>
-            </div>
-
-            <div className="flex-1 overflow-y-auto min-h-0">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="bg-[#D9D9D9] text-black font-bold uppercase text-[11px] sticky top-0 z-10">
-                    <th className="py-2.5 px-3 text-left w-[20%]">CODIGO</th>
-                    <th className="py-2.5 px-3 text-left w-[25%]">FECHA</th>
-                    <th className="py-2.5 px-3 text-left w-[35%]">PRODUCTO BASE</th>
-                    <th className="py-2.5 px-3 text-right w-[20%]">GRANEL</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#E5E5E5]">
-                  {bulkLots.length > 0 ? (
-                    bulkLots.map((lot) => (
-                      <tr key={lot.id} className="hover:bg-gray-50/80 transition-colors">
-                        <td className="py-2.5 px-3 font-mono font-semibold text-black">{lot.code}</td>
-                        <td className="py-2.5 px-3 text-gray-700">{lot.businessDate}</td>
-                        <td className="py-2.5 px-3 font-semibold text-black truncate max-w-0">
-                          {lot.baseProductName}
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-mono font-bold text-black">
-                          {formatKg(lot.kgAvailable)} Kg
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={4} className="py-10 text-center text-xs text-neutral-400">
-                        Sin lotes a granel disponibles
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+    <div className=" pb-16 space-y-5">
+      {/* 1. GRANELES — tiles por lote abierto + `+` para registrar fabricación (Figma Mi Fábrica) */}
+      <Panel className="!py-6">
+        <div className="flex items-center gap-8 overflow-x-auto pb-2 px-4">
+          {bulkLots.map((lot) => (
+            <button
+              key={lot.id}
+              type="button"
+              onClick={() => openEnvasadoForLot(lot.id)}
+              title={`Registrar envasado del lote ${lot.code}`}
+              className="shrink-0 w-[143px] flex flex-col items-center text-center gap-1 px-2 py-2 rounded-[10px] border border-transparent hover:border-steffen-gold transition-colors cursor-pointer"
+            >
+              <ErpIcon name="tanque" tone="original" className="w-[98px] h-[120px] grayscale brightness-[1.6]" />
+              <span className="mt-2 text-lg text-steffen-surface truncate max-w-full">{lot.baseProductName}</span>
+              <span className="text-2xl font-bold text-steffen-surface">{formatKg(lot.kgAvailable)}Kg</span>
+              <span className="mt-1 text-base text-steffen-surface">
+                <span>{lot.code}</span> - {lot.businessDate}
+              </span>
+            </button>
+          ))}
+          <div className="shrink-0 flex items-center px-4">
+            <CreateButton label="Registrar fabricación" onClick={() => setIsFabricacionModalOpen(true)} />
           </div>
         </div>
+        <p className="mt-4 text-base text-steffen-surface text-center">
+          {bulkLots.length > 0
+            ? 'Presionar un granel para registrar un envasado'
+            : 'Sin lotes a granel disponibles. Usá + para registrar una fabricación.'}
+        </p>
+      </Panel>
 
-        {/* Registrar (Acciones directas, altura proporcional) */}
-        <div className="bg-white border border-[#D9D9D9] rounded-[5px] p-5 h-[240px] flex flex-col justify-between">
-          <div>
-            <h2 className="text-base font-bold text-black uppercase tracking-wider mb-3 pb-1 border-b border-black">
-              Registrar
-            </h2>
-            <div className="grid grid-cols-2 gap-3 mb-2">
-              <button
-                type="button"
-                onClick={() => setIsFabricacionModalOpen(true)}
-                className="h-12 bg-[#0E50A0] hover:bg-[#0c4386] cursor-pointer text-white rounded-[5px] font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors"
-                title="Registrar nueva fabricación de granel"
-              >
-                <Factory className="w-4 h-4" />
-                <span>Fabricación</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsEnvasadoModalOpen(true)}
-                className="h-12 bg-[#0E50A0] hover:bg-[#0c4386] cursor-pointer text-white rounded-[5px] font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors"
-                title="Registrar nuevo envasado de producto final"
-              >
-                <Package className="w-4 h-4" />
-                <span>Envasado</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-3 border-t border-[#E5E5E5]">
-            <Link
-              href="/stock?tab=productos&action=new"
-              className="h-8 px-3.5 bg-[#D2AB68] hover:bg-[#c29b58] text-white rounded-[5px] text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1.5 transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Nuevo Producto</span>
-            </Link>
-            <Link
-              href="/stock?tab=productos"
-              className="text-xs font-bold text-[#0E50A0] hover:underline inline-flex items-center gap-1"
-            >
-              <span>Ver todos</span>
-              <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Fila Media: Próximas fabricaciones + Fórmulas Granel */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Próximas fabricaciones (bajo stock, 2 columnas, altura fija con scroll interno) */}
-        <div className="lg:col-span-2 bg-white border border-[#D9D9D9] rounded-[5px] p-5 h-[320px] flex flex-col justify-between">
-          <div className="flex-1 flex flex-col min-h-0">
-            <div className="flex justify-between items-center mb-3 pb-1 border-b border-black">
-              <h2 className="text-base font-bold text-black uppercase tracking-wider">
-                Próximas fabricaciones (bajo stock)
-              </h2>
-              <span className="text-xs text-neutral-400">Alertas de producción</span>
-            </div>
-
-            <div className="flex-1 overflow-y-auto min-h-0">
-              <table className="w-full text-xs">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
+        {/* Columna izquierda: Próxima fabricación + Costo-Ganancia */}
+        <div className="lg:col-span-2 space-y-5">
+          <Panel>
+            <SectionHeader
+              title="Próxima fabricación"
+              actions={
+                <>
+                  <Link
+                    href="/stock?tab=productos&action=new"
+                    className="ui-btn-dark h-8 px-3 inline-flex items-center gap-1.5 rounded-[5px] text-xs font-semibold transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Nuevo producto
+                  </Link>
+                  <Link
+                    href="/stock?tab=productos"
+                    className={forwardLinkClass}
+                  >
+                    Ver todos <ForwardArrow />
+                  </Link>
+                </>
+              }
+            />
+            <div className="max-h-[195px] overflow-y-auto">
+              <table className={tableStyles.table}>
                 <thead>
-                  <tr className="bg-[#D9D9D9] text-black font-bold uppercase text-[11px] sticky top-0 z-10">
-                    <th className="py-2.5 px-3 text-left w-[40%]">PRODUCTO FINAL</th>
-                    <th className="py-2.5 px-3 text-center w-[15%]">STOCK MINIMO</th>
-                    <th className="py-2.5 px-3 text-center w-[15%]">STOCK ACTUAL</th>
-                    <th className="py-2.5 px-3 text-center w-[20%]">ESTADO</th>
-                    <th className="py-2.5 px-3 text-center w-[10%]">SIMULAR</th>
+                  <tr className={`${tableStyles.headRow} sticky top-0 z-10`}>
+                    <th className="py-2 px-3 text-left w-[40%]">PRODUCTO FINAL</th>
+                    <th className="py-2 px-3 text-center w-[15%]">STOCK MINIMO</th>
+                    <th className="py-2 px-3 text-center w-[15%]">STOCK ACTUAL</th>
+                    <th className="py-2 px-3 text-center w-[20%]">ESTADO</th>
+                    <th className="py-2 px-3 text-center w-[10%]">SIMULAR</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E5E5E5]">
+                <tbody>
                   {lowStockProducts.length > 0 ? (
                     lowStockProducts.map((p) => (
-                      <tr
-                        key={p.id}
-                        className={
-                          p.isCritical
-                            ? 'bg-[#FFA8A8] text-black font-medium transition-colors'
-                            : 'hover:bg-gray-50/80 transition-colors'
-                        }
-                      >
-                        <td className="py-2.5 px-3 font-semibold text-black truncate max-w-0">{p.name}</td>
-                        <td className="py-2.5 px-3 text-center text-gray-700">{p.stockMinimum}</td>
-                        <td className="py-2.5 px-3 text-center font-bold text-[#DD0000]">
-                          {p.stockActual}
+                      <tr key={p.id} className={p.isCritical ? tableStyles.rowAlert : tableStyles.row}>
+                        <td className="py-1.5 px-3 font-medium truncate max-w-0">{p.name}</td>
+                        <td className="py-1.5 px-3 text-center tabular-nums">{p.stockMinimum}</td>
+                        <td className="py-1.5 px-3 text-center tabular-nums">{p.stockActual}</td>
+                        <td className="py-1.5 px-3 text-center font-medium">
+                          {p.isCritical ? 'URG PARA PEDIDOS' : 'POCO STOCK'}
                         </td>
-                        <td className="py-2.5 px-3 text-center">
-                          {p.isCritical ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#DD0000] text-white">
-                              URG PARA PEDIDOS
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                              POCO STOCK
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          <FlaskConical className="w-4 h-4 text-gray-600 inline-block hover:text-black cursor-pointer" />
+                        <td className="py-1.5 px-3 text-center">
+                          <ErpIcon name="formula" tone="light" className="w-5 h-5 align-middle" />
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="py-12 text-center text-xs text-neutral-400">
+                      <td colSpan={5} className="py-10 text-center text-xs text-steffen-surface/60">
                         Sin alertas de producción bajo stock
                       </td>
                     </tr>
@@ -226,141 +158,119 @@ export const FabricaView: React.FC<FabricaViewProps> = ({
                 </tbody>
               </table>
             </div>
-          </div>
+          </Panel>
+
+          {/* Costo-Ganancia (Panel propio) */}
+          <CostGainView analysis={costGainAnalysis} basePath="/fabrica" />
         </div>
 
-        {/* Fórmulas Granel (Altura fija 320px) */}
-        <div className="bg-white border border-[#D9D9D9] rounded-[5px] p-5 h-[320px] flex flex-col justify-between">
-          <div className="flex-1 flex flex-col min-h-0">
-            <div className="flex justify-between items-center mb-2 pb-1 border-b border-black">
-              <h2 className="text-base font-bold text-black uppercase tracking-wider">
-                FORMULAS GRANEL
-              </h2>
-            </div>
-
-            <div className="mb-2">
-              <select
-                value={selectedFormulaId}
-                onChange={(e) => setSelectedFormulaId(e.target.value)}
-                className="w-full h-8 px-2.5 text-xs border border-[#D9D9D9] rounded-[5px] bg-white text-gray-700 focus:outline-none focus:border-[#0E50A0] cursor-pointer"
-              >
-                {formulaOptions.length === 0 && (
-                  <option value="">No hay fórmulas cargadas</option>
-                )}
-                {formulaOptions.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.name} ({f.code})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex-1 overflow-y-auto min-h-0 mb-2">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="bg-[#D9D9D9] text-black font-bold uppercase text-[11px] sticky top-0 z-10">
-                    <th className="py-2 px-2 text-left w-[65%]">MATERIA PRIMA</th>
-                    <th className="py-2 px-2 text-right w-[35%]">CANTIDAD</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#E5E5E5]">
-                  {activeFormula && activeFormula.items.length > 0 ? (
-                    activeFormula.items.map((it, idx) => (
-                      <tr key={idx}>
-                        <td className="py-2 px-2 text-gray-800 truncate max-w-0">{it.rawMaterialName}</td>
-                        <td className="py-2 px-2 text-right font-mono font-medium whitespace-nowrap">
-                          {formatKg(it.quantityKg)} kg
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={2} className="py-8 text-center text-xs text-neutral-400">
-                        Seleccione un producto base para ver su fórmula
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-2 border-t border-[#E5E5E5]">
-            <Link
-              href="/formulas?action=new"
-              className="h-8 px-3 bg-[#0E50A0] hover:bg-[#0c4386] text-white rounded-[5px] text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1.5 transition-colors"
-            >
-              <Plus className="w-3 h-3" />
-              <span>Nueva fórmula</span>
-            </Link>
-            <Link
-              href="/formulas"
-              className="text-xs font-bold text-[#0E50A0] hover:underline inline-flex items-center gap-1"
-            >
-              <span>Ver todas</span>
-              <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. Sección Canónica de Costo-Ganancia (Real Backend Data) */}
-      <CostGainView analysis={costGainAnalysis} basePath="/fabrica" />
-
-      {/* 4. Fila Inferior: Movimientos de fábrica (Altura fija con scroll interno) */}
-      <div className="bg-white border border-[#D9D9D9] rounded-[5px] p-5 h-[300px] flex flex-col justify-between">
-        <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex justify-between items-center mb-3 pb-1 border-b border-black">
-            <h2 className="text-base font-bold text-black uppercase tracking-wider">
-              Movimientos de fábrica
-            </h2>
-            <span className="text-xs text-neutral-400">Historial reciente de producción</span>
-          </div>
+        {/* Columna derecha: Fórmulas */}
+        <Panel className="flex flex-col min-h-[390px]">
+          <SectionHeader title="Formulas" />
+          <select
+            value={selectedFormulaId}
+            onChange={(e) => setSelectedFormulaId(e.target.value)}
+            aria-label="Seleccionar producto base"
+            className="w-full h-8 px-2.5 mb-3 text-sm border border-steffen-border rounded-[5px] cursor-pointer"
+          >
+            {formulaOptions.length === 0 && <option value="">No hay fórmulas cargadas</option>}
+            {formulaOptions.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.name} ({f.code})
+              </option>
+            ))}
+          </select>
 
           <div className="flex-1 overflow-y-auto min-h-0">
-            <table className="w-full text-xs">
+            <table className="w-full text-sm text-steffen-surface">
               <thead>
-                <tr className="bg-[#D9D9D9] text-black font-bold uppercase text-[11px] sticky top-0 z-10">
-                  <th className="py-2.5 px-3 text-left w-[15%]">CODIGO</th>
-                  <th className="py-2.5 px-3 text-left w-[15%]">FECHA</th>
-                  <th className="py-2.5 px-3 text-left w-[15%]">TIPO</th>
-                  <th className="py-2.5 px-3 text-left w-[35%]">DESCRIPCION</th>
-                  <th className="py-2.5 px-3 text-right w-[20%]">REGISTRO</th>
+                <tr className="border-b border-steffen-border font-semibold uppercase text-sm">
+                  <th className="py-1.5 text-left">Materia prima</th>
+                  <th className="py-1.5 text-right">Cantidad</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E5E5E5]">
-                {factoryMovements.length > 0 ? (
-                  factoryMovements.map((mov) => (
-                    <tr key={mov.id} className="hover:bg-gray-50/80 transition-colors">
-                      <td className="py-2.5 px-3 font-mono font-semibold text-black">{mov.code}</td>
-                      <td className="py-2.5 px-3 text-gray-700">{mov.businessDate}</td>
-                      <td className="py-2.5 px-3 text-gray-900 font-medium">{mov.movementType}</td>
-                      <td className="py-2.5 px-3 text-gray-700 truncate max-w-0">{mov.description}</td>
-                      <td className="py-2.5 px-3 text-right font-mono text-gray-600 text-[11px]">
-                        {mov.movementType === 'FABRICACIÓN' || mov.movementType === 'FABRICACION'
-                          ? '- MATERIA PRIMA + GRANEL'
-                          : mov.movementType === 'ENVASADO'
-                          ? '- GRANEL - COMPONENTES + PRODUCTOS'
-                          : mov.movementType === 'MERMA'
-                          ? '- GRANEL'
-                          : mov.movementType === 'SOBRANTE'
-                          ? '+ PRODUCTOS'
-                          : '-'}
-                      </td>
+              <tbody>
+                {activeFormula && activeFormula.items.length > 0 ? (
+                  activeFormula.items.map((it, idx) => (
+                    <tr key={idx}>
+                      <td className="py-1 truncate max-w-0">{it.rawMaterialName}</td>
+                      <td className="py-1 text-right tabular-nums whitespace-nowrap">{formatKg(it.quantityKg)} kg</td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-xs text-neutral-400">
-                      Sin movimientos de fábrica registrados
+                    <td colSpan={2} className="py-8 text-center text-xs text-steffen-surface/60">
+                      Seleccione un producto base para ver su fórmula
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-        </div>
+
+          <div className="flex items-center justify-between pt-4">
+            <Link
+              href="/formulas?action=new"
+              className="ui-btn-dark h-10 px-10 inline-flex items-center rounded-[5px] text-lg transition-colors"
+            >
+              Nueva formula
+            </Link>
+            <Link
+              href="/formulas"
+              className={forwardLinkClass}
+            >
+              Ver todas <ForwardArrow />
+            </Link>
+          </div>
+        </Panel>
       </div>
+
+      {/* MOVIMIENTOS DE FÁBRICA (ancho completo) */}
+      <Panel>
+        <SectionHeader title="Movimientos de fábrica" />
+        <div className="max-h-[225px] overflow-y-auto">
+          <table className={tableStyles.table}>
+            <thead>
+              <tr className={`${tableStyles.headRow} sticky top-0 z-10`}>
+                <th className="py-2 px-3 text-left w-[13%]">CODIGO</th>
+                <th className="py-2 px-3 text-left w-[12%]">FECHA</th>
+                <th className="py-2 px-3 text-left w-[13%]">TIPO</th>
+                <th className="py-2 px-3 text-left w-[37%]">DESCRIPCION</th>
+                <th className="py-2 px-3 text-right w-[25%]">REGISTRO</th>
+              </tr>
+            </thead>
+            <tbody>
+              {factoryMovements.length > 0 ? (
+                factoryMovements.map((mov) => (
+                  <tr key={mov.id} className={tableStyles.row}>
+                    <td className="py-1.5 px-3">{mov.code}</td>
+                    <td className="py-1.5 px-3">{mov.businessDate}</td>
+                    <td className="py-1.5 px-3">{mov.movementType}</td>
+                    <td className="py-1.5 px-3 truncate max-w-0">{mov.description}</td>
+                    <td className="py-1.5 px-3 text-right text-xs">
+                      {mov.movementType === 'FABRICACIÓN' || mov.movementType === 'FABRICACION'
+                        ? '- MATERIA PRIMA + GRANEL'
+                        : mov.movementType === 'ENVASADO'
+                        ? '- GRANEL - COMPONENTES + PRODUCTOS'
+                        : mov.movementType === 'MERMA'
+                        ? '- GRANEL'
+                        : mov.movementType === 'SOBRANTE'
+                        ? '+ PRODUCTOS'
+                        : '-'}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="py-10 text-center text-xs text-steffen-surface/60">
+                    Sin movimientos de fábrica registrados
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
 
       {/* Modal de Registro de Fabricación */}
       <RegistrarFabricacionModal
@@ -377,6 +287,7 @@ export const FabricaView: React.FC<FabricaViewProps> = ({
         onSuccess={() => router.refresh()}
         bulkLots={bulkLots}
         products={productsForPackaging}
+        initialBulkLotId={envasadoLotId}
       />
     </div>
   );

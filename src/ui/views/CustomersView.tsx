@@ -1,21 +1,21 @@
 'use client';
 
 import React, { useState, useEffect, useTransition } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button, ConfirmDialog } from '../components/UIComponents';
+import {
+  Button,
+  ConfirmDialog,
+  IconButton,
+  ListItemButton,
+  Panel,
+  SecondaryHeader,
+  SectionHeader,
+  tableStyles,
+} from '../components/UIComponents';
+import { ErpIcon } from '../components/ErpIcon';
 import { CustomerModal } from '../modals/CustomerModal';
 import { toggleCustomerActiveAction, type CustomerDTO } from '@/actions/customer.actions';
-import {
-  ChevronLeft,
-  ChevronDown,
-  Edit3,
-  Power,
-  RefreshCw,
-  Search,
-  List,
-  UserCheck,
-} from 'lucide-react';
+import { Pencil, Power, RefreshCw, Search, List, UserCheck, FileText } from 'lucide-react';
 import { RegistrarPagoClienteModal } from '@/ui/modals/RegistrarPagoClienteModal';
 import { EditarPagoModal } from '@/ui/modals/EditarPagoModal';
 import { getCustomerMovementsAction } from '@/actions/patrimony.actions';
@@ -145,479 +145,418 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
     };
   };
 
+  // Lista lateral (Figma Cuentas Clientes): primeros clientes como ListItem + "Ver más".
+  const SIDEBAR_LIMIT = 7;
+  const sidebarCustomers = initialCustomers.slice(0, SIDEBAR_LIMIT);
+  const moreCustomers = initialCustomers.slice(SIDEBAR_LIMIT);
+  const isSelectedInMore = moreCustomers.some((c) => c.id === selectedCustomer?.id);
+
   return (
-    <div className="space-y-4">
-      
-      {/* Subheader superior exacto a CUENTAS-CLIENTES.png de Figma */}
-      <div className="flex items-center justify-between text-xs px-1">
-        <Link
-          href="/"
-          className="text-[#0E50A0] font-bold text-sm hover:underline flex items-center gap-1 transition-colors"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          <span>Volver</span>
-        </Link>
-        <span className="font-bold text-sm uppercase tracking-wider text-black">
-          CUENTAS CLIENTES
-        </span>
-      </div>
+    <div className="space-y-6">
+      {/* Barra superior (Figma): Volver · CLIENTES · acciones */}
+      <SecondaryHeader
+        title="Clientes"
+        backHref="/"
+        actions={
+          <>
+              <IconButton
+                label="Refrescar datos del servidor"
+                icon={<RefreshCw className={`w-4 h-4 ${isPending ? 'animate-spin' : ''}`} />}
+                onClick={() => {
+                  startTransition(() => {
+                    router.refresh();
+                  });
+                }}
+                disabled={isPending}
+              />
+              <IconButton label="Nueva cuenta" icon={<ErpIcon name="nueva-cuenta" tone="light" className="w-6 h-6" />} onClick={handleOpenCreate} />
+          </>
+        }
+      />
 
-      {/* Tarjeta Principal de Cuentas Clientes */}
-      <div className="bg-white rounded-2xl border border-[#D9D9D9] p-6 shadow-xs space-y-6">
-        
-        {/* Barra Superior con Selector de Clientes y Botón Nueva Cuenta */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          
-          {/* Selector de Clientes estilo Figma (Cliente 1, Cliente 2... / Dropdown) */}
-          <div className="flex flex-wrap items-center gap-2">
-            {initialCustomers.slice(0, 5).map((c) => {
-              const isSelected = selectedCustomer?.id === c.id;
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedCustomerId(c.id);
-                    setViewMode('ficha');
-                  }}
-                  className={`text-xs uppercase font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors ${
-                    isSelected && viewMode === 'ficha'
-                      ? 'border-2 border-[#0E50A0] text-[#0E50A0] bg-white'
-                      : 'text-[#0E50A0] hover:bg-blue-50'
-                  }`}
-                >
-                  <span className="truncate max-w-[120px]">{c.name}</span>
-                  <ChevronDown className="w-3.5 h-3.5 shrink-0" />
-                </button>
-              );
-            })}
+      {actionError && (
+        <div className="p-3 border border-steffen-red rounded-[5px] text-xs font-semibold text-steffen-red flex justify-between items-center">
+          <span>{actionError}</span>
+          <button
+            onClick={() => setActionError(null)}
+            aria-label="Cerrar error"
+            className="text-steffen-surface/60 hover:text-steffen-surface font-bold"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
-            {/* Selector desplegable para ver más clientes */}
-            {initialCustomers.length > 5 && (
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Lista lateral de clientes */}
+        <nav aria-label="Clientes" className="lg:col-span-3 flex flex-col gap-2">
+          {sidebarCustomers.map((c) => (
+            <ListItemButton
+              key={c.id}
+              selected={selectedCustomer?.id === c.id && viewMode === 'ficha'}
+              onClick={() => {
+                setSelectedCustomerId(c.id);
+                setViewMode('ficha');
+              }}
+              icon={<ErpIcon name="usuario" tone="light" className="w-5 h-5" />}
+              title={`${c.name} (${c.code})`}
+              className={!c.active ? 'opacity-60' : ''}
+            >
+              {c.name}
+            </ListItemButton>
+          ))}
+
+          {/* Ver más: resto de clientes en un selector compacto */}
+          {moreCustomers.length > 0 && (
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none flex">
+                <ErpIcon name="usuario" tone="light" className="w-5 h-5" />
+              </span>
               <select
-                value={selectedCustomerId}
+                aria-label="Ver más clientes"
+                value={isSelectedInMore ? selectedCustomerId : ''}
                 onChange={(e) => {
                   setSelectedCustomerId(e.target.value);
                   setViewMode('ficha');
                 }}
-                className="text-xs uppercase font-bold text-[#0E50A0] bg-white border border-[#D9D9D9] rounded-lg px-2 py-1.5 focus:outline-none cursor-pointer"
+                className={`w-full h-[29px] pl-12 pr-3 rounded-[5px] border text-sm font-semibold cursor-pointer focus:outline-none ${
+                  isSelectedInMore && viewMode === 'ficha' ? '!border-steffen-gray' : '!border-transparent !bg-none !bg-transparent'
+                }`}
               >
                 <option value="" disabled>
-                  VER MAS ({initialCustomers.length - 5})
+                  Ver más ({moreCustomers.length})
                 </option>
-                {initialCustomers.slice(5).map((c) => (
+                {moreCustomers.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name} ({c.code})
                   </option>
                 ))}
               </select>
-            )}
-
-            {/* Alternar vista de Directorio completo */}
-            <button
-              type="button"
-              onClick={() => setViewMode(viewMode === 'ficha' ? 'listado' : 'ficha')}
-              className={`text-xs uppercase font-bold px-3 py-1.5 rounded-lg border flex items-center gap-1.5 transition-colors ${
-                viewMode === 'listado'
-                  ? 'border-2 border-[#D2AB68] text-[#D2AB68] bg-white'
-                  : 'border-[#D9D9D9] text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              {viewMode === 'ficha' ? (
-                <>
-                  <List className="w-3.5 h-3.5" />
-                  <span>Ver Todos ({initialCustomers.length})</span>
-                </>
-              ) : (
-                <>
-                  <UserCheck className="w-3.5 h-3.5" />
-                  <span>Ver Ficha</span>
-                </>
-              )}
-            </button>
-          </div>
-
-          {/* Botones a la derecha: Refrescar y Nueva Cuenta (Azul Figma) */}
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                startTransition(() => {
-                  router.refresh();
-                });
-              }}
-              disabled={isPending}
-              title="Refrescar datos del servidor"
-              className="p-2 border border-[#D9D9D9] rounded-[2px] text-gray-600 hover:text-black hover:bg-gray-50 transition-colors cursor-pointer"
-            >
-              <RefreshCw className={`w-4 h-4 ${isPending ? 'animate-spin' : ''}`} />
-            </button>
-
-            <Button
-              variant="azul"
-              onClick={handleOpenCreate}
-              className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider"
-            >
-              NUEVA CUENTA
-            </Button>
-          </div>
-
-        </div>
-
-        {actionError && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs font-semibold text-[#DD0000] flex justify-between items-center">
-            <span>{actionError}</span>
-            <button onClick={() => setActionError(null)} className="text-gray-400 hover:text-black font-bold">
-              ✕
-            </button>
-          </div>
-        )}
-
-        {/* MODO 1: FICHA CLIENTE INDIVIDUAL (idéntica a CUENTAS-CLIENTES.png de Figma) */}
-        {viewMode === 'ficha' && selectedCustomer && (
-          <div className="space-y-6">
-            
-            {/* Sección FICHA CLIENTE con 3 columnas de datos y lápiz de edición */}
-            <div className="border border-[#D9D9D9] rounded-xl p-5 bg-white space-y-4">
-              <div className="flex items-center justify-between border-b border-black pb-2">
-                <div className="flex items-center gap-3">
-                  <h2 className="text-base font-bold text-black uppercase tracking-wider">
-                    FICHA CLIENTE
-                  </h2>
-                  <span className="text-base font-bold text-black">
-                    {selectedCustomer.name}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleOpenEdit(selectedCustomer)}
-                  title="Editar Ficha Cliente"
-                  className="p-1 rounded text-gray-600 hover:text-[#0E50A0] transition-colors cursor-pointer"
-                >
-                  <Edit3 className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Grid de 3 Columnas según Figma */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-black">
-                
-                {/* Columna 1 */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold w-24">Codigo</span>
-                    <span className="font-mono">{selectedCustomer.code}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold w-24">Domicilio</span>
-                    <span>{selectedCustomer.address || '-'}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold w-24">Localidad</span>
-                    <span>{selectedCustomer.locality || '-'}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold w-24">Telefono</span>
-                    <span>{selectedCustomer.phone || '-'}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold w-24">Fecha registro</span>
-                    <span>
-                      {selectedCustomer.createdAt
-                        ? new Date(selectedCustomer.createdAt).toLocaleDateString('es-AR')
-                        : '-'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Columna 2 */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold w-28">Dni / CUIT</span>
-                    <span>{selectedCustomer.dni || '-'}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold w-28">Provincia</span>
-                    <span>{selectedCustomer.province || '-'}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold w-28">Transporte</span>
-                    <span>{selectedCustomer.transportName || '-'}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold w-28">Dir. Transporte</span>
-                    <span>{selectedCustomer.transportAddress || '-'}</span>
-                  </div>
-                </div>
-
-                {/* Columna 3 */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold w-24">Categoria</span>
-                    <span>{selectedCustomer.category || '-'}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold w-24">Descuento 1</span>
-                    <span>{selectedCustomer.discount1Pct}%</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold w-24">Descuento 2</span>
-                    <span>{selectedCustomer.discount2Pct}%</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold w-24">Descuento 3</span>
-                    <span>{selectedCustomer.discount3Pct}%</span>
-                  </div>
-                </div>
-
-              </div>
             </div>
+          )}
 
-            {/* Sección MOVIMIENTOS y SALDO ACTUALIZADO */}
-            <div className="border border-[#D9D9D9] rounded-xl p-5 bg-white space-y-4">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-black pb-2">
-                <h2 className="text-base font-bold text-black uppercase tracking-wider">
-                  MOVIMIENTOS
-                </h2>
+          {/* Directorio completo / volver a la ficha */}
+          <ListItemButton
+            selected={viewMode === 'listado'}
+            onClick={() => setViewMode(viewMode === 'ficha' ? 'listado' : 'ficha')}
+            icon={viewMode === 'ficha' ? <List className="w-4 h-4 shrink-0" /> : <UserCheck className="w-4 h-4 shrink-0" />}
+          >
+            {viewMode === 'ficha' ? `Ver todos (${initialCustomers.length})` : 'Ver ficha'}
+          </ListItemButton>
+        </nav>
 
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Buscar"
-                    className="h-8 pl-3 pr-8 text-xs border border-[#D9D9D9] rounded-lg w-52 sm:w-64 focus:outline-none focus:border-[#0E50A0] placeholder-gray-400 text-black"
-                  />
-                  <Search className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <div className="lg:col-span-9 space-y-4">
+          {/* MODO 1: FICHA CLIENTE (Figma Cuentas Clientes) */}
+          {viewMode === 'ficha' && selectedCustomer && (
+            <>
+              <Panel>
+                <div className="flex items-center justify-between border-b border-steffen-surface pb-2 mb-4">
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-base font-semibold uppercase">Ficha cliente</h2>
+                    <span className="text-base font-semibold">{selectedCustomer.name}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEdit(selectedCustomer)}
+                    title="Editar Ficha Cliente"
+                    aria-label="Editar Ficha Cliente"
+                    className="p-1 rounded-[5px] text-steffen-surface/70 hover:text-steffen-surface hover:bg-steffen-gray transition-colors cursor-pointer"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
                 </div>
-              </div>
 
-              {/* Tabla de Movimientos */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold w-28">Codigo</span>
+                      <span>{selectedCustomer.code}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold w-28">Domicilio</span>
+                      <span>{selectedCustomer.address || '-'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold w-28">Localidad</span>
+                      <span>{selectedCustomer.locality || '-'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold w-28">Telefono</span>
+                      <span>{selectedCustomer.phone || '-'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold w-28">Fecha registro</span>
+                      <span>
+                        {selectedCustomer.createdAt
+                          ? new Date(selectedCustomer.createdAt).toLocaleDateString('es-AR')
+                          : '-'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold w-32">Dni / CUIT</span>
+                      <span>{selectedCustomer.dni || '-'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold w-32">Provincia</span>
+                      <span>{selectedCustomer.province || '-'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold w-32">Transporte</span>
+                      <span>{selectedCustomer.transportName || '-'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold w-32">Dir. Transporte</span>
+                      <span>{selectedCustomer.transportAddress || '-'}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 md:justify-self-end">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold w-28">Categoria</span>
+                      <span>{selectedCustomer.category || '-'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold w-28">Descuento 1</span>
+                      <span>{selectedCustomer.discount1Pct}%</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold w-28">Descuento 2</span>
+                      <span>{selectedCustomer.discount2Pct}%</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold w-28">Descuento 3</span>
+                      <span>{selectedCustomer.discount3Pct}%</span>
+                    </div>
+                  </div>
+                </div>
+              </Panel>
+
+              {/* MOVIMIENTOS + SALDO ACTUALIZADO */}
+              <Panel>
+                <SectionHeader
+                  title="MOVIMIENTOS"
+                  variant="strong"
+                  actions={
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Buscar"
+                        className="h-[26px] pl-3 pr-8 text-xs border border-steffen-border rounded-[5px] w-52 sm:w-80 focus:outline-none focus:border-steffen-gold"
+                      />
+                      <Search className="w-3.5 h-3.5 text-steffen-surface/50 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+                  }
+                />
+
+                <div className="overflow-x-auto mt-4">
+                  <table className={tableStyles.table}>
+                    <thead>
+                      <tr className={tableStyles.headRow}>
+                        <th className="py-2 px-3 text-left">FECHA</th>
+                        <th className="py-2 px-3 text-left">VENTA</th>
+                        <th className="py-2 px-3 text-left">REMITO</th>
+                        <th className="py-2 px-3 text-left">PAGO</th>
+                        <th className="py-2 px-3 text-right">TOTAL</th>
+                        <th className="py-2 px-3 text-center w-12"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {customerMovements.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="py-6 text-center text-steffen-surface/60">
+                            Sin movimientos registrados para este cliente.
+                          </td>
+                        </tr>
+                      ) : (
+                        customerMovements.map((m) => (
+                          <tr key={m.id} className={tableStyles.row}>
+                            <td className="py-1.5 px-3 font-semibold whitespace-nowrap">{m.date}</td>
+                            <td className="py-1.5 px-3">{!m.isPayment ? formatArs(m.amountArs) : '—'}</td>
+                            <td className="py-1.5 px-3">{m.documentCode || '—'}</td>
+                            <td className="py-1.5 px-3 font-semibold">
+                              {m.isPayment ? formatArs(m.amountArs) : '—'}
+                            </td>
+                            <td className="py-1.5 px-3 text-right">{formatArs(m.amountArs)}</td>
+                            <td className="py-1.5 px-3 text-center">
+                              {m.isPayment && m.paymentId ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingPaymentId(m.paymentId!)}
+                                  title="Editar Pago"
+                                  aria-label="Editar Pago"
+                                  className="p-1 rounded-[5px] text-steffen-surface/70 hover:text-steffen-surface hover:bg-steffen-gray transition-colors cursor-pointer"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                              ) : !m.isPayment && m.remittanceId ? (
+                                <DocumentPdfButton
+                                  sourceType="RTO"
+                                  sourceId={m.remittanceId}
+                                  knownStatus={m.rtoDocumentStatus || 'MISSING'}
+                                />
+                              ) : null}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+
+                      {/* SALDO ACTUALIZADO: rojo oscuro si hay deuda (Figma) */}
+                      {(() => {
+                        const bal = formatBalance(selectedCustomer.balanceArs);
+                        return (
+                          <tr
+                            className={`font-semibold text-sm text-steffen-surface border-b border-steffen-border/60 ${
+                              bal.hasDebt ? 'bg-steffen-alert' : 'bg-steffen-gray'
+                            }`}
+                          >
+                            <td colSpan={4} className="py-2.5 px-3 uppercase">
+                              Saldo actualizado
+                            </td>
+                            <td className="py-2.5 px-3 text-right">{bal.text}</td>
+                            <td></td>
+                          </tr>
+                        );
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="flex justify-end items-center gap-3 pt-6">
+                  <Button variant="verde" onClick={() => setIsPagoModalOpen(true)}>
+                    Registrar pago
+                  </Button>
+                  <IconButton
+                    label="PDF estado de cuenta"
+                    icon={<FileText className="w-5 h-5 text-steffen-red" />}
+                    onClick={() => alert('Generación de PDF de estado de cuenta disponible en el bloque de Reportes/PDF')}
+                  />
+                </div>
+              </Panel>
+            </>
+          )}
+
+          {/* MODO 2: DIRECTORIO DE CLIENTES */}
+          {viewMode === 'listado' && (
+            <Panel>
+              <SectionHeader
+                title="Directorio de clientes"
+                actions={
+                  <>
+                    <label className="flex items-center gap-1.5 text-xs text-steffen-surface/80 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={showInactive}
+                        onChange={(e) => setShowInactive(e.target.checked)}
+                        className="h-3.5 w-3.5 accent-steffen-gold"
+                      />
+                      <span>Inactivos</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Buscar cliente..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="h-[26px] pl-3 pr-8 text-xs border border-steffen-border rounded-[5px] w-52 sm:w-64 focus:outline-none focus:border-steffen-gold"
+                      />
+                      <Search className="w-3.5 h-3.5 text-steffen-surface/50 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+                  </>
+                }
+              />
+
+              <div className="overflow-x-auto mt-4">
+                <table className={tableStyles.table}>
                   <thead>
-                    <tr className="bg-[#D9D9D9] text-black font-bold text-left uppercase">
-                      <th className="py-2.5 px-3">FECHA</th>
-                      <th className="py-2.5 px-3">VENTA</th>
-                      <th className="py-2.5 px-3">REMITO</th>
-                      <th className="py-2.5 px-3">PAGO</th>
-                      <th className="py-2.5 px-3 text-right">TOTAL</th>
-                      <th className="py-2.5 px-3 text-center"></th>
+                    <tr className={tableStyles.headRow}>
+                      <th className="py-2 px-3 text-left">CODIGO</th>
+                      <th className="py-2 px-3 text-left">CLIENTE</th>
+                      <th className="py-2 px-3 text-left">LOCALIDAD / PROV.</th>
+                      <th className="py-2 px-3 text-left">TELEFONO</th>
+                      <th className="py-2 px-3 text-right">SALDO CT</th>
+                      <th className="py-2 px-3 text-center">ESTADO</th>
+                      <th className="py-2 px-3 text-center">ACCIONES</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#E5E5E5]">
-                    {customerMovements.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="py-6 text-center text-gray-400 font-medium">
-                          Sin movimientos registrados para este cliente.
-                        </td>
-                      </tr>
-                    ) : (
-                      customerMovements.map((m) => (
-                        <tr key={m.id} className="hover:bg-gray-50/80 transition-colors">
-                          <td className="py-2.5 px-3 font-semibold text-black whitespace-nowrap">{m.date}</td>
-                          <td className="py-2.5 px-3 font-mono font-bold text-black">
-                            {!m.isPayment ? formatArs(m.amountArs) : '—'}
-                          </td>
-                          <td className="py-2.5 px-3 text-gray-500">{m.documentCode || '—'}</td>
-                          <td className="py-2.5 px-3 font-mono font-bold text-[#008102]">
-                            {m.isPayment ? formatArs(m.amountArs) : '—'}
-                          </td>
-                          <td className="py-2.5 px-3 text-right font-mono font-bold text-black">
-                            {formatArs(m.amountArs)}
-                          </td>
-                          <td className="py-2.5 px-3 text-center">
-                            {m.isPayment && m.paymentId ? (
-                              <button
-                                type="button"
-                                onClick={() => setEditingPaymentId(m.paymentId!)}
-                                title="Editar Pago"
-                                className="p-1 rounded text-gray-500 hover:text-[#0E50A0] transition-colors cursor-pointer"
-                              >
-                                <Edit3 className="w-3.5 h-3.5" />
-                              </button>
-                            ) : !m.isPayment && m.remittanceId ? (
-                              <DocumentPdfButton
-                                sourceType="RTO"
-                                sourceId={m.remittanceId}
-                                knownStatus={m.rtoDocumentStatus || 'MISSING'}
-                              />
-                            ) : null}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-
-                    {/* Fila de SALDO ACTUALIZADO con fondo salmón si tiene deuda según Figma */}
-                    {(() => {
-                      const bal = formatBalance(selectedCustomer.balanceArs);
+                  <tbody>
+                    {filteredCustomers.map((c) => {
+                      const bal = formatBalance(c.balanceArs);
                       return (
                         <tr
-                          className={`font-bold text-sm ${
-                            bal.hasDebt
-                              ? 'bg-[#FFA8A8] text-black'
-                              : 'bg-gray-50 text-black'
-                          }`}
+                          key={c.id}
+                          className={`${tableStyles.row} hover:bg-steffen-gray/40 transition-colors ${!c.active ? 'opacity-60' : ''}`}
                         >
-                          <td colSpan={4} className="py-3 px-4 uppercase tracking-wider">
-                            SALDO ACTUALIZADO
+                          <td className="py-1.5 px-3">{c.code}</td>
+                          <td className="py-1.5 px-3 font-semibold">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedCustomerId(c.id);
+                                setViewMode('ficha');
+                              }}
+                              className="text-left hover:text-steffen-gold hover:underline cursor-pointer"
+                            >
+                              {c.name}
+                            </button>
                           </td>
-                          <td className="py-3 px-4 text-right font-mono text-base">
+                          <td className="py-1.5 px-3">{c.locality ? `${c.locality}, ${c.province || ''}` : '-'}</td>
+                          <td className="py-1.5 px-3">{c.phone || '-'}</td>
+                          <td
+                            className={`py-1.5 px-3 text-right font-semibold ${
+                              bal.hasDebt ? 'text-steffen-red' : 'text-steffen-green'
+                            }`}
+                          >
                             {bal.text}
                           </td>
-                          <td></td>
+                          <td className="py-1.5 px-3 text-center">
+                            <span
+                              className={`px-2 py-0.5 rounded-[5px] text-[10px] font-semibold uppercase ${
+                                c.active ? 'border border-steffen-green text-steffen-green' : 'bg-steffen-gray text-steffen-surface/70'
+                              }`}
+                            >
+                              {c.active ? 'Activo' : 'Inactivo'}
+                            </span>
+                          </td>
+                          <td className="py-1.5 px-3 text-center whitespace-nowrap space-x-1">
+                            <button
+                              onClick={() => {
+                                setSelectedCustomerId(c.id);
+                                setViewMode('ficha');
+                              }}
+                              title="Ver Ficha"
+                              className="p-1 rounded-[5px] hover:bg-steffen-gray text-steffen-surface/80 hover:text-steffen-surface transition-colors cursor-pointer"
+                            >
+                              <UserCheck className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleOpenEdit(c)}
+                              title="Editar Cliente"
+                              className="p-1 rounded-[5px] hover:bg-steffen-gray text-steffen-surface/80 hover:text-steffen-surface transition-colors cursor-pointer"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleToggleActiveClick(c)}
+                              title={c.active ? 'Desactivar cliente' : 'Activar cliente'}
+                              className={`p-1 rounded-[5px] hover:bg-steffen-gray transition-colors cursor-pointer ${
+                                c.active ? 'text-steffen-surface/60 hover:text-steffen-surface' : 'text-steffen-green'
+                              }`}
+                            >
+                              <Power className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
                         </tr>
                       );
-                    })()}
+                    })}
                   </tbody>
                 </table>
               </div>
-
-              {/* Botones inferiores derechos: REGISTRAR PAGO (Verde) y PDF ESTADO DE CUENTA (Azul) */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                <Button
-                  variant="verde"
-                  onClick={() => setIsPagoModalOpen(true)}
-                  className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider cursor-pointer"
-                >
-                  REGISTRAR PAGO
-                </Button>
-                <Button
-                  variant="azul"
-                  onClick={() => alert('Generación de PDF de estado de cuenta disponible en el bloque de Reportes/PDF')}
-                  className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider"
-                >
-                  PDF ESTADO DE CUENTA
-                </Button>
-              </div>
-
-            </div>
-
-          </div>
-        )}
-
-        {/* MODO 2: LISTADO COMPLETO DE CLIENTES (Directorio) */}
-        {viewMode === 'listado' && (
-          <div className="border border-[#D9D9D9] rounded-xl p-5 bg-white space-y-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-black pb-2">
-              <h2 className="text-base font-bold text-black uppercase tracking-wider">
-                Directorio de Clientes
-              </h2>
-
-              <div className="flex items-center gap-3">
-                <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={showInactive}
-                    onChange={(e) => setShowInactive(e.target.checked)}
-                    className="rounded border-gray-300 text-[#0E50A0] focus:ring-[#0E50A0] h-3.5 w-3.5"
-                  />
-                  <span>Inactivos</span>
-                </label>
-
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Buscar cliente..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="h-8 pl-3 pr-8 text-xs border border-[#D9D9D9] rounded-lg w-52 sm:w-64 focus:outline-none focus:border-[#0E50A0] placeholder-gray-400 text-black"
-                  />
-                  <Search className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-black text-black font-bold text-left uppercase">
-                    <th className="py-2.5 px-3">CODIGO</th>
-                    <th className="py-2.5 px-3">CLIENTE</th>
-                    <th className="py-2.5 px-3">LOCALIDAD / PROV.</th>
-                    <th className="py-2.5 px-3">TELEFONO</th>
-                    <th className="py-2.5 px-3 text-right">SALDO CT</th>
-                    <th className="py-2.5 px-3 text-center">ESTADO</th>
-                    <th className="py-2.5 px-3 text-center">ACCIONES</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#E5E5E5]">
-                  {filteredCustomers.map((c) => {
-                    const bal = formatBalance(c.balanceArs);
-                    return (
-                      <tr
-                        key={c.id}
-                        className={`hover:bg-gray-50 transition-colors ${
-                          !c.active ? 'opacity-60 bg-gray-50' : ''
-                        }`}
-                      >
-                        <td className="py-3 px-3 font-mono font-bold text-black">{c.code}</td>
-                        <td className="py-3 px-3 font-semibold text-black">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedCustomerId(c.id);
-                              setViewMode('ficha');
-                            }}
-                            className="text-left hover:text-[#0E50A0] hover:underline cursor-pointer"
-                          >
-                            {c.name}
-                          </button>
-                        </td>
-                        <td className="py-3 px-3 text-gray-700">
-                          {c.locality ? `${c.locality}, ${c.province || ''}` : '-'}
-                        </td>
-                        <td className="py-3 px-3 text-gray-700">{c.phone || '-'}</td>
-                        <td
-                          className={`py-3 px-3 text-right font-mono font-bold ${
-                            bal.hasDebt ? 'text-[#DD0000]' : 'text-[#008102]'
-                          }`}
-                        >
-                          {bal.text}
-                        </td>
-                        <td className="py-3 px-3 text-center">
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              c.active ? 'bg-emerald-50 text-[#008102]' : 'bg-gray-100 text-gray-600'
-                            }`}
-                          >
-                            {c.active ? 'Activo' : 'Inactivo'}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-center whitespace-nowrap space-x-1">
-                          <button
-                            onClick={() => {
-                              setSelectedCustomerId(c.id);
-                              setViewMode('ficha');
-                            }}
-                            title="Ver Ficha"
-                            className="p-1 rounded hover:bg-black/10 text-[#0E50A0] transition-colors cursor-pointer"
-                          >
-                            <UserCheck className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleOpenEdit(c)}
-                            title="Editar Cliente"
-                            className="p-1 rounded hover:bg-black/10 text-gray-700 transition-colors cursor-pointer"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleToggleActiveClick(c)}
-                            title={c.active ? 'Desactivar cliente' : 'Activar cliente'}
-                            className={`p-1 rounded hover:bg-black/10 transition-colors cursor-pointer ${
-                              c.active ? 'text-gray-500 hover:text-red-700' : 'text-[#008102]'
-                            }`}
-                          >
-                            <Power className="w-3.5 h-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
+            </Panel>
+          )}
+        </div>
       </div>
 
       {/* Modal de Cliente */}

@@ -1,9 +1,14 @@
-// Core UI Components conforming to COMPONENTS.md & DESIGN.md
+// Core UI Components conforming to COMPONENTS.md & DESIGN.md (sistema dark definitivo, Frame 1.png)
 
 import React, { ReactNode } from 'react';
+import Link from 'next/link';
 import { X, AlertCircle } from 'lucide-react';
+import { ErpIcon } from './ErpIcon';
 
 // Buttons
+// Variantes (COMPONENTS.md §4): principal / secundario = PrimaryDark (degradé + Border Button),
+// verde = Success, rojo = Danger, azul = Tertiary.
+// Los nombres de variante se conservan para no tocar ningún call site.
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'principal' | 'secundario' | 'verde' | 'rojo' | 'azul';
   size?: 'small' | 'large';
@@ -19,26 +24,25 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const baseClasses =
-    'inline-flex items-center justify-center font-semibold rounded-[2px] transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer';
+    'inline-flex items-center justify-center gap-2 rounded-[5px] transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-steffen-gold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap';
 
-  const sizeClasses = size === 'large' ? 'h-[70px] px-6 text-base font-bold' : 'h-[38px] px-4 text-xs font-bold uppercase';
+  // Chico 40 px (B1), Grande 70 px (H3) — DESIGN.md §8.
+  const sizeClasses = size === 'large' ? 'h-[50px] px-5 text-lg' : 'h-[30px] px-5 text-sm font-semibold';
 
   let variantClasses = '';
   switch (variant) {
     case 'principal':
-      variantClasses = 'bg-[#D2AB68] hover:bg-[#c29b58] text-white border border-[#D2AB68]';
-      break;
     case 'secundario':
-      variantClasses = 'bg-white hover:bg-gray-100 text-[#000000] border border-[#D9D9D9]';
+      variantClasses = 'ui-btn-dark';
       break;
     case 'verde':
-      variantClasses = 'bg-[#008102] hover:bg-[#015C02] text-white border border-[#008102]';
+      variantClasses = 'border border-steffen-green bg-steffen-green text-steffen-surface hover:bg-steffen-green-hover hover:border-steffen-green-hover';
       break;
     case 'rojo':
-      variantClasses = 'bg-[#DD0000] hover:bg-[#B10000] text-white border border-[#DD0000]';
+      variantClasses = 'border border-steffen-red bg-steffen-red text-steffen-surface hover:bg-steffen-red-hover hover:border-steffen-red-hover';
       break;
     case 'azul':
-      variantClasses = 'bg-[#0E50A0] hover:bg-[#0c4386] text-white border border-[#0E50A0]';
+      variantClasses = 'border border-steffen-blue bg-steffen-blue text-steffen-surface hover:bg-steffen-blue-hover hover:border-steffen-blue-hover';
       break;
   }
 
@@ -54,39 +58,20 @@ export const StatusBadge: React.FC<{ type: 'URG' | 'POCO_STOCK' | 'OPEN' | 'CLOS
   type,
   label,
 }) => {
+  const base = 'inline-flex items-center px-2 py-0.5 rounded-[5px] text-xs';
   if (type === 'URG') {
-    return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-[#DD0000] text-white animate-pulse">
-        URG PARA PEDIDOS
-      </span>
-    );
+    return <span className={`${base} font-semibold bg-steffen-red text-steffen-surface`}>URG PARA PEDIDOS</span>;
   }
   if (type === 'POCO_STOCK') {
-    return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300">
-        POCO STOCK
-      </span>
-    );
+    return <span className={`${base} font-semibold text-steffen-gold border border-steffen-gold`}>POCO STOCK</span>;
   }
   if (type === 'OPEN') {
-    return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-100 text-[#008102] border border-green-300">
-        ABIERTO
-      </span>
-    );
+    return <span className={`${base} font-semibold text-steffen-surface bg-steffen-green`}>ABIERTO</span>;
   }
   if (type === 'CLOSED') {
-    return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-300">
-        CERRADO
-      </span>
-    );
+    return <span className={`${base} font-semibold text-steffen-surface bg-steffen-gray`}>CERRADO</span>;
   }
-  return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
-      {label || type}
-    </span>
-  );
+  return <span className={`${base} text-steffen-surface bg-steffen-gray`}>{label || type}</span>;
 };
 
 // Form Field Wrapper
@@ -97,25 +82,25 @@ export const FormField: React.FC<{
   children: ReactNode;
   className?: string;
 }> = ({ label, error, hint, children, className = '' }) => (
-  <div className={`flex flex-col gap-1 ${className}`}>
-    <label className="text-xs font-semibold uppercase tracking-wider text-[#393939]">{label}</label>
+  <div className={`flex flex-col gap-1.5 ${className}`}>
+    <label className="text-xs font-semibold uppercase tracking-wide text-steffen-surface/85">{label}</label>
     {children}
-    {hint && <span className="text-xs text-gray-500">{hint}</span>}
-    {error && <span className="text-xs text-[#DD0000] font-medium">{error}</span>}
+    {hint && <span className="text-xs text-steffen-muted">{hint}</span>}
+    {error && <span className="text-xs text-steffen-red font-medium">{error}</span>}
   </div>
 );
 
-// Read-only Field
+// Read-only Field (valor automático, distinguible de un input editable)
 export const ReadOnlyField: React.FC<{
   label: string;
   value: string | number;
   highlight?: boolean;
 }> = ({ label, value, highlight }) => (
-  <div className="flex flex-col gap-1">
-    <label className="text-xs font-semibold uppercase tracking-wider text-[#393939]">{label}</label>
+  <div className="flex flex-col gap-1.5">
+    <label className="text-xs font-semibold uppercase tracking-wide text-steffen-surface/85">{label}</label>
     <div
-      className={`h-[40px] px-3 flex items-center rounded border border-[#D9D9D9] bg-gray-50 text-sm font-medium ${
-        highlight ? 'text-[#D2AB68] font-bold' : 'text-[#393939]'
+      className={`h-[30px] px-3 flex items-center rounded-[5px] border border-steffen-gray bg-steffen-gray/55 text-sm ${
+        highlight ? 'text-steffen-gold font-semibold' : 'text-steffen-surface'
       }`}
     >
       {value}
@@ -138,13 +123,13 @@ export const MoneyDisplay: React.FC<{
       className={`font-semibold ${
         isGain
           ? amount > 0
-            ? 'text-[#008102]'
+            ? 'text-steffen-green'
             : amount < 0
-            ? 'text-[#DD0000]'
-            : 'text-gray-600'
+            ? 'text-steffen-red'
+            : 'text-steffen-muted'
           : isNeg
-          ? 'text-[#DD0000]'
-          : 'text-[#393939]'
+          ? 'text-steffen-red'
+          : 'text-steffen-surface'
       } ${className}`}
     >
       $ {formatted} {currency !== 'ARS' ? `(${currency})` : ''}
@@ -152,7 +137,7 @@ export const MoneyDisplay: React.FC<{
   );
 };
 
-// Modal / Operation Window
+// Modal / Operation Window (DESIGN.md §11: panel dark radius 10, sin sombras)
 export const Modal: React.FC<{
   title: string;
   isOpen: boolean;
@@ -163,18 +148,19 @@ export const Modal: React.FC<{
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs overflow-y-auto">
-      <div className={`bg-white rounded-xl shadow-2xl border border-[#D9D9D9] w-full ${maxWidth} my-6 max-h-[92vh] flex flex-col`}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#D9D9D9]">
-          <h2 className="text-lg font-bold text-[#000000] uppercase tracking-wide">{title}</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 overflow-y-auto">
+      <div className={`ui-panel w-full ${maxWidth} my-6 max-h-[92vh] flex flex-col`}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-steffen-gray">
+          <h2 className="text-2xl font-semibold text-steffen-surface">{title}</h2>
           <button
             onClick={onClose}
-            className="p-1 rounded text-gray-400 hover:text-black hover:bg-gray-100 transition-colors cursor-pointer"
+            aria-label="Cerrar"
+            className="p-1 rounded-[5px] text-steffen-surface/70 hover:text-steffen-surface hover:bg-steffen-gray transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="p-6 overflow-y-auto flex-1">{children}</div>
+        <div className="p-5 overflow-y-auto flex-1">{children}</div>
       </div>
     </div>
   );
@@ -191,13 +177,13 @@ export const ConfirmDialog: React.FC<{
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-      <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl border border-[#D9D9D9]">
-        <div className="flex items-center gap-3 text-[#DD0000] mb-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75">
+      <div className="bg-steffen-bg rounded-[10px] p-5 max-w-md w-full border border-steffen-red">
+        <div className="flex items-center gap-3 text-steffen-red mb-3">
           <AlertCircle className="w-6 h-6" />
-          <h3 className="text-base font-bold uppercase tracking-wide text-black">{title}</h3>
+          <h3 className="text-lg font-semibold text-steffen-surface">{title}</h3>
         </div>
-        <p className="text-xs text-gray-600 mb-6 leading-relaxed">{message}</p>
+        <p className="text-sm text-steffen-surface/80 mb-6 leading-relaxed">{message}</p>
         <div className="flex justify-end gap-3">
           <Button variant="secundario" onClick={onCancel}>
             Cancelar
@@ -210,3 +196,187 @@ export const ConfirmDialog: React.FC<{
     </div>
   );
 };
+
+// ==========================================================================
+// Componentes base del rediseño (COMPONENTS.md §5–§8, §19, §20, §61–§64)
+// ==========================================================================
+
+// SectionHeader: `Título ———— línea` (Text Muted + Border Contenedor), controles opcionales al extremo.
+export const SectionHeader: React.FC<{
+  title: string;
+  variant?: 'default' | 'alert' | 'strong';
+  actions?: ReactNode;
+  className?: string;
+}> = ({ title, variant = 'default', actions, className = '' }) => {
+  const titleColor =
+    variant === 'alert' ? 'text-steffen-red' : variant === 'strong' ? 'text-steffen-surface' : 'text-steffen-muted';
+  const lineColor = variant === 'alert' ? 'bg-steffen-red' : variant === 'strong' ? 'bg-steffen-surface' : 'bg-steffen-gray';
+  return (
+    <div className={`flex items-center gap-5 mb-3 ${className}`}>
+      <h2 className={`text-[12px] font-semibold whitespace-nowrap ${titleColor}`}>{title}</h2>
+      <span aria-hidden className={`flex-1 h-px ${lineColor}`} />
+      {actions && <div className="flex items-center gap-3 shrink-0">{actions}</div>}
+    </div>
+  );
+};
+
+// Panel: Secondary + Border Contenedor + radius 10 (COMPONENTS.md §62).
+export const Panel: React.FC<{
+  children: ReactNode;
+  variant?: 'default' | 'alert';
+  className?: string;
+}> = ({ children, variant = 'default', className = '' }) => (
+  <section className={`ui-panel px-5 py-4 ${variant === 'alert' ? '!border-steffen-red' : ''} ${className}`}>{children}</section>
+);
+
+// KpiCard: Default (negra + borde dorado), con ícono, o Positiva (verde sólido). COMPONENTS.md §19.
+export const KpiCard: React.FC<{
+  label: string;
+  value: ReactNode;
+  variant?: 'default' | 'inverted' | 'positive';
+  icon?: ReactNode;
+  className?: string;
+}> = ({ label, value, variant = 'default', icon, className = '' }) => {
+  const variantClasses =
+    variant === 'positive'
+      ? 'bg-steffen-green border-steffen-green text-steffen-surface'
+      : 'bg-steffen-bg border-steffen-gold text-steffen-surface';
+  return (
+    <div
+      className={`rounded-[10px] border-2 px-4 py-3 flex flex-col items-center justify-center text-center ${variantClasses} ${className}`}
+    >
+      <div className="flex items-center gap-2">
+        {icon}
+        <span className="text-[24px] leading-none font-bold tabular-nums">{value}</span>
+      </div>
+      <span className="mt-2 text-xs font-semibold uppercase">{label}</span>
+    </div>
+  );
+};
+
+// IconButton: acción compacta icon-only con label accesible obligatorio (COMPONENTS.md §4.1 Icon).
+interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  icon: ReactNode;
+  label: string;
+  variant?: 'secundario' | 'rojo' | 'verde';
+  size?: 'small' | 'large';
+}
+
+export const IconButton: React.FC<IconButtonProps> = ({
+  icon,
+  label,
+  variant = 'secundario',
+  size = 'small',
+  className = '',
+  ...props
+}) => {
+  const variantClasses =
+    variant === 'rojo'
+      ? 'border border-steffen-red bg-steffen-red hover:bg-steffen-red-hover'
+      : variant === 'verde'
+      ? 'border border-steffen-green bg-steffen-green hover:bg-steffen-green-hover'
+      : 'ui-btn-dark';
+  const sizeClasses = size === 'large' ? 'w-[50px] h-[50px]' : 'w-[30px] h-[30px]';
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      className={`inline-flex items-center justify-center shrink-0 rounded-[5px] text-steffen-surface transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${sizeClasses} ${variantClasses} ${className}`}
+      {...props}
+    >
+      {icon}
+    </button>
+  );
+};
+
+// ListItemButton: patrón Lista — transparente; hover/seleccionado con degradé (COMPONENTS.md §7).
+interface ListItemButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  selected?: boolean;
+  icon?: ReactNode;
+  children: ReactNode;
+}
+
+export const ListItemButton: React.FC<ListItemButtonProps> = ({ selected, icon, children, className = '', ...props }) => (
+  <button
+    type="button"
+    aria-pressed={selected}
+    className={`ui-list-item ${/(^|\s)w-/.test(className) ? '' : 'w-full'} flex items-center gap-3 px-4 h-[29px] rounded-[5px] text-sm font-semibold text-left transition-colors cursor-pointer ${className}`}
+    {...props}
+  >
+    {icon}
+    <span className="truncate">{children}</span>
+  </button>
+);
+
+// CreateButton: `+` circular (ícono boton-mas) para crear dentro de una colección visual.
+interface CreateButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  label: string;
+}
+
+export const CreateButton: React.FC<CreateButtonProps> = ({ label, className = '', ...props }) => (
+  <button
+    type="button"
+    title={label}
+    aria-label={label}
+    className={`inline-flex items-center justify-center w-[66px] h-[66px] rounded-full transition-opacity hover:opacity-80 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+    {...props}
+  >
+    <ErpIcon name="mas" tone="light" className="w-[66px] h-[66px]" />
+  </button>
+);
+
+// Enlace de navegación secundaria (`IR A …`, `Ver todas ▸`): Tertiary + triángulo (COMPONENTS.md §8).
+export const forwardLinkClass =
+  'inline-flex items-center gap-2 text-sm font-semibold text-steffen-blue hover:text-steffen-blue-hover transition-colors';
+
+export const ForwardArrow: React.FC = () => (
+  <svg aria-hidden viewBox="0 0 10 12" className="w-3 h-3.5 fill-current">
+    <path d="M0 0 L10 6 L0 12 Z" />
+  </svg>
+);
+
+// BackLink: `◂ Volver` en Tertiary (COMPONENTS.md §8).
+export const BackLink: React.FC<{ href: string; label?: string; className?: string }> = ({
+  href,
+  label = 'Volver',
+  className = '',
+}) => (
+  <Link
+    href={href}
+    className={`inline-flex items-center gap-2 text-base font-semibold text-steffen-blue hover:text-steffen-blue-hover transition-colors ${className}`}
+  >
+    <svg aria-hidden viewBox="0 0 10 12" className="w-2.5 h-3 fill-current">
+      <path d="M10 0 L0 6 L10 12 Z" />
+    </svg>
+    {label}
+  </Link>
+);
+
+// SecondaryHeader: `Volver` · título H3 centrado · acción (COMPONENTS.md §64).
+export const SecondaryHeader: React.FC<{
+  title: string;
+  backHref: string;
+  actions?: ReactNode;
+  className?: string;
+}> = ({ title, backHref, actions, className = '' }) => (
+  <div className={`grid grid-cols-1 sm:grid-cols-3 items-center gap-4 ${className}`}>
+    <BackLink href={backHref} className="justify-self-start" />
+    <h1 className="text-lg text-steffen-surface uppercase sm:text-center">{title}</h1>
+    <div className="flex items-center gap-3 sm:justify-self-end">{actions}</div>
+  </div>
+);
+
+// DataTable: clases compartidas del patrón de tabla dark (DESIGN.md §12, COMPONENTS.md §20).
+// Encabezado: el fondo va en cada th (no en el tr) para que el radius de 5px recorte en border-collapse.
+export const tableStyles = {
+  table: 'w-full text-sm text-steffen-surface border-collapse',
+  headRow: 'text-steffen-surface font-semibold text-sm [&>th]:bg-steffen-gray [&>th:first-child]:rounded-l-[5px] [&>th:last-child]:rounded-r-[5px]',
+  headRowHighlight: 'text-steffen-surface font-semibold text-sm [&>th]:bg-steffen-gold [&>th:first-child]:rounded-l-[5px] [&>th:last-child]:rounded-r-[5px]',
+  headRowAlert: 'text-steffen-surface font-semibold text-sm [&>th]:bg-steffen-red [&>th:first-child]:rounded-l-[5px] [&>th:last-child]:rounded-r-[5px]',
+  headCell: 'px-5 py-2 text-left',
+  row: 'border-b border-steffen-surface/70',
+  rowAlert: 'ui-row-alert border-b border-steffen-surface/70',
+  cell: 'px-5 py-1.5',
+  numericCell: 'px-5 py-1.5 text-right tabular-nums',
+} as const;

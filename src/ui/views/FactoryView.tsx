@@ -89,9 +89,9 @@ export const FactoryView: React.FC<{
   return (
     <div className="space-y-6">
       {/* Header and Actions */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-5 rounded-lg border border-[#D9D9D9]">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-5 rounded-[5px] border border-steffen-border">
         <div>
-          <h1 className="text-2xl font-bold text-[#000000]">Mi Fábrica</h1>
+          <h1 className="text-2xl font-bold text-steffen-surface">Mi Fábrica</h1>
           <p className="text-xs text-gray-500">Gestión de lotes de granel, envasado, costos teóricos y rentabilidad.</p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -107,15 +107,15 @@ export const FactoryView: React.FC<{
       {/* Grid: Granel Disponible & Próximas Fabricaciones */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Granel disponible */}
-        <div className="bg-white p-5 rounded-lg border border-[#D9D9D9] shadow-xs">
-          <h2 className="text-base font-bold text-[#000000] mb-3">Lotes de Granel Disponibles</h2>
+        <div className="bg-white p-5 rounded-[5px] border border-steffen-border shadow-xs">
+          <h2 className="text-base font-bold text-steffen-surface mb-3">Lotes de Granel Disponibles</h2>
           {openLots.length === 0 ? (
             <p className="text-sm text-gray-400 py-6 text-center">No hay lotes abiertos.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-[#D9D9D9] text-gray-500 text-left">
+                  <tr className="border-b border-steffen-border text-gray-500 text-left">
                     <th className="py-2">CÓDIGO</th>
                     <th className="py-2">PRODUCTO BASE</th>
                     <th className="py-2 text-right">DISP. (KG)</th>
@@ -128,9 +128,9 @@ export const FactoryView: React.FC<{
                     const bp = state.baseProducts[lot.base_product_id];
                     return (
                       <tr key={lot.id} className="hover:bg-gray-50">
-                        <td className="py-2.5 font-bold text-[#B99D22]">{lot.code}</td>
+                        <td className="py-2.5 font-bold text-steffen-gold">{lot.code}</td>
                         <td className="py-2.5 font-medium">{bp?.name}</td>
-                        <td className="py-2.5 text-right font-bold text-[#008102]">{lot.kg_available.toFixed(3)} kg</td>
+                        <td className="py-2.5 text-right font-bold text-steffen-green">{lot.kg_available.toFixed(3)} kg</td>
                         <td className="py-2.5 text-right text-gray-500">{lot.kg_fabricated.toFixed(3)} kg</td>
                         <td className="py-2.5 text-right font-semibold">$ {lot.cost_per_kg_snapshot_ars.toFixed(2)}</td>
                       </tr>
@@ -143,10 +143,10 @@ export const FactoryView: React.FC<{
         </div>
 
         {/* Próximas fabricaciones */}
-        <div className="bg-white p-5 rounded-lg border border-[#D9D9D9] shadow-xs">
-          <h2 className="text-base font-bold text-[#000000] mb-3">Próximas Fabricaciones Requeridas</h2>
+        <div className="bg-white p-5 rounded-[5px] border border-steffen-border shadow-xs">
+          <h2 className="text-base font-bold text-steffen-surface mb-3">Próximas Fabricaciones Requeridas</h2>
           {upcomingFabrications.length === 0 ? (
-            <div className="text-center py-6 text-[#008102] font-medium text-sm flex items-center justify-center gap-2">
+            <div className="text-center py-6 text-steffen-green font-medium text-sm flex items-center justify-center gap-2">
               <CheckCircle2 className="w-5 h-5" /> No hay urgencias ni quiebres de stock.
             </div>
           ) : (
@@ -155,13 +155,13 @@ export const FactoryView: React.FC<{
                 <div key={uf.product.stock_item_id} className="py-3 flex justify-between items-center">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-[#000]">{uf.stockItem?.name}</span>
+                      <span className="font-bold text-sm text-steffen-surface">{uf.stockItem?.name}</span>
                       <StatusBadge type={uf.status as any} />
                     </div>
                     <span className="text-xs text-gray-500">Base: {uf.baseProduct?.name} ({uf.product.presentation})</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-sm font-bold text-[#DD0000]">{uf.currentStock} un</span>
+                    <span className="text-sm font-bold text-steffen-red">{uf.currentStock} un</span>
                     <p className="text-xs text-gray-400">Mínimo: {uf.minStock} un</p>
                   </div>
                 </div>
@@ -172,10 +172,10 @@ export const FactoryView: React.FC<{
       </div>
 
       {/* Costo-Ganancia por Producto (Nomenclatura oficial que reemplaza "Margen por producto") */}
-      <div className="bg-white p-5 rounded-lg border border-[#D9D9D9] shadow-xs space-y-4">
+      <div className="bg-white p-5 rounded-[5px] border border-steffen-border shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
           <div>
-            <h2 className="text-base font-bold text-[#000000] uppercase tracking-wider">Costo-Ganancia por Producto</h2>
+            <h2 className="text-base font-bold text-steffen-surface uppercase tracking-wider">Costo-Ganancia por Producto</h2>
             <p className="text-xs text-gray-500">
               Simulación de rentabilidad calculada exclusivamente sobre <strong>Lista Salón</strong> aplicando descuentos sucesivos.
             </p>
@@ -185,7 +185,7 @@ export const FactoryView: React.FC<{
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-gray-600">Simular Descuento:</span>
             <select
-              className="h-9 px-3 border border-[#D9D9D9] rounded bg-white text-xs font-bold text-[#B99D22]"
+              className="h-9 px-3 border border-steffen-border rounded bg-white text-xs font-bold text-steffen-gold"
               value={selectedProfileId}
               onChange={(e) => setSelectedProfileId(e.target.value)}
             >
@@ -201,7 +201,7 @@ export const FactoryView: React.FC<{
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="bg-gray-100 border-b border-[#D9D9D9] text-[#000000] font-bold text-left">
+              <tr className="bg-gray-100 border-b border-steffen-border text-steffen-surface font-bold text-left">
                 <th className="py-2.5 px-3">PRODUCTO FINAL</th>
                 <th className="py-2.5 px-3 text-right">COSTO TOTAL TEÓRICO (C/IVA)</th>
                 <th className="py-2.5 px-3 text-right">PRECIO LISTA SALÓN</th>
@@ -213,14 +213,14 @@ export const FactoryView: React.FC<{
             <tbody className="divide-y divide-gray-100">
               {costoGananciaRows.map((row) => (
                 <tr key={row.product.stock_item_id} className="hover:bg-gray-50">
-                  <td className="py-3 px-3 font-semibold text-[#393939]">
+                  <td className="py-3 px-3 font-semibold text-steffen-surface/80">
                     {row.stockItem?.name} ({row.stockItem?.code})
                   </td>
                   <td className="py-3 px-3 text-right font-medium">$ {row.totalCostArs.toFixed(2)}</td>
                   <td className="py-3 px-3 text-right text-gray-600">$ {row.listPrice.toLocaleString('es-AR')}</td>
-                  <td className="py-3 px-3 text-right font-bold text-[#000]">$ {Math.round(row.finalPrice).toLocaleString('es-AR')}</td>
-                  <td className="py-3 px-3 text-right font-bold text-[#B99D22]">{row.markup.toFixed(2)}x</td>
-                  <td className={`py-3 px-3 text-right font-bold ${row.gain > 0 ? 'text-[#008102]' : 'text-[#DD0000]'}`}>
+                  <td className="py-3 px-3 text-right font-bold text-steffen-surface">$ {Math.round(row.finalPrice).toLocaleString('es-AR')}</td>
+                  <td className="py-3 px-3 text-right font-bold text-steffen-gold">{row.markup.toFixed(2)}x</td>
+                  <td className={`py-3 px-3 text-right font-bold ${row.gain > 0 ? 'text-steffen-green' : 'text-steffen-red'}`}>
                     $ {Math.round(row.gain).toLocaleString('es-AR')}
                   </td>
                 </tr>
@@ -231,15 +231,15 @@ export const FactoryView: React.FC<{
       </div>
 
       {/* Movimientos de Fábrica (MFA) */}
-      <div className="bg-white p-5 rounded-lg border border-[#D9D9D9] shadow-xs">
-        <h2 className="text-base font-bold text-[#000000] mb-3">Movimientos de Fábrica (MFA)</h2>
+      <div className="bg-white p-5 rounded-[5px] border border-steffen-border shadow-xs">
+        <h2 className="text-base font-bold text-steffen-surface mb-3">Movimientos de Fábrica (MFA)</h2>
         {factoryMovements.length === 0 ? (
           <p className="text-sm text-gray-400 py-6 text-center">No hay movimientos productivos registrados.</p>
         ) : (
           <div className="overflow-x-auto max-h-72">
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-white">
-                <tr className="border-b border-[#D9D9D9] text-gray-500 text-left">
+                <tr className="border-b border-steffen-border text-gray-500 text-left">
                   <th className="py-2">CÓDIGO</th>
                   <th className="py-2">TIPO</th>
                   <th className="py-2">DESCRIPCIÓN</th>

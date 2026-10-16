@@ -41,15 +41,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#FBFBFB] px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-steffen-bg px-4 py-12">
       <div className="w-full max-w-md">
         {/* Cabecera / Marca Steffen */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#D2AB68] text-white shadow-md mb-3">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-[10px] bg-steffen-gold text-white shadow-md mb-3">
             <Sparkles className="w-7 h-7" />
           </div>
-          <h1 className="text-3xl font-extrabold tracking-wider text-[#393939]">STEFFEN</h1>
-          <p className="text-xs uppercase tracking-widest text-[#D2AB68] font-semibold mt-1">
+          <h1 className="text-3xl font-extrabold tracking-wider text-steffen-surface/80">STEFFEN</h1>
+          <p className="text-xs uppercase tracking-widest text-steffen-gold font-semibold mt-1">
             Cosmética Capilar
           </p>
           <p className="text-sm text-neutral-500 mt-2">
@@ -58,16 +58,16 @@ export default function LoginPage() {
         </div>
 
         {/* Tarjeta de Inicio de Sesión */}
-        <div className="bg-white rounded-2xl border border-[#D9D9D9] p-8 shadow-sm">
+        <div className="bg-white rounded-[10px] border border-steffen-border p-8 shadow-sm">
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-[#393939]">Iniciar Sesión</h2>
+            <h2 className="text-xl font-bold text-steffen-surface/80">Iniciar Sesión</h2>
             <p className="text-xs text-neutral-500 mt-1">
               Ingrese sus credenciales para acceder al sistema
             </p>
           </div>
 
           {errorMessage && (
-            <div className="mb-5 p-3.5 rounded-lg bg-red-50 border border-red-200 flex items-start gap-2.5 text-xs text-[#DD0000]">
+            <div className="mb-5 p-3.5 rounded-[5px] bg-red-50 border border-red-200 flex items-start gap-2.5 text-xs text-steffen-red">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{errorMessage}</span>
             </div>
@@ -77,7 +77,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-xs font-semibold text-[#393939] uppercase tracking-wider mb-1.5"
+                className="block text-xs font-semibold text-steffen-surface/80 uppercase tracking-wider mb-1.5"
               >
                 Correo Electrónico
               </label>
@@ -93,7 +93,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@steffen.com"
-                  className="w-full pl-10 pr-3.5 py-2.5 bg-neutral-50 border border-[#D9D9D9] rounded-lg text-sm text-[#393939] placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#D2AB68] focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-3.5 py-2.5 bg-neutral-50 border border-steffen-border rounded-[5px] text-sm text-steffen-surface/80 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-steffen-gold focus:border-transparent transition-all"
                 />
               </div>
             </div>
@@ -101,7 +101,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-xs font-semibold text-[#393939] uppercase tracking-wider mb-1.5"
+                className="block text-xs font-semibold text-steffen-surface/80 uppercase tracking-wider mb-1.5"
               >
                 Contraseña
               </label>
@@ -116,7 +116,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full pl-10 pr-3.5 py-2.5 bg-neutral-50 border border-[#D9D9D9] rounded-lg text-sm text-[#393939] placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#D2AB68] focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-3.5 py-2.5 bg-neutral-50 border border-steffen-border rounded-[5px] text-sm text-steffen-surface/80 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-steffen-gold focus:border-transparent transition-all"
                 />
               </div>
             </div>
@@ -124,7 +124,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 py-3 px-4 rounded-[2px] bg-[#D2AB68] hover:bg-[#c29b58] text-white text-sm font-semibold tracking-wide shadow-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full mt-2 py-3 px-4 rounded-[5px] bg-steffen-gold hover:bg-steffen-gold text-white text-sm font-semibold tracking-wide shadow-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {loading ? (
                 <>

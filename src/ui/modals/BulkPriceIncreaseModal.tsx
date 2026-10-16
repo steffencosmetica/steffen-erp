@@ -109,11 +109,11 @@ export const BulkPriceIncreaseModal: React.FC<BulkPriceIncreaseModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="relative w-full max-w-2xl bg-white border border-[#D9D9D9] rounded-[4px] shadow-2xl p-6 max-h-[92vh] flex flex-col">
+      <div className="relative w-full max-w-2xl bg-white border border-steffen-border rounded-[5px] shadow-2xl p-6 max-h-[92vh] flex flex-col">
         {/* Encabezado */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#D9D9D9] shrink-0">
+        <div className="flex items-center justify-between pb-4 border-b border-steffen-border shrink-0">
           <div className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-[#0E50A0]" />
+            <TrendingUp className="w-5 h-5 text-steffen-blue" />
             <h2 className="text-lg font-bold tracking-tight text-black uppercase">
               {isSelective
                 ? `AUMENTO SELECTIVO — ${countToUpdate} PRODUCTOS`
@@ -131,7 +131,7 @@ export const BulkPriceIncreaseModal: React.FC<BulkPriceIncreaseModalProps> = ({
         </div>
 
         {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-[2px] text-xs font-semibold text-[#DD0000] flex items-center gap-2 shrink-0">
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-[5px] text-xs font-semibold text-steffen-red flex items-center gap-2 shrink-0">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -140,7 +140,7 @@ export const BulkPriceIncreaseModal: React.FC<BulkPriceIncreaseModalProps> = ({
         <form onSubmit={handleSubmit} className="mt-4 flex flex-col flex-1 overflow-hidden">
           <div className="overflow-y-auto pr-1 space-y-4 flex-1">
             {/* Resumen */}
-            <div className="p-3 bg-gray-50 border border-[#D9D9D9] rounded-[2px] text-xs">
+            <div className="p-3 bg-gray-50 border border-steffen-border rounded-[5px] text-xs">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-gray-500 font-bold uppercase tracking-wider text-[10px]">
                   Lista de Precios
@@ -151,7 +151,7 @@ export const BulkPriceIncreaseModal: React.FC<BulkPriceIncreaseModalProps> = ({
                 <span className="text-gray-500 font-bold uppercase tracking-wider text-[10px]">
                   Alcance del Aumento
                 </span>
-                <span className="font-bold text-[#0E50A0]">
+                <span className="font-bold text-steffen-blue">
                   {isSelective
                     ? `Selección manual (${countToUpdate} productos)`
                     : `Toda la lista (${countToUpdate} productos con precio activo)`}
@@ -182,7 +182,7 @@ export const BulkPriceIncreaseModal: React.FC<BulkPriceIncreaseModalProps> = ({
                   placeholder="Ej. 12.5"
                   disabled={isPending}
                   autoFocus
-                  className="w-full h-11 pl-4 pr-10 text-base font-bold border border-[#D9D9D9] rounded-[2px] focus:outline-none focus:border-[#0E50A0] text-black"
+                  className="w-full h-11 pl-4 pr-10 text-base font-bold border border-steffen-border rounded-[5px] focus:outline-none focus:border-steffen-gold text-black"
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-base pointer-events-none">
                   %
@@ -199,10 +199,10 @@ export const BulkPriceIncreaseModal: React.FC<BulkPriceIncreaseModalProps> = ({
                 <span className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
                   Vista Previa de Productos Afectados ({targetProducts.length})
                 </span>
-                <div className="max-h-48 overflow-y-auto border border-[#D9D9D9] rounded-[2px]">
+                <div className="max-h-48 overflow-y-auto border border-steffen-border rounded-[5px]">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="bg-[#D9D9D9] text-black font-bold uppercase text-left border-b border-[#D9D9D9]">
+                      <tr className="bg-steffen-gray text-black font-bold uppercase text-left border-b border-steffen-border">
                         <th className="py-2 px-3">Código</th>
                         <th className="py-2 px-3">Producto</th>
                         <th className="py-2 px-3 text-right">Precio Actual</th>
@@ -215,13 +215,13 @@ export const BulkPriceIncreaseModal: React.FC<BulkPriceIncreaseModalProps> = ({
                         return (
                           <tr key={p.productId} className="hover:bg-gray-50">
                             <td className="py-2 px-3 font-semibold text-black">{p.productCode}</td>
-                            <td className="py-2 px-3 text-gray-700 truncate max-w-[200px]">
+                            <td className="py-2 px-3 text-gray-700 truncate max-w-[150px]">
                               {p.productName} ({p.presentation})
                             </td>
                             <td className="py-2 px-3 text-right font-medium text-gray-600">
                               {formatExactIntegerArs(p.currentPriceArs)}
                             </td>
-                            <td className="py-2 px-3 text-right font-bold text-[#008102]">
+                            <td className="py-2 px-3 text-right font-bold text-steffen-green">
                               {preview ? formatExactIntegerArs(preview) : '—'}
                             </td>
                           </tr>
@@ -234,7 +234,7 @@ export const BulkPriceIncreaseModal: React.FC<BulkPriceIncreaseModalProps> = ({
             )}
 
             {/* Advertencia Transaccional */}
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-[2px] text-xs text-amber-900 flex items-start gap-2">
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-[5px] text-xs text-amber-900 flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold">Operación Atómica Masiva</p>
@@ -251,7 +251,7 @@ export const BulkPriceIncreaseModal: React.FC<BulkPriceIncreaseModalProps> = ({
                 checked={confirmUnderstood}
                 onChange={(e) => setConfirmUnderstood(e.target.checked)}
                 disabled={isPending}
-                className="rounded border-gray-300 text-[#0E50A0] focus:ring-[#0E50A0] h-4 w-4 mt-0.5 cursor-pointer"
+                className="rounded border-gray-300 text-steffen-blue focus:ring-steffen-gold h-4 w-4 mt-0.5 cursor-pointer"
               />
               <span>
                 Confirmo que deseo aplicar este aumento de {isPctValid && pctDecimal ? `${pctDecimal.toString()}%` : '...%'} a {countToUpdate} productos en la lista {priceList.name}.
@@ -259,19 +259,19 @@ export const BulkPriceIncreaseModal: React.FC<BulkPriceIncreaseModalProps> = ({
             </label>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#D9D9D9] mt-4 shrink-0">
+          <div className="flex justify-end gap-3 pt-4 border-t border-steffen-border mt-4 shrink-0">
             <button
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="h-[38px] px-4 rounded-[2px] text-xs font-bold uppercase tracking-wider bg-white border border-[#D9D9D9] text-black hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-50"
+              className="h-[29px] px-4 rounded-[5px] text-xs font-bold uppercase tracking-wider bg-white border border-steffen-border text-black hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isPending || !isPctValid || !confirmUnderstood || countToUpdate === 0}
-              className="h-[38px] px-5 rounded-[2px] text-xs font-bold uppercase tracking-wider bg-[#0E50A0] hover:bg-[#0c4386] text-white border border-[#0E50A0] transition-colors cursor-pointer disabled:opacity-50"
+              className="h-[29px] px-5 rounded-[5px] text-xs font-bold uppercase tracking-wider bg-steffen-blue hover:bg-steffen-blue-hover text-white border border-steffen-blue transition-colors cursor-pointer disabled:opacity-50"
             >
               {isPending ? 'Aplicando aumento...' : 'Aplicar Aumento'}
             </button>

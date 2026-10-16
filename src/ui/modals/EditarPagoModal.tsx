@@ -74,7 +74,7 @@ export const EditarPagoModal: React.FC<EditarPagoModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-      <div className="bg-white border border-[#D9D9D9] rounded-[5px] w-full max-w-md shadow-xl flex flex-col max-h-[90vh]">
+      <div className="bg-white border border-steffen-border rounded-[10px] w-full max-w-md shadow-xl flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-black">
           <h2 className="text-base font-bold text-black uppercase tracking-wider">
@@ -92,7 +92,7 @@ export const EditarPagoModal: React.FC<EditarPagoModalProps> = ({
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5 space-y-4 text-xs">
           {errorMsg && (
-            <div className="p-3 bg-red-50 border border-[#DD0000] text-[#DD0000] rounded-[3px] flex items-center gap-2">
+            <div className="p-3 bg-red-50 border border-steffen-red text-steffen-red rounded-[5px] flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>
@@ -100,7 +100,7 @@ export const EditarPagoModal: React.FC<EditarPagoModalProps> = ({
 
           {loading ? (
             <div className="py-8 flex flex-col items-center justify-center gap-2 text-gray-500">
-              <Loader2 className="w-6 h-6 animate-spin text-[#0E50A0]" />
+              <Loader2 className="w-6 h-6 animate-spin text-steffen-blue" />
               <span>Cargando datos del pago...</span>
             </div>
           ) : (
@@ -110,7 +110,7 @@ export const EditarPagoModal: React.FC<EditarPagoModalProps> = ({
                 <label className="font-bold text-gray-800 uppercase text-[11px]">
                   {payment?.paymentType === 'CUSTOMER' ? 'Cliente' : 'Proveedor'}
                 </label>
-                <div className="w-full h-9 px-3 bg-gray-100 border border-[#D9D9D9] rounded-[5px] flex items-center font-semibold text-black">
+                <div className="w-full h-9 px-3 bg-gray-100 border border-steffen-border rounded-[10px] flex items-center font-semibold text-black">
                   {payment?.entityName || '—'}
                 </div>
               </div>
@@ -124,7 +124,7 @@ export const EditarPagoModal: React.FC<EditarPagoModalProps> = ({
                   onChange={(e) => setBusinessDate(e.target.value)}
                   disabled={isPending}
                   required
-                  className="w-full h-9 px-3 border border-[#D9D9D9] rounded-[5px] text-black focus:outline-none focus:border-[#0E50A0]"
+                  className="w-full h-9 px-3 border border-steffen-border rounded-[10px] text-black focus:outline-none focus:border-steffen-gold"
                 />
               </div>
 
@@ -143,7 +143,7 @@ export const EditarPagoModal: React.FC<EditarPagoModalProps> = ({
                     onChange={(e) => setAmountInput(e.target.value)}
                     disabled={isPending}
                     required
-                    className="w-full h-9 pl-8 pr-3 border border-[#D9D9D9] rounded-[5px] font-mono font-bold text-right text-black focus:outline-none focus:border-[#0E50A0]"
+                    className="w-full h-9 pl-8 pr-3 border border-steffen-border rounded-[10px] font-bold text-right text-black focus:outline-none focus:border-steffen-gold"
                   />
                 </div>
                 <p className="text-[10px] text-gray-400">
@@ -157,14 +157,14 @@ export const EditarPagoModal: React.FC<EditarPagoModalProps> = ({
                   type="button"
                   onClick={onClose}
                   disabled={isPending}
-                  className="h-9 px-4 border border-[#D9D9D9] rounded-[5px] font-bold text-gray-700 hover:bg-gray-100 transition-colors uppercase tracking-wider"
+                  className="h-9 px-4 border border-steffen-border rounded-[10px] font-bold text-gray-700 hover:bg-gray-100 transition-colors uppercase tracking-wider"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="h-9 px-5 bg-[#0E50A0] hover:bg-[#0c4386] text-white rounded-[5px] font-bold transition-colors uppercase tracking-wider flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="h-9 px-5 bg-steffen-blue hover:bg-steffen-blue-hover text-white rounded-[10px] font-bold transition-colors uppercase tracking-wider flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                   <span>GUARDAR CAMBIOS</span>

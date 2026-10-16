@@ -59,7 +59,7 @@ export const RetiroCajaModal: React.FC<RetiroCajaModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-      <div className="bg-white border border-[#D9D9D9] rounded-[5px] w-full max-w-md shadow-xl flex flex-col max-h-[90vh]">
+      <div className="bg-white border border-steffen-border rounded-[10px] w-full max-w-md shadow-xl flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-black">
           <h2 className="text-base font-bold text-black uppercase tracking-wider">
@@ -77,7 +77,7 @@ export const RetiroCajaModal: React.FC<RetiroCajaModalProps> = ({
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5 space-y-4 text-xs">
           {errorMsg && (
-            <div className="p-3 bg-red-50 border border-[#DD0000] text-[#DD0000] rounded-[3px] flex items-center gap-2">
+            <div className="p-3 bg-red-50 border border-steffen-red text-steffen-red rounded-[5px] flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>
@@ -92,7 +92,7 @@ export const RetiroCajaModal: React.FC<RetiroCajaModalProps> = ({
               onChange={(e) => setBusinessDate(e.target.value)}
               disabled={isPending}
               required
-              className="w-full h-9 px-3 border border-[#D9D9D9] rounded-[5px] text-black focus:outline-none focus:border-[#DD0000]"
+              className="w-full h-9 px-3 border border-steffen-border rounded-[10px] text-black focus:outline-none focus:border-steffen-red"
             />
           </div>
 
@@ -108,7 +108,7 @@ export const RetiroCajaModal: React.FC<RetiroCajaModalProps> = ({
               onChange={(e) => setDescription(e.target.value)}
               disabled={isPending}
               required
-              className="w-full h-9 px-3 border border-[#D9D9D9] rounded-[5px] text-black focus:outline-none focus:border-[#DD0000]"
+              className="w-full h-9 px-3 border border-steffen-border rounded-[10px] text-black focus:outline-none focus:border-steffen-red"
             />
           </div>
 
@@ -126,7 +126,7 @@ export const RetiroCajaModal: React.FC<RetiroCajaModalProps> = ({
                 onChange={(e) => setAmountInput(e.target.value)}
                 disabled={isPending}
                 required
-                className="w-full h-9 pl-8 pr-3 border border-[#D9D9D9] rounded-[5px] font-mono font-bold text-right text-black focus:outline-none focus:border-[#DD0000]"
+                className="w-full h-9 pl-8 pr-3 border border-steffen-border rounded-[10px] font-bold text-right text-black focus:outline-none focus:border-steffen-red"
               />
             </div>
             <p className="text-[10px] text-gray-400">
@@ -140,14 +140,14 @@ export const RetiroCajaModal: React.FC<RetiroCajaModalProps> = ({
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="h-9 px-4 border border-[#D9D9D9] rounded-[5px] font-bold text-gray-700 hover:bg-gray-100 transition-colors uppercase tracking-wider"
+              className="h-9 px-4 border border-steffen-border rounded-[10px] font-bold text-gray-700 hover:bg-gray-100 transition-colors uppercase tracking-wider"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="h-9 px-5 bg-[#DD0000] hover:bg-[#b00000] text-white rounded-[5px] font-bold transition-colors uppercase tracking-wider flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              className="h-9 px-5 bg-steffen-red hover:bg-steffen-red-hover text-white rounded-[10px] font-bold transition-colors uppercase tracking-wider flex items-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
               <span>REGISTRAR RETIRO</span>

@@ -69,9 +69,9 @@ export const AdminView: React.FC<{
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-lg border border-[#D9D9D9]">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-[5px] border border-steffen-border">
         <div>
-          <h1 className="text-2xl font-bold text-[#000000]">Administración y Finanzas</h1>
+          <h1 className="text-2xl font-bold text-steffen-surface">Administración y Finanzas</h1>
           <p className="text-xs text-gray-500">
             Control patrimonial, cotización del dólar, cuentas corrientes, liquidaciones y ventas históricas.
           </p>
@@ -92,18 +92,18 @@ export const AdminView: React.FC<{
       {/* Row 1: Cotización Global & Cuentas Patrimoniales */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Cotización USD */}
-        <div className="bg-white p-5 rounded-lg border border-[#D9D9D9] shadow-xs space-y-4">
+        <div className="bg-white p-5 rounded-[5px] border border-steffen-border shadow-xs space-y-4">
           <div className="flex items-center gap-2">
-            <DollarSign className="w-5 h-5 text-[#B99D22]" />
-            <h2 className="text-base font-bold text-[#000000]">Cotización Dólar Oficial / Global</h2>
+            <DollarSign className="w-5 h-5 text-steffen-gold" />
+            <h2 className="text-base font-bold text-steffen-surface">Cotización Dólar Oficial / Global</h2>
           </div>
           <p className="text-xs text-gray-500">
             Actualiza inmediatamente el cálculo teórico de costos en pesos de materias primas e insumos cotizados en USD.
           </p>
 
-          <div className="p-3 bg-gray-50 rounded border border-[#D9D9D9] flex justify-between items-center">
+          <div className="p-3 bg-gray-50 rounded border border-steffen-border flex justify-between items-center">
             <span className="text-xs font-semibold text-gray-600">Cotización Actual Vigente:</span>
-            <span className="text-xl font-bold text-[#B99D22]">$ {currentFx.toFixed(2)}</span>
+            <span className="text-xl font-bold text-steffen-gold">$ {currentFx.toFixed(2)}</span>
           </div>
 
           <div className="flex gap-2">
@@ -111,7 +111,7 @@ export const AdminView: React.FC<{
               type="number"
               step="0.01"
               min="1"
-              className="h-[40px] px-3 border border-[#D9D9D9] rounded flex-1 font-bold text-sm"
+              className="h-[30px] px-3 border border-steffen-border rounded flex-1 font-bold text-sm"
               value={newFxRate}
               onChange={(e) => setNewFxRate(parseFloat(e.target.value) || 0)}
             />
@@ -120,16 +120,16 @@ export const AdminView: React.FC<{
             </Button>
           </div>
 
-          {fxMessage && <p className="text-xs text-[#008102] font-semibold">{fxMessage}</p>}
+          {fxMessage && <p className="text-xs text-steffen-green font-semibold">{fxMessage}</p>}
           <span className="text-[11px] text-gray-400 block">
             Última actualización: {currentFxObj ? new Date(currentFxObj.created_at).toLocaleString('es-AR') : '-'}
           </span>
         </div>
 
         {/* Cuentas Patrimoniales */}
-        <div className="lg:col-span-2 bg-white p-5 rounded-lg border border-[#D9D9D9] shadow-xs space-y-3">
+        <div className="lg:col-span-2 bg-white p-5 rounded-[5px] border border-steffen-border shadow-xs space-y-3">
           <div className="flex justify-between items-center">
-            <h2 className="text-base font-bold text-[#000000]">Cuentas y Posición Patrimonial</h2>
+            <h2 className="text-base font-bold text-steffen-surface">Cuentas y Posición Patrimonial</h2>
             <div className="flex gap-2">
               <Button variant="secundario" onClick={() => onOpenModal('PAYMENT_CUSTOMER')} className="h-8 text-xs">
                 Cobro Cliente
@@ -143,28 +143,28 @@ export const AdminView: React.FC<{
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
             <div className="p-3 bg-gray-50 border border-gray-200 rounded">
               <span className="text-[11px] text-gray-500 uppercase font-semibold">Caja Steffen</span>
-              <p className="text-base font-bold text-[#000] mt-1">$ {Math.round(cashSteffen).toLocaleString('es-AR')}</p>
+              <p className="text-base font-bold text-steffen-surface mt-1">$ {Math.round(cashSteffen).toLocaleString('es-AR')}</p>
             </div>
 
             <div className="p-3 bg-gray-50 border border-gray-200 rounded">
               <span className="text-[11px] text-gray-500 uppercase font-semibold">Caja Mercado Libre</span>
-              <p className="text-base font-bold text-[#000] mt-1">$ {Math.round(cashML).toLocaleString('es-AR')}</p>
+              <p className="text-base font-bold text-steffen-surface mt-1">$ {Math.round(cashML).toLocaleString('es-AR')}</p>
             </div>
 
             <div className="p-3 bg-green-50 border border-green-200 rounded">
               <span className="text-[11px] text-green-700 uppercase font-semibold">Deudas Clientes</span>
-              <p className="text-base font-bold text-[#008102] mt-1">$ {Math.round(totalCustomerDebt).toLocaleString('es-AR')}</p>
+              <p className="text-base font-bold text-steffen-green mt-1">$ {Math.round(totalCustomerDebt).toLocaleString('es-AR')}</p>
             </div>
 
             <div className="p-3 bg-red-50 border border-red-200 rounded">
               <span className="text-[11px] text-red-700 uppercase font-semibold">Deudas Proveedores</span>
-              <p className="text-base font-bold text-[#DD0000] mt-1">$ {Math.round(totalSupplierDebt).toLocaleString('es-AR')}</p>
+              <p className="text-base font-bold text-steffen-red mt-1">$ {Math.round(totalSupplierDebt).toLocaleString('es-AR')}</p>
             </div>
           </div>
 
-          <div className="p-3 bg-[#FBFBFB] border-t-2 border-[#B99D22] rounded flex justify-between items-center">
-            <span className="text-xs uppercase font-bold text-[#393939]">PATRIMONIO NETO REAL (ACTIVO - PASIVO):</span>
-            <span className="text-xl font-bold text-[#B99D22]">$ {Math.round(netBalance).toLocaleString('es-AR')}</span>
+          <div className="p-3 bg-steffen-bg border-t-2 border-steffen-gold rounded flex justify-between items-center">
+            <span className="text-xs uppercase font-bold text-steffen-surface/80">PATRIMONIO NETO REAL (ACTIVO - PASIVO):</span>
+            <span className="text-xl font-bold text-steffen-gold">$ {Math.round(netBalance).toLocaleString('es-AR')}</span>
           </div>
         </div>
       </div>
@@ -172,12 +172,12 @@ export const AdminView: React.FC<{
       {/* Row 2: Cuentas Clientes y Cuentas Proveedores */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Cuentas Clientes */}
-        <div className="bg-white p-5 rounded-lg border border-[#D9D9D9] shadow-xs">
-          <h2 className="text-base font-bold text-[#000000] mb-3">Resumen de Cuentas Clientes</h2>
+        <div className="bg-white p-5 rounded-[5px] border border-steffen-border shadow-xs">
+          <h2 className="text-base font-bold text-steffen-surface mb-3">Resumen de Cuentas Clientes</h2>
           <div className="overflow-x-auto max-h-60">
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-white">
-                <tr className="border-b border-[#D9D9D9] text-gray-500 text-left">
+                <tr className="border-b border-steffen-border text-gray-500 text-left">
                   <th className="py-2">CLIENTE</th>
                   <th className="py-2 text-right">SALDO DEUDA</th>
                   <th className="py-2 text-center">ACCIÓN</th>
@@ -188,17 +188,17 @@ export const AdminView: React.FC<{
                   const hasDebt = account.current_balance > 0;
                   return (
                     <tr key={account.id} className="hover:bg-gray-50">
-                      <td className="py-2.5 font-semibold text-[#000]">
+                      <td className="py-2.5 font-semibold text-steffen-surface">
                         {customer?.name} ({customer?.code})
                       </td>
-                      <td className={`py-2.5 text-right font-bold ${hasDebt ? 'text-[#DD0000]' : 'text-gray-500'}`}>
+                      <td className={`py-2.5 text-right font-bold ${hasDebt ? 'text-steffen-red' : 'text-gray-500'}`}>
                         $ {Math.round(account.current_balance).toLocaleString('es-AR')}
                       </td>
                       <td className="py-2.5 text-center">
                         {hasDebt && (
                           <button
                             onClick={() => onOpenModal('PAYMENT_CUSTOMER')}
-                            className="text-[#B99D22] font-bold hover:underline cursor-pointer"
+                            className="text-steffen-gold font-bold hover:underline cursor-pointer"
                           >
                             Registrar Cobro
                           </button>
@@ -213,15 +213,15 @@ export const AdminView: React.FC<{
         </div>
 
         {/* Deudas Proveedores */}
-        <div className="bg-white p-5 rounded-lg border border-[#D9D9D9] shadow-xs">
-          <h2 className="text-base font-bold text-[#000000] mb-3">Deudas a Proveedores</h2>
+        <div className="bg-white p-5 rounded-[5px] border border-steffen-border shadow-xs">
+          <h2 className="text-base font-bold text-steffen-surface mb-3">Deudas a Proveedores</h2>
           {supplierAccounts.length === 0 ? (
-            <p className="text-sm text-[#008102] py-6 text-center font-medium">✓ No hay deudas pendientes a proveedores.</p>
+            <p className="text-sm text-steffen-green py-6 text-center font-medium">✓ No hay deudas pendientes a proveedores.</p>
           ) : (
             <div className="overflow-x-auto max-h-60">
               <table className="w-full text-xs">
                 <thead className="sticky top-0 bg-white">
-                  <tr className="border-b border-[#D9D9D9] text-gray-500 text-left">
+                  <tr className="border-b border-steffen-border text-gray-500 text-left">
                     <th className="py-2">PROVEEDOR</th>
                     <th className="py-2 text-right">SALDO DEUDA</th>
                     <th className="py-2 text-center">ACCIÓN</th>
@@ -230,16 +230,16 @@ export const AdminView: React.FC<{
                 <tbody className="divide-y divide-gray-100">
                   {supplierAccounts.map(({ account, supplier }) => (
                     <tr key={account.id} className="hover:bg-gray-50">
-                      <td className="py-2.5 font-semibold text-[#000]">
+                      <td className="py-2.5 font-semibold text-steffen-surface">
                         {supplier?.name} ({supplier?.code})
                       </td>
-                      <td className="py-2.5 text-right font-bold text-[#DD0000]">
+                      <td className="py-2.5 text-right font-bold text-steffen-red">
                         $ {Math.round(account.current_balance).toLocaleString('es-AR')}
                       </td>
                       <td className="py-2.5 text-center">
                         <button
                           onClick={() => onOpenModal('PAYMENT_SUPPLIER')}
-                          className="text-[#DD0000] font-bold hover:underline cursor-pointer"
+                          className="text-steffen-red font-bold hover:underline cursor-pointer"
                         >
                           Pagar
                         </button>
@@ -254,15 +254,15 @@ export const AdminView: React.FC<{
       </div>
 
       {/* Row 3: Ventas Cerradas Históricas (con PDFs de RTO y RTM) */}
-      <div className="bg-white p-5 rounded-lg border border-[#D9D9D9] shadow-xs space-y-3">
-        <h2 className="text-base font-bold text-[#000000]">Historial de Ventas Confirmadas</h2>
+      <div className="bg-white p-5 rounded-[5px] border border-steffen-border shadow-xs space-y-3">
+        <h2 className="text-base font-bold text-steffen-surface">Historial de Ventas Confirmadas</h2>
         {completedSales.length === 0 ? (
           <p className="text-sm text-gray-400 py-6 text-center">No hay ventas finalizadas todavía.</p>
         ) : (
           <div className="overflow-x-auto max-h-72">
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-white">
-                <tr className="border-b border-[#D9D9D9] text-gray-500 text-left bg-gray-50">
+                <tr className="border-b border-steffen-border text-gray-500 text-left bg-gray-50">
                   <th className="py-2.5 px-3">FECHA</th>
                   <th className="py-2.5 px-3">CLIENTE / DESTINATARIO</th>
                   <th className="py-2.5 px-3 text-right">TOTAL PEDIDO</th>
@@ -277,16 +277,16 @@ export const AdminView: React.FC<{
                     <td className="py-3 px-3 text-gray-600">
                       {new Date(remittance.created_at).toLocaleDateString('es-AR')}
                     </td>
-                    <td className="py-3 px-3 font-semibold text-[#000]">
+                    <td className="py-3 px-3 font-semibold text-steffen-surface">
                       {remittance.recipient_name_snapshot || 'Consumidor'}
                     </td>
                     <td className="py-3 px-3 text-right font-bold text-sm">
                       $ {Math.round(remittance.total_order_ars).toLocaleString('es-AR')}
                     </td>
-                    <td className="py-3 px-3 text-right font-bold text-sm text-[#008102]">
+                    <td className="py-3 px-3 text-right font-bold text-sm text-steffen-green">
                       $ {Math.round(rtm?.gain_ars || 0).toLocaleString('es-AR')}
                     </td>
-                    <td className="py-3 px-3 text-center font-bold text-[#B99D22]">{remittance.code}</td>
+                    <td className="py-3 px-3 text-center font-bold text-steffen-gold">{remittance.code}</td>
                     <td className="py-3 px-3 text-center space-x-2">
                       <Button
                         variant="secundario"
@@ -314,12 +314,12 @@ export const AdminView: React.FC<{
       </div>
 
       {/* Row 4: Movimientos Patrimoniales (MOV) */}
-      <div className="bg-white p-5 rounded-lg border border-[#D9D9D9] shadow-xs space-y-3">
-        <h2 className="text-base font-bold text-[#000000]">Últimos Movimientos Patrimoniales (MOV)</h2>
+      <div className="bg-white p-5 rounded-[5px] border border-steffen-border shadow-xs space-y-3">
+        <h2 className="text-base font-bold text-steffen-surface">Últimos Movimientos Patrimoniales (MOV)</h2>
         <div className="overflow-x-auto max-h-72">
           <table className="w-full text-xs">
             <thead className="sticky top-0 bg-white">
-              <tr className="border-b border-[#D9D9D9] text-gray-500 text-left bg-gray-50">
+              <tr className="border-b border-steffen-border text-gray-500 text-left bg-gray-50">
                 <th className="py-2.5 px-3">CÓDIGO MOV</th>
                 <th className="py-2.5 px-3">FECHA</th>
                 <th className="py-2.5 px-3">TIPO</th>
