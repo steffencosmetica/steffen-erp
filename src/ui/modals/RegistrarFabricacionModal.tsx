@@ -20,6 +20,14 @@ interface RegistrarFabricacionModalProps {
   onClose: () => void;
   onSuccess: () => void;
   baseProducts: BaseProductOption[];
+  /**
+   * Simular fabricación (Próxima fabricación en Mi Fábrica y Dashboard): solo muestra la
+   * previsualización de requerimientos vs disponibilidad (getManufacturingPreviewAction).
+   * No registra: no genera GRA/MFA/MST, consumos, reservas ni cambios de stock.
+   */
+  simulateOnly?: boolean;
+  /** Producto Base preseleccionado al abrir. */
+  initialBaseProductId?: string;
 }
 
 export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps> = ({
@@ -27,8 +35,10 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
   onClose,
   onSuccess,
   baseProducts,
+  simulateOnly = false,
+  initialBaseProductId,
 }) => {
-  const [baseProductId, setBaseProductId] = useState<string>(baseProducts[0]?.id || '');
+  const [baseProductId, setBaseProductId] = useState<string>(initialBaseProductId || baseProducts[0]?.id || '');
   const [businessDate, setBusinessDate] = useState<string>(() => {
     return new Date().toISOString().split('T')[0];
   });
@@ -41,6 +51,13 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
 
   const [isPending, startTransition] = useTransition();
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Preselección del Producto Base al abrir (p. ej. SIMULAR desde Próxima fabricación)
+  useEffect(() => {
+    if (isOpen && initialBaseProductId) {
+      setBaseProductId(initialBaseProductId);
+    }
+  }, [isOpen, initialBaseProductId]);
 
   // Cargar previsualización de requerimientos de MPR cada vez que cambia PBA o kg
   useEffect(() => {
@@ -82,6 +99,7 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
   if (!isOpen) return null;
 
   const canSubmit =
+    !simulateOnly &&
     !isPending &&
     !previewLoading &&
     preview !== null &&
@@ -90,7 +108,7 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canSubmit || !preview) return;
+    if (simulateOnly || !canSubmit || !preview) return;
 
     setSubmitError(null);
     startTransition(async () => {
@@ -117,7 +135,7 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
         {/* Cabecera */}
         <div className="px-6 py-4 border-b border-steffen-border flex justify-between items-center bg-white">
           <h2 className="text-lg font-bold text-black uppercase tracking-wider">
-            Fabricacion
+            {simulateOnly ? 'Simular fabricación' : 'Fabricacion'}
           </h2>
           <button
             type="button"
@@ -137,8 +155,14 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
             </div>
           )}
 
+          {simulateOnly && (
+            <p className="text-[11px] text-steffen-muted">
+              Simulación: comprueba la disponibilidad de materias primas. No registra fabricación ni modifica stock.
+            </p>
+          )}
+
           {/* Campo Código */}
-          <div className="grid grid-cols-3 items-center gap-4">
+          <div className={`grid grid-cols-3 items-center gap-4 ${simulateOnly ? 'hidden' : ''}`}>
             <label className="font-bold text-gray-800 text-right">Codigo</label>
             <div className="col-span-2 text-gray-500 text-xs">
               Automatico (GRAxxxx)
@@ -146,14 +170,14 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
           </div>
 
           {/* Fecha Lote */}
-          <div className="grid grid-cols-3 items-center gap-4">
+          <div className={`grid grid-cols-3 items-center gap-4 ${simulateOnly ? 'hidden' : ''}`}>
             <label className="font-bold text-gray-800 text-right">Fecha Lote</label>
             <div className="col-span-2">
               <input
                 type="date"
                 value={businessDate}
                 onChange={(e) => setBusinessDate(e.target.value)}
-                required
+                required={!simulateOnly}
                 className="w-full h-8 px-2.5 border border-steffen-border rounded-[10px] text-xs focus:outline-none focus:border-steffen-gold"
               />
             </div>
@@ -199,7 +223,7 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
           </div>
 
           {/* Observaciones */}
-          <div className="grid grid-cols-3 items-center gap-4">
+          <div className={`grid grid-cols-3 items-center gap-4 ${simulateOnly ? 'hidden' : ''}`}>
             <label className="font-bold text-gray-800 text-right">Observaciones</label>
             <div className="col-span-2">
               <input
@@ -278,21 +302,26 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
             {preview && !preview.isAllSufficient && (
               <div className="text-[11px] font-semibold text-steffen-red flex items-center gap-1.5 pt-1">
                 <AlertCircle className="w-3.5 h-3.5" />
-                <span>Stock insuficiente. La fabricación no puede registrarse.</span>
+                <span>
+                  {simulateOnly
+                    ? 'Stock insuficiente para fabricar esa cantidad.'
+                    : 'Stock insuficiente. La fabricación no puede registrarse.'}
+                </span>
               </div>
             )}
           </div>
 
           {/* Botones de Acción */}
-          <div className="pt-4 border-t border-steffen-border grid grid-cols-2 gap-3">
+          <div className={`pt-4 border-t border-steffen-border grid gap-3 ${simulateOnly ? 'grid-cols-1' : 'grid-cols-2'}`}>
             <button
               type="button"
               onClick={onClose}
               disabled={isPending}
               className="h-10 bg-steffen-red hover:bg-steffen-red-hover text-white rounded-[5px] font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
             >
-              Cancelar
+              {simulateOnly ? 'Cerrar' : 'Cancelar'}
             </button>
+            {!simulateOnly && (
             <button
               type="submit"
               disabled={!canSubmit}
@@ -301,6 +330,7 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
               {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
               <span>{preview && !preview.isAllSufficient ? 'STOCK INSUFICIENTE' : 'Registrar'}</span>
             </button>
+            )}
           </div>
         </form>
       </div>

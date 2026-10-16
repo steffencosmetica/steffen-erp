@@ -32,6 +32,8 @@ import { OrderRepository } from '@/repositories/order.repository';
 import { OrderDomainService } from '@/services/order.service';
 import { PlanningRepository } from '@/repositories/planning.repository';
 import { PlanningDomainService } from '@/services/planning.service';
+import { ReportRepository } from '@/repositories/report.repository';
+import { ReportDomainService } from '@/services/report.service';
 import { RemittanceRepository } from '@/repositories/remittance.repository';
 import { RemittanceDomainService } from '@/services/remittance.service';
 import { MarginRemittanceRepository } from '@/repositories/margin-remittance.repository';
@@ -285,6 +287,15 @@ export function getPlanningService(): PlanningDomainService {
     planningServiceInstance = new PlanningDomainService(planningRepo);
   }
   return planningServiceInstance;
+}
+
+let reportServiceInstance: ReportDomainService | null = null;
+
+export function getReportService(): ReportDomainService {
+  if (!reportServiceInstance) {
+    reportServiceInstance = new ReportDomainService(new ReportRepository(serverSupabase));
+  }
+  return reportServiceInstance;
 }
 
 let remittanceRepoInstance: RemittanceRepository | null = null;

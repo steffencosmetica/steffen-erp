@@ -15,6 +15,8 @@ interface DashboardCuentasCardProps {
   neto: string;
   /** Acciones patrimoniales ubicadas junto a Retiro Caja (Figma Dashboard). */
   actions?: ReactNode;
+  /** Error de carga de saldos: se muestra en lugar de la tabla, sin ocultar las acciones. */
+  error?: string | null;
 }
 
 export const DashboardCuentasCard: React.FC<DashboardCuentasCardProps> = ({
@@ -24,6 +26,7 @@ export const DashboardCuentasCard: React.FC<DashboardCuentasCardProps> = ({
   deudasProveedores,
   neto,
   actions,
+  error,
 }) => {
   const router = useRouter();
   const [isRetiroOpen, setIsRetiroOpen] = useState(false);
@@ -31,6 +34,9 @@ export const DashboardCuentasCard: React.FC<DashboardCuentasCardProps> = ({
   return (
     <>
       <Panel>
+        {error ? (
+          <p className="py-6 text-center text-xs text-steffen-red">{error}</p>
+        ) : (
         <table className={tableStyles.table}>
           <thead>
             <tr className={tableStyles.headRow}>
@@ -63,6 +69,7 @@ export const DashboardCuentasCard: React.FC<DashboardCuentasCardProps> = ({
             </tr>
           </tbody>
         </table>
+        )}
       </Panel>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">

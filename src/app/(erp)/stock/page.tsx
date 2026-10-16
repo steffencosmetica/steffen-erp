@@ -23,6 +23,7 @@ import {
 } from '@/actions/stock.dto';
 import { RawMaterialsView } from '@/ui/views/RawMaterialsView';
 import { Decimal, toNumericString } from '@/domain/decimal';
+import { compareStockPriority } from '@/domain/stock-priority';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,41 +77,11 @@ export default async function StockPage(props: {
 
   // 3. Ordenamiento normativo por ratio de stock: stock_actual / stock_minimo ASC
   // Resuelto en servidor con aritmética exacta Decimal (sin floating-point de JS)
-  const sortedProducts = [...productRecords].sort((a, b) => {
-    const minA = a.stockMinimum && a.stockMinimum.gt(0) ? a.stockMinimum : new Decimal(1);
-    const minB = b.stockMinimum && b.stockMinimum.gt(0) ? b.stockMinimum : new Decimal(1);
-    const ratioA = a.balance.dividedBy(minA);
-    const ratioB = b.balance.dividedBy(minB);
+  const sortedProducts = [...productRecords].sort(compareStockPriority);
 
-    if (!ratioA.equals(ratioB)) {
-      return ratioA.comparedTo(ratioB);
-    }
-    return a.code.localeCompare(b.code);
-  });
+  const sortedRawMaterials = [...rawMaterialRecords].sort(compareStockPriority);
 
-  const sortedRawMaterials = [...rawMaterialRecords].sort((a, b) => {
-    const minA = a.stockMinimum && a.stockMinimum.gt(0) ? a.stockMinimum : new Decimal(1);
-    const minB = b.stockMinimum && b.stockMinimum.gt(0) ? b.stockMinimum : new Decimal(1);
-    const ratioA = a.balance.dividedBy(minA);
-    const ratioB = b.balance.dividedBy(minB);
-
-    if (!ratioA.equals(ratioB)) {
-      return ratioA.comparedTo(ratioB);
-    }
-    return a.code.localeCompare(b.code);
-  });
-
-  const sortedComponents = [...componentRecords].sort((a, b) => {
-    const minA = a.stockMinimum && a.stockMinimum.gt(0) ? a.stockMinimum : new Decimal(1);
-    const minB = b.stockMinimum && b.stockMinimum.gt(0) ? b.stockMinimum : new Decimal(1);
-    const ratioA = a.balance.dividedBy(minA);
-    const ratioB = b.balance.dividedBy(minB);
-
-    if (!ratioA.equals(ratioB)) {
-      return ratioA.comparedTo(ratioB);
-    }
-    return a.code.localeCompare(b.code);
-  });
+  const sortedComponents = [...componentRecords].sort(compareStockPriority);
 
   // 4. Serialización estricta a DTOs JSON-safe
   const initialProducts = sortedProducts.map(serializeFinalProduct);

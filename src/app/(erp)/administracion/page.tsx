@@ -5,6 +5,7 @@ import {
   getPatrimonyService,
   getSupplierItemRepository,
   getRemittanceService,
+  getReportService,
 } from '@/services/composition';
 import { AdministracionView } from '@/ui/views/AdministracionView';
 import { type AdministracionDashboardDTO } from '@/actions/administracion.dto';
@@ -31,9 +32,8 @@ export default async function AdministracionPage() {
   const supplierItemRepo = getSupplierItemRepository();
   const remittanceService = getRemittanceService();
 
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1;
+  // Período comercial desde la fecha de la base (misma fuente que el Dashboard); nunca la hora de Node.
+  const { year: currentYear, month: currentMonth } = await getReportService().getCurrentBusinessPeriod();
 
   const [customerRecords, customerLastActivityMap, supplierDebts, summary, recentMovements, usdRate, monthlySales] =
     await Promise.all([

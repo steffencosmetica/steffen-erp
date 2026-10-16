@@ -1,26 +1,35 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getAuthenticatedUser, isUserAuthorized } from '@/auth/guard';
 import {
-  getCustomerService,
   getSupplierService,
   getMasterItemService,
   getFormulaService,
   getProductService,
   getFactoryService,
   getPatrimonyService,
-  getOrderService,
+  getPlanningService,
+  getReportService,
 } from '@/services/composition';
-import { Decimal, toNumericString } from '@/domain/decimal';
-import { serializeBulkLot } from '@/actions/factory.dto';
+import { toNumericString } from '@/domain/decimal';
+import { compareStockPriority, isBelowStockMinimum } from '@/domain/stock-priority';
+import {
+  serializeBulkLot,
+  serializeNextManufacturingProduct,
+  type NextManufacturingProductDTO,
+} from '@/actions/factory.dto';
+import { selectNextManufacturingProducts, urgentProductIdsFromPlanning } from '@/domain/next-manufacturing';
+import { DashboardLowStock, type LowStockMaterialDTO } from '@/ui/components/DashboardLowStock';
+import { serializePlanningMatrix, type PlanningMatrixDTO } from '@/actions/planning.dto';
 import type { BaseProductOption } from '@/ui/modals/RegistrarFabricacionModal';
 import type { PackagingProductOption } from '@/ui/modals/RegistrarEnvasadoModal';
 import { DashboardActionsProvider, DashboardActionButton } from '@/ui/components/DashboardQuickAccess';
 import { DashboardCuentasCard } from '@/ui/components/DashboardCuentasCard';
-import { SectionHeader, KpiCard, Panel, tableStyles, forwardLinkClass, ForwardArrow } from '@/ui/components/UIComponents';
+import { PlanningMatrixTable } from '@/ui/components/PlanningMatrixTable';
+import { SectionHeader, KpiCard, Panel } from '@/ui/components/UIComponents';
 import { ErpIcon } from '@/ui/components/ErpIcon';
-import { formatArs, formatKg } from '@/lib/format';
+import { formatArs } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,58 +38,164 @@ export const metadata = {
   description: 'Panel operativo principal y centro de control según Figma.',
 };
 
+// Cantidad de ítems más urgentes mostrados en BAJO STOCK (orden normativo por ratio).
+const LOW_STOCK_LIMIT = 5;
+
+/** Importes de KPI: misma escala tipográfica compacta, sin desbordar la card. */
+const MoneyValue: React.FC<{ value: string }> = ({ value }) => (
+  <span className="text-[19px] whitespace-nowrap">{value}</span>
+);
+
+/* ==========================================================================
+   REPORTE MENSUAL — v_current_reports (BUSINESS_RULES §36)
+   ========================================================================== */
+
+function MonthlyKpisGrid({
+  openOrders,
+  sales,
+  billed,
+  gain,
+  error,
+}: {
+  openOrders: React.ReactNode;
+  sales: React.ReactNode;
+  billed: React.ReactNode;
+  gain: React.ReactNode;
+  error?: string;
+}) {
+  return (
+    <>
+      <div className="grid grid-cols-[1fr_1fr_1.35fr] gap-x-4 gap-y-3 items-stretch">
+        <KpiCard
+          className="min-h-[109px]"
+          label="Pedidos abiertos"
+          value={openOrders}
+          icon={<ErpIcon name="orden" tone="chrome" className="w-10 h-10" />}
+        />
+        <KpiCard
+          className="min-h-[109px]"
+          label="Ventas del mes"
+          value={sales}
+          icon={<ErpIcon name="ingresos" tone="chrome" className="w-10 h-10" />}
+        />
+        <div className="row-span-2 flex flex-col gap-3">
+          <KpiCard className="flex-1" label="Total facturado" value={billed} />
+          <KpiCard className="flex-1" label="Ganancia" value={gain} variant="positive" />
+        </div>
+        <DashboardActionButton action="order" appearance="secondary" className="w-full" />
+        <div aria-hidden />
+      </div>
+      {error && <p className="mt-2 text-xs text-steffen-red">{error}</p>}
+    </>
+  );
+}
+
+async function MonthlyKpis() {
+  try {
+    const reports = await getReportService().getCurrentReports();
+    return (
+      <MonthlyKpisGrid
+        openOrders={reports.openOrders}
+        sales={reports.salesCurrentMonth}
+        billed={<MoneyValue value={formatArs(reports.billedCurrentMonthArs)} />}
+        gain={<MoneyValue value={formatArs(reports.gainCurrentMonthArs)} />}
+      />
+    );
+  } catch {
+    return (
+      <MonthlyKpisGrid
+        openOrders="—"
+        sales="—"
+        billed="—"
+        gain="—"
+        error="No se pudieron cargar las métricas del mes."
+      />
+    );
+  }
+}
+
+/* ==========================================================================
+   RESUMEN DE PEDIDOS — mismo motor de planificación que Pedidos (§35.1)
+   ========================================================================== */
+
+function PlanningSummary({ planning }: { planning: PlanningMatrixDTO | null }) {
+  if (!planning) {
+    return <p className="py-12 text-center text-xs text-steffen-red">No se pudo cargar el resumen de pedidos.</p>;
+  }
+  return <PlanningMatrixTable planning={planning} />;
+}
+
+/* ==========================================================================
+   BAJO STOCK — MPR/COM debajo del mínimo, prioridad por ratio (§8.3)
+   ========================================================================== */
+
+async function LowStock({
+  products,
+  baseProducts,
+  urgencyUnavailable,
+}: {
+  products: NextManufacturingProductDTO[];
+  baseProducts: BaseProductOption[];
+  urgencyUnavailable: boolean;
+}) {
+  let materials: LowStockMaterialDTO[];
+  try {
+    const service = getMasterItemService();
+    const [mpr, com] = await Promise.all([service.listMasterItems('MPR', false), service.listMasterItems('COM', false)]);
+    materials = [...mpr, ...com]
+      .filter((it) => it.active && isBelowStockMinimum(it))
+      .sort(compareStockPriority)
+      .slice(0, LOW_STOCK_LIMIT)
+      .map((it) => ({
+        id: it.id,
+        name: it.name,
+        itemType: it.itemType === 'COM' ? 'COM' : 'MPR',
+        supplierName: it.referenceSupplierName,
+        balance: toNumericString(it.balance),
+        unitCostGrossArs: it.currentTheoreticalCostGrossArs ? toNumericString(it.currentTheoreticalCostGrossArs) : null,
+      }));
+  } catch {
+    return (
+      <Panel variant="alert">
+        <p className="py-6 text-center text-xs text-steffen-red">No se pudo cargar el bajo stock.</p>
+      </Panel>
+    );
+  }
+
+  return (
+    <DashboardLowStock
+      materials={materials}
+      products={products}
+      baseProducts={baseProducts}
+      urgencyUnavailable={urgencyUnavailable}
+    />
+  );
+}
+
+const BlockLoading: React.FC<{ label: string }> = ({ label }) => (
+  <p className="py-12 text-center text-xs text-steffen-muted">Cargando {label}…</p>
+);
+
 export default async function ErpHomePage() {
   const user = await getAuthenticatedUser();
   if (!user || !isUserAuthorized(user)) {
     redirect('/login');
   }
 
-  // Carga de datos reales sin mocks para el Dashboard
-  const [
-    mprItems,
-    customers,
-    suppliers,
-    baseProductRecords,
-    productRecords,
-    openLotsRecords,
-    patrimonialSummary,
-    openOrdersCount,
-  ] = await Promise.all([
-    getMasterItemService().listMasterItems('MPR').catch(() => []),
-    getCustomerService().listCustomers().catch(() => []),
+  // Datos de las operaciones rápidas y de CUENTAS (fuentes reales).
+  const [suppliers, baseProductRecords, productRecords, openLotsRecords, patrimonialSummary, planningMatrix] = await Promise.all([
     getSupplierService().listSuppliers().catch(() => []),
     getFormulaService().listBaseProducts(true).catch(() => []),
     getProductService().listProducts(false).catch(() => []),
     getFactoryService().listOpenBulkLots().catch(() => []),
-    getPatrimonyService().getSummary().catch(() => ({
-      cajaSteffen: new Decimal(0),
-      cajaMercadoLibre: new Decimal(0),
-      deudasClientes: new Decimal(0),
-      deudasProveedores: new Decimal(0),
-      neto: new Decimal(0),
-    })),
-    getOrderService().countOpenOrders().catch(() => 0),
+    getPatrimonyService()
+      .getSummary()
+      .catch(() => null),
+    // Mismo motor que Pedidos: alimenta RESUMEN DE PEDIDOS y la urgencia de Producto Final.
+    getPlanningService()
+      .getPlanningMatrix()
+      .catch(() => null),
   ]);
-
-  // Filtrar insumos críticos reales (por debajo del mínimo)
-  const criticalItems = mprItems
-    .filter((it) => it.stockMinimum && it.balance.lt(it.stockMinimum) && it.active)
-    .sort((a, b) => {
-      const minA = a.stockMinimum || new Decimal(1);
-      const minB = b.stockMinimum || new Decimal(1);
-      const ratioA = a.balance.div(minA).toNumber();
-      const ratioB = b.balance.div(minB).toNumber();
-      return ratioA - ratioB;
-    });
-
-  // Cálculo de totales financieros reales
-  const totalCustomerDebt = customers.reduce((acc, c) => {
-    return acc.plus(c.balanceArs.gt(0) ? c.balanceArs : new Decimal(0));
-  }, new Decimal(0));
-
-  const totalSupplierDebt = suppliers.reduce((acc, s) => {
-    return acc.plus(s.balance.gt(0) ? s.balance : new Decimal(0));
-  }, new Decimal(0));
 
   const supplierOptions = suppliers.map((s) => ({
     id: s.id,
@@ -99,6 +214,12 @@ export default async function ErpHomePage() {
       name: bp.name,
       code: bp.code,
     }));
+
+  const planning = planningMatrix ? serializePlanningMatrix(planningMatrix) : null;
+  const nextManufacturingProducts = selectNextManufacturingProducts(
+    productRecords,
+    urgentProductIdsFromPlanning(planning?.products ?? [])
+  ).map(serializeNextManufacturingProduct);
 
   const productsForPackaging: PackagingProductOption[] = productRecords
     .filter((p) => p.active)
@@ -124,28 +245,11 @@ export default async function ErpHomePage() {
           <div className="lg:col-span-5 space-y-6">
             <div>
               <SectionHeader title="Reporte mensual" />
-              {/* Cards KPI (DESIGN.md §15.2). Valores: los mismos que ya mostraba esta
-                  pantalla; el Dashboard con fuentes reales es Fase 16. */}
-              <div className="grid grid-cols-[1fr_1fr_1.35fr] gap-x-4 gap-y-3 items-stretch">
-                <KpiCard
-                  className="min-h-[109px]"
-                  label="Pedidos abiertos"
-                  value={openOrdersCount}
-                  icon={<ErpIcon name="orden" tone="chrome" className="w-10 h-10" />}
-                />
-                <KpiCard
-                  className="min-h-[109px]"
-                  label="Ventas del mes"
-                  value="11"
-                  icon={<ErpIcon name="ingresos" tone="chrome" className="w-10 h-10" />}
-                />
-                <div className="row-span-2 flex flex-col gap-3">
-                  <KpiCard className="flex-1" label="Total facturado" value="$ 6.536.464" />
-                  <KpiCard className="flex-1" label="Ganancia" value="$ 4.234.242" variant="positive" />
-                </div>
-                <DashboardActionButton action="order" appearance="secondary" className="w-full" />
-                <div aria-hidden />
-              </div>
+              <Suspense
+                fallback={<MonthlyKpisGrid openOrders="…" sales="…" billed="…" gain="…" />}
+              >
+                <MonthlyKpis />
+              </Suspense>
             </div>
 
             <div>
@@ -167,11 +271,12 @@ export default async function ErpHomePage() {
             <div>
               <SectionHeader title="Cuentas" />
               <DashboardCuentasCard
-                cajaSteffen={toNumericString(patrimonialSummary.cajaSteffen)}
-                cajaMercadoLibre={toNumericString(patrimonialSummary.cajaMercadoLibre)}
-                deudasClientes={toNumericString(patrimonialSummary.deudasClientes)}
-                deudasProveedores={toNumericString(patrimonialSummary.deudasProveedores)}
-                neto={toNumericString(patrimonialSummary.neto)}
+                cajaSteffen={patrimonialSummary ? toNumericString(patrimonialSummary.cajaSteffen) : '0'}
+                cajaMercadoLibre={patrimonialSummary ? toNumericString(patrimonialSummary.cajaMercadoLibre) : '0'}
+                deudasClientes={patrimonialSummary ? toNumericString(patrimonialSummary.deudasClientes) : '0'}
+                deudasProveedores={patrimonialSummary ? toNumericString(patrimonialSummary.deudasProveedores) : '0'}
+                neto={patrimonialSummary ? toNumericString(patrimonialSummary.neto) : '0'}
+                error={patrimonialSummary ? null : 'No se pudieron cargar los saldos de cuentas.'}
                 actions={
                   <>
                     <DashboardActionButton action="supplier-payment" appearance="secondary-large" />
@@ -183,125 +288,31 @@ export default async function ErpHomePage() {
             </div>
           </div>
 
-          {/* Columna derecha: RESUMEN DE PEDIDOS */}
+          {/* Columna derecha: RESUMEN DE PEDIDOS (informativo: no reserva ni genera movimientos) */}
           <div className="lg:col-span-7">
             <SectionHeader title="Resumen de pedidos" />
             <Panel>
-              <div className="overflow-x-auto">
-                <table className={tableStyles.table}>
-                  <thead>
-                    <tr className={tableStyles.headRow}>
-                      <th className="py-2 px-3 text-left">PRODUCTO</th>
-                      <th className="py-2 px-3 text-center">PED01<br /><span className="text-[11px] font-normal normal-case">Salceh, Tarek</span></th>
-                      <th className="py-2 px-3 text-center">PED02<br /><span className="text-[11px] font-normal normal-case">Salceh, Tarek</span></th>
-                      <th className="py-2 px-3 text-center">TOTAL</th>
-                      <th className="py-2 px-3 text-center">STOCK</th>
-                      <th className="py-2 px-3 text-center">FALTANTE</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className={tableStyles.row}>
-                      <td className="py-1.5 px-3">Reparador de puntas 30cc</td>
-                      <td className="py-1.5 px-3 text-center">100</td>
-                      <td className="py-1.5 px-3 text-center">50</td>
-                      <td className="py-1.5 px-3 text-center">150</td>
-                      <td className="py-1.5 px-3 text-center">50 + <span className="text-steffen-muted">(100)GR</span></td>
-                      <td className="py-1.5 px-3 text-center">-</td>
-                    </tr>
-                    <tr className={tableStyles.row}>
-                      <td className="py-1.5 px-3">Shampoo Keratina 350cc</td>
-                      <td className="py-1.5 px-3 text-center">10</td>
-                      <td className="py-1.5 px-3 text-center">0</td>
-                      <td className="py-1.5 px-3 text-center">10</td>
-                      <td className="py-1.5 px-3 text-center">(10)GR</td>
-                      <td className="py-1.5 px-3 text-center">-</td>
-                    </tr>
-                    <tr className={tableStyles.row}>
-                      <td className="py-1.5 px-3">Emulsion capilar Triple Accion</td>
-                      <td className="py-1.5 px-3 text-center">100</td>
-                      <td className="py-1.5 px-3 text-center">20</td>
-                      <td className="py-1.5 px-3 text-center">120</td>
-                      <td className="py-1.5 px-3 text-center">0</td>
-                      <td className="py-1.5 px-3 text-center font-semibold text-steffen-red">120</td>
-                    </tr>
-                    <tr className={tableStyles.row}>
-                      <td className="py-1.5 px-3">Shampoo Keratina 1000cc</td>
-                      <td className="py-1.5 px-3 text-center">20</td>
-                      <td className="py-1.5 px-3 text-center">10</td>
-                      <td className="py-1.5 px-3 text-center">30</td>
-                      <td className="py-1.5 px-3 text-center text-steffen-muted">(12)GR</td>
-                      <td className="py-1.5 px-3 text-center font-semibold text-steffen-red">18</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <PlanningSummary planning={planning} />
             </Panel>
           </div>
         </div>
 
-        {/* BAJO STOCK (sección de alerta, DESIGN.md §13): MPR críticas + Simular compra */}
+        {/* BAJO STOCK (Figma): MPR/COM + simular compra · Producto Final + simular fabricación */}
         <div>
           <SectionHeader title="Bajo stock" variant="alert" />
-          <Panel variant="alert">
-            <div className="overflow-x-auto">
-              <table className={tableStyles.table}>
-                <thead>
-                  <tr className={tableStyles.headRowAlert}>
-                    <th className="py-2 px-3 text-left">CODIGO</th>
-                    <th className="py-2 px-3 text-left">COMPONENTE/MP</th>
-                    <th className="py-2 px-3 text-left">PROVEEDOR</th>
-                    <th className="py-2 px-3 text-right">ACTUAL</th>
-                    <th className="py-2 px-3 text-center !bg-steffen-gray">SIMULAR COMPRA</th>
-                    <th className="py-2 px-3 text-right !bg-steffen-gray">$</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {criticalItems.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="py-6 text-center text-steffen-surface/60">
-                        ✓ Todas las materias primas se encuentran en niveles óptimos de stock.
-                      </td>
-                    </tr>
-                  ) : (
-                    criticalItems.slice(0, 5).map((it) => {
-                      const priceNet = it.referencePriceNet?.toNumber() || 0;
-                      const min = it.stockMinimum || new Decimal(0);
-                      const stockDiff = Math.max(0, min.minus(it.balance).toNumber());
-                      const approxTotal = stockDiff * priceNet * 1.21;
-
-                      return (
-                        <tr key={it.id} className={tableStyles.row}>
-                          <td className="py-1.5 px-3">{it.code}</td>
-                          <td className="py-1.5 px-3 truncate max-w-[135px]">{it.name}</td>
-                          <td className="py-1.5 px-3">{it.referenceSupplierCode || '-'}</td>
-                          <td className="py-1.5 px-3 text-right tabular-nums text-steffen-red">{formatKg(it.balance)} kg</td>
-                          <td className="py-1.5 px-3 text-center tabular-nums">{Math.ceil(stockDiff)}</td>
-                          <td className="py-1.5 px-3 text-right tabular-nums font-semibold">{formatArs(approxTotal)}</td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="flex justify-between items-center pt-3 text-sm font-semibold">
-              <Link href="/stock" className={forwardLinkClass}>
-                Ir a Stock <ForwardArrow />
-              </Link>
-              <span>
-                TOTAL:{' '}
-                {formatArs(
-                  criticalItems.reduce((acc, it) => {
-                    const price = it.referencePriceNet || new Decimal(0);
-                    const min = it.stockMinimum || new Decimal(0);
-                    const diff = min.minus(it.balance);
-                    return acc.plus(diff.gt(0) ? diff.mul(price).mul(1.21) : new Decimal(0));
-                  }, new Decimal(0))
-                )}
-              </span>
-            </div>
-          </Panel>
+          <Suspense
+            fallback={
+              <Panel variant="alert">
+                <BlockLoading label="bajo stock" />
+              </Panel>
+            }
+          >
+            <LowStock
+              products={nextManufacturingProducts}
+              baseProducts={baseProductsForFabrication}
+              urgencyUnavailable={planning === null}
+            />
+          </Suspense>
         </div>
       </div>
     </DashboardActionsProvider>

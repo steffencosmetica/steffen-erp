@@ -5,12 +5,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { ErpIcon } from '@/ui/components/ErpIcon';
+import { SimulateManufacturingButton, useManufacturingSimulation } from '@/ui/components/ManufacturingSimulation';
 import { Panel, SectionHeader, CreateButton, tableStyles, forwardLinkClass, ForwardArrow } from '@/ui/components/UIComponents';
 import { type CostGainAnalysisDTO } from '@/actions/cost-gain.dto';
 import { CostGainView } from './CostGainView';
 import { RegistrarFabricacionModal, type BaseProductOption } from '@/ui/modals/RegistrarFabricacionModal';
 import { RegistrarEnvasadoModal, type PackagingProductOption } from '@/ui/modals/RegistrarEnvasadoModal';
-import type { BulkLotDTO, FactoryMovementDTO } from '@/actions/factory.dto';
+import type { BulkLotDTO, FactoryMovementDTO, NextManufacturingProductDTO } from '@/actions/factory.dto';
 import { formatKg } from '@/lib/format';
 
 export interface FabricaFormulaOptionDTO {
@@ -23,13 +24,8 @@ export interface FabricaFormulaOptionDTO {
   }>;
 }
 
-export interface FabricaLowStockProductDTO {
-  id: string;
-  name: string;
-  stockMinimum: string;
-  stockActual: string;
-  isCritical: boolean;
-}
+/** Misma regla y DTO que Dashboard → BAJO STOCK (Producto Final). */
+export type FabricaLowStockProductDTO = NextManufacturingProductDTO;
 
 interface FabricaViewProps {
   costGainAnalysis: CostGainAnalysisDTO;
@@ -55,6 +51,7 @@ export const FabricaView: React.FC<FabricaViewProps> = ({
     formulaOptions[0]?.id || ''
   );
   const [isFabricacionModalOpen, setIsFabricacionModalOpen] = useState<boolean>(false);
+  const { simulate, modal: simulationModal } = useManufacturingSimulation(baseProductsForFabrication);
   const [isEnvasadoModalOpen, setIsEnvasadoModalOpen] = useState<boolean>(false);
 
   const activeFormula = formulaOptions.find((f) => f.id === selectedFormulaId) || formulaOptions[0] || null;
@@ -136,15 +133,15 @@ export const FabricaView: React.FC<FabricaViewProps> = ({
                 <tbody>
                   {lowStockProducts.length > 0 ? (
                     lowStockProducts.map((p) => (
-                      <tr key={p.id} className={p.isCritical ? tableStyles.rowAlert : tableStyles.row}>
+                      <tr key={p.id} className={p.isUrgentForOrders ? tableStyles.rowAlert : tableStyles.row}>
                         <td className="py-1.5 px-3 font-medium truncate max-w-0">{p.name}</td>
                         <td className="py-1.5 px-3 text-center tabular-nums">{p.stockMinimum}</td>
                         <td className="py-1.5 px-3 text-center tabular-nums">{p.stockActual}</td>
                         <td className="py-1.5 px-3 text-center font-medium">
-                          {p.isCritical ? 'URG PARA PEDIDOS' : 'POCO STOCK'}
+                          {p.isUrgentForOrders ? 'URG PARA PEDIDOS' : 'POCO STOCK'}
                         </td>
                         <td className="py-1.5 px-3 text-center">
-                          <ErpIcon name="formula" tone="light" className="w-5 h-5 align-middle" />
+                          <SimulateManufacturingButton productName={p.name} onClick={() => simulate(p.baseProductId)} />
                         </td>
                       </tr>
                     ))
@@ -289,6 +286,7 @@ export const FabricaView: React.FC<FabricaViewProps> = ({
         products={productsForPackaging}
         initialBulkLotId={envasadoLotId}
       />
+      {simulationModal}
     </div>
   );
 };
