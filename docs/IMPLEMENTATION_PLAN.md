@@ -729,6 +729,19 @@ Antes de considerar terminado el MVP:
 
 ---
 
+## 22.1 FASE 19.1 — Saldo de apertura + Ingreso de caja
+
+Preparación para el arranque con base limpia (Cajas en `0`; sin apertura de caja ni de granel; sin reconstruir históricos).
+
+- migración `20261002000034`: tipos `OPENING_BALANCE` / `CASH_DEPOSIT` (operación) y `SALDO_APERTURA` / `INGRESO_CAJA` (MOV); tablas `opening_balances` y `cash_deposits`; RPCs atómicas solo `service_role`;
+- saldo de apertura de clientes y proveedores (BUSINESS_RULES §20.2, FLOWS §28.2): crear / editar / eliminar mientras la cuenta no tenga otra actividad;
+- ingreso de caja (BUSINESS_RULES §26.1, FLOWS §28.1): Dashboard (Cuentas) y Administración (junto a Retiro caja);
+- tests: `opening-balance`, `cash-deposit`, `phase19-1-permissions`, `amount-input`.
+
+La base limpia se levanta aplicando las 34 migraciones.
+
+---
+
 # 23. Criterio de finalización
 
 El MVP no se considera terminado solo porque las pantallas funcionen.

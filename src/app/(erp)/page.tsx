@@ -321,6 +321,7 @@ export default async function ErpHomePage() {
                   <DashboardActionButton action="supplier-payment" appearance="tile" />
                   <DashboardActionButton action="customer-payment" appearance="tile" />
                   <DashboardActionButton action="expense" appearance="tile" />
+                  <DashboardActionButton action="cash-deposit" appearance="tile" />
                 </>
               }
             />

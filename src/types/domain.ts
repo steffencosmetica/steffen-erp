@@ -16,7 +16,9 @@ export type OperationType =
   | 'OPERATING_EXPENSE'
   | 'WITHDRAWAL'
   | 'MARKETPLACE_SETTLEMENT'
-  | 'STOCK_ADJUSTMENT';
+  | 'STOCK_ADJUSTMENT'
+  | 'OPENING_BALANCE'
+  | 'CASH_DEPOSIT';
 
 export type StockMovementType = 'VENTA' | 'COMPRA' | 'ENVASADO' | 'FABRICACIÓN' | 'AJUSTE';
 export type FactoryMovementType = 'FABRICACIÓN' | 'ENVASADO' | 'MERMA' | 'SOBRANTE';
@@ -28,7 +30,9 @@ export type PatrimonialMovementType =
   | 'TRANSPORTE'
   | 'VENTA'
   | 'GASTO_OPERATIVO'
-  | 'TRANSFERENCIA_MERCADO_LIBRE';
+  | 'TRANSFERENCIA_MERCADO_LIBRE'
+  | 'SALDO_APERTURA'
+  | 'INGRESO_CAJA';
 
 export type AccountType =
   | 'CASH_STEFFEN'

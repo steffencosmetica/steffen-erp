@@ -223,6 +223,38 @@ export type Database = {
         }
         Relationships: []
       }
+      cash_deposits: {
+        Row: {
+          amount_ars: number
+          created_at: string
+          description: string
+          id: string
+          operation_id: string
+        }
+        Insert: {
+          amount_ars: number
+          created_at?: string
+          description: string
+          id?: string
+          operation_id: string
+        }
+        Update: {
+          amount_ars?: number
+          created_at?: string
+          description?: string
+          id?: string
+          operation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_deposits_operation_id_fkey"
+            columns: ["operation_id"]
+            isOneToOne: true
+            referencedRelation: "business_operations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       code_sequences: {
         Row: {
           last_value: number
@@ -875,6 +907,65 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "marketplace_settlements_operation_id_fkey"
+            columns: ["operation_id"]
+            isOneToOne: true
+            referencedRelation: "business_operations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      opening_balances: {
+        Row: {
+          amount_ars: number
+          created_at: string
+          financial_account_id: string
+          id: string
+          observation: string | null
+          operation_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount_ars: number
+          created_at?: string
+          financial_account_id: string
+          id?: string
+          observation?: string | null
+          operation_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount_ars?: number
+          created_at?: string
+          financial_account_id?: string
+          id?: string
+          observation?: string | null
+          operation_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opening_balances_financial_account_id_fkey"
+            columns: ["financial_account_id"]
+            isOneToOne: true
+            referencedRelation: "financial_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opening_balances_financial_account_id_fkey"
+            columns: ["financial_account_id"]
+            isOneToOne: true
+            referencedRelation: "v_customer_balances"
+            referencedColumns: ["financial_account_id"]
+          },
+          {
+            foreignKeyName: "opening_balances_financial_account_id_fkey"
+            columns: ["financial_account_id"]
+            isOneToOne: true
+            referencedRelation: "v_supplier_debts"
+            referencedColumns: ["financial_account_id"]
+          },
+          {
+            foreignKeyName: "opening_balances_operation_id_fkey"
             columns: ["operation_id"]
             isOneToOne: true
             referencedRelation: "business_operations"
@@ -2588,6 +2679,19 @@ export type Database = {
         }
         Returns: Json
       }
+      delete_opening_balance_atomic: {
+        Args: { p_opening_balance_id: string }
+        Returns: Json
+      }
+      edit_opening_balance_atomic: {
+        Args: {
+          p_new_amount_ars: number
+          p_new_business_date: string
+          p_observation: string
+          p_opening_balance_id: string
+        }
+        Returns: Json
+      }
       edit_payment_atomic: {
         Args: {
           p_new_amount_ars: number
@@ -2615,6 +2719,10 @@ export type Database = {
         }[]
       }
       get_next_code_sequence: { Args: { p_prefix: string }; Returns: string }
+      get_opening_balance_state: {
+        Args: { p_party_id: string; p_party_type: string }
+        Returns: Json
+      }
       manufacture_bulk_lot_atomic: {
         Args: {
           p_base_product_id: string
@@ -2625,6 +2733,10 @@ export type Database = {
           p_observations?: string
         }
         Returns: Json
+      }
+      opening_balance_account_has_activity: {
+        Args: { p_account_id: string; p_opening_movement_id: string }
+        Returns: boolean
       }
       package_product_atomic: {
         Args: {
@@ -2648,11 +2760,28 @@ export type Database = {
         }
         Returns: Json
       }
+      register_cash_deposit_atomic: {
+        Args: {
+          p_amount_ars: number
+          p_business_date: string
+          p_description: string
+        }
+        Returns: Json
+      }
       register_customer_payment_atomic: {
         Args: {
           p_amount_ars: number
           p_business_date: string
           p_customer_id: string
+        }
+        Returns: Json
+      }
+      register_opening_balance_atomic: {
+        Args: {
+          p_amount_ars: number
+          p_business_date: string
+          p_financial_account_id: string
+          p_observation: string
         }
         Returns: Json
       }

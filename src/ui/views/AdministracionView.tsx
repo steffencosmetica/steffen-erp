@@ -18,6 +18,7 @@ import { getMonthlySalesAction } from '@/actions/remittance.actions';
 import type { MonthlySaleDTO } from '@/actions/remittance.dto';
 import { GastoOperativoModal } from '@/ui/modals/GastoOperativoModal';
 import { RetiroCajaModal } from '@/ui/modals/RetiroCajaModal';
+import { IngresoCajaModal } from '@/ui/modals/IngresoCajaModal';
 import { RegistrarPagoClienteModal } from '@/ui/modals/RegistrarPagoClienteModal';
 import { RegistrarPagoProveedorModal } from '@/ui/modals/RegistrarPagoProveedorModal';
 
@@ -65,6 +66,7 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({
 
   const [isGastoOperativoOpen, setIsGastoOperativoOpen] = useState(false);
   const [isRetiroCajaOpen, setIsRetiroCajaOpen] = useState(false);
+  const [isIngresoCajaOpen, setIsIngresoCajaOpen] = useState(false);
   const [isPagoClienteOpen, setIsPagoClienteOpen] = useState(false);
   const [isPagoProveedorOpen, setIsPagoProveedorOpen] = useState(false);
 
@@ -196,7 +198,7 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({
           {/* Cotización Dólar (componente compartido con Dashboard) */}
           <UsdRateCard currentUsdRate={data.currentUsdRate} />
 
-          {/* CUENTAS / CAJA: cards; en Administración solo la acción Retiro caja */}
+          {/* CUENTAS / CAJA: cards; en Administración solo las acciones Ingreso caja y Retiro caja */}
           <Panel>
             <SectionHeader title="CUENTAS" />
             <AccountBalanceCards
@@ -205,12 +207,20 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({
               deudasClientes={data.deudasClientesArs}
               deudasProveedores={data.deudasProveedoresArs}
               neto={data.netoArs}
+              actionsFlow="fluid"
               actions={
-                <IconTile
-                  label="Retiro caja"
-                  onClick={() => setIsRetiroCajaOpen(true)}
-                  icon={<ErpIcon name="retiro" className="w-7 h-7" />}
-                />
+                <>
+                  <IconTile
+                    label="Ingreso caja"
+                    onClick={() => setIsIngresoCajaOpen(true)}
+                    icon={<ErpIcon name="ingresos" className="w-7 h-7" />}
+                  />
+                  <IconTile
+                    label="Retiro caja"
+                    onClick={() => setIsRetiroCajaOpen(true)}
+                    icon={<ErpIcon name="retiro" className="w-7 h-7" />}
+                  />
+                </>
               }
             />
           </Panel>
@@ -404,6 +414,15 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({
         onClose={() => setIsGastoOperativoOpen(false)}
         onSuccess={() => {
           setIsGastoOperativoOpen(false);
+          router.refresh();
+        }}
+      />
+
+      <IngresoCajaModal
+        isOpen={isIngresoCajaOpen}
+        onClose={() => setIsIngresoCajaOpen(false)}
+        onSuccess={() => {
+          setIsIngresoCajaOpen(false);
           router.refresh();
         }}
       />

@@ -1259,6 +1259,48 @@ Caja puede quedar negativa.
 
 ---
 
+## 28.1 INGRESO DE CAJA (Fase 19.1)
+
+Contraparte de Retiro (BUSINESS_RULES §26.1). Una sola transacción (`register_cash_deposit_atomic`):
+
+1. validar importe > 0 y concepto obligatorio;
+2. bloquear Caja Steffen;
+3. crear operación `CASH_DEPOSIT`;
+4. crear `cash_deposit`;
+5. crear MOV INGRESO_CAJA;
+6. crear entry `+importe` sobre Caja Steffen;
+7. Caja Steffen `+= importe`;
+8. confirmar.
+
+No es venta: no toca Caja ML, deudas, stock, facturación ni ganancia. Solo alta (mismo criterio que Retiro).
+
+---
+
+## 28.2 SALDO DE APERTURA (Fase 19.1)
+
+Deuda previa al inicio operativo de un cliente o proveedor (BUSINESS_RULES §20.2). Desde la ficha de Cliente / Proveedor: botón **SALDO DE APERTURA** (o **EDITAR SALDO DE APERTURA**), visible solo mientras la cuenta no tenga otra actividad.
+
+Alta (`register_opening_balance_atomic`, una transacción):
+
+1. validar importe > 0 y fecha;
+2. bloquear la cuenta corriente;
+3. validar tipo `CUSTOMER_RECEIVABLE` / `SUPPLIER_PAYABLE` (nunca CASH);
+4. validar que no exista otra apertura para la cuenta;
+5. validar que la cuenta no tenga actividad (asientos, pagos, compras, RTO);
+6. crear operación `OPENING_BALANCE` (fecha comercial elegida);
+7. crear `opening_balance` (importe, observación opcional);
+8. crear MOV SALDO_APERTURA y entry `+importe` sobre la cuenta;
+9. cuenta `+= importe`;
+10. confirmar.
+
+Editar (`edit_opening_balance_atomic`): mismas validaciones de actividad; actualiza importe, fecha y observación, el MOV original y su entry; cuenta `+= (nuevo - anterior)`.
+
+Eliminar (`delete_opening_balance_atomic`, con confirmación): mismas validaciones de actividad; cuenta `-= importe`; elimina entry, MOV, registro y operación de la apertura.
+
+No genera caja, stock, MST, MFA, compra, pedido, RTO, RTM, venta, ganancia ni comisión.
+
+---
+
 # 29. LIQUIDACIÓN MERCADO LIBRE
 
 ## 29.1 Entrada
@@ -1735,6 +1777,8 @@ Generan MOV:
 - Transporte;
 - Gasto Operativo;
 - Retiro;
+- Ingreso de caja;
+- Saldo de apertura (cliente / proveedor);
 - Liquidación Mercado Libre.
 
 ---
@@ -1762,6 +1806,9 @@ Generan MOV:
 | Pago Proveedor | No | No | Deuda Proveedor ↓ / Caja ↓ | No | No | Sí |
 | Gasto Operativo | No | No | Caja ↓ | No | No | Sí |
 | Retiro | No | No | Caja ↓ | No | No | Sí |
+| Ingreso de caja | No | No | Caja ↑ | No | No | Sí |
+| Saldo de apertura cliente | No | No | Deuda Cliente ↑ | No | No | Sí |
+| Saldo de apertura proveedor | No | No | Deuda Proveedor ↑ | No | No | Sí |
 | Liquidación ML | No | No | Caja ML ↓ / Caja Steffen ↑ | No | No | Sí |
 
 ---

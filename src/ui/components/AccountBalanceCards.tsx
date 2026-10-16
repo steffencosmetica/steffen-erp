@@ -19,6 +19,12 @@ interface AccountBalanceCardsProps {
   error?: string | null;
   /** side: acciones a la derecha (Dashboard). below: debajo, para dar todo el ancho a las cards. */
   actionsPosition?: 'side' | 'below';
+  /**
+   * grid: acciones en 2 columnas fijas (Dashboard, 5 acciones).
+   * fluid: las acciones ocupan el espacio libre a la derecha de las cards (en columna si
+   * solo entra un tile); si no entra ni un tile, bajan debajo y se reparten en fila.
+   */
+  actionsFlow?: 'grid' | 'fluid';
 }
 
 const BalanceCard: React.FC<{ value: string; label: string; labelClassName: string; strong?: boolean; className?: string }> = ({
@@ -45,6 +51,7 @@ export const AccountBalanceCards: React.FC<AccountBalanceCardsProps> = ({
   actions,
   error,
   actionsPosition = 'side',
+  actionsFlow = 'grid',
 }) => (
   <div className={`flex flex-col gap-4 ${actionsPosition === 'side' ? 'sm:flex-row sm:flex-wrap' : ''}`}>
     {error ? (
@@ -71,8 +78,13 @@ export const AccountBalanceCards: React.FC<AccountBalanceCardsProps> = ({
     )}
     {actions && (
       <div
-        className={`flex flex-wrap gap-x-4 gap-y-4 content-start shrink-0 ${
-          actionsPosition === 'side' ? 'sm:grid sm:grid-cols-[repeat(2,max-content)]' : ''
+        className={`flex flex-wrap gap-x-4 gap-y-4 content-start ${
+          actionsPosition !== 'side'
+            ? 'shrink-0'
+            : actionsFlow === 'fluid'
+            ? // basis 0 + min-w de un tile (64px): queda al lado si entra un tile y crece al espacio libre
+              'sm:flex-1 sm:basis-0 sm:min-w-[64px]'
+            : 'shrink-0 sm:grid sm:grid-cols-[repeat(2,max-content)]'
         }`}
       >
         {actions}

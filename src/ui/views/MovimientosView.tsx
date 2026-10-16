@@ -99,6 +99,10 @@ export const MovimientosView: React.FC<MovimientosViewProps> = ({
         return 'GASTO OPERATIVO';
       case 'TRANSFERENCIA_MERCADO_LIBRE':
         return 'TRANSF ML';
+      case 'INGRESO_CAJA':
+        return 'INGRESO CAJA';
+      case 'SALDO_APERTURA':
+        return 'SALDO APERTURA';
       default:
         return type;
     }
@@ -171,6 +175,7 @@ export const MovimientosView: React.FC<MovimientosViewProps> = ({
                       className="bg-transparent text-black font-bold text-[11px] focus:outline-none cursor-pointer"
                     >
                       <option value="TODOS">TODOS</option>
+                      <option value="INGRESO_CAJA">INGRESO CAJA</option>
                       <option value="RETIRO">RETIRO</option>
                       <option value="COMPRA">COMPRA</option>
                       <option value="PAGO_PROV">PAGO PROV</option>
@@ -178,6 +183,7 @@ export const MovimientosView: React.FC<MovimientosViewProps> = ({
                       <option value="GASTO_OPERATIVO">GASTO OPERATIVO</option>
                       <option value="TRANSPORTE">TRANSPORTE</option>
                       <option value="VENTA">VENTA</option>
+                      <option value="SALDO_APERTURA">SALDO APERTURA</option>
                     </select>
                   </div>
                 </th>

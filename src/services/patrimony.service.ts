@@ -7,6 +7,12 @@ import {
   EditPaymentAtomicRpcResult,
   WithdrawalAtomicRpcResult,
   OperatingExpenseAtomicRpcResult,
+  CashDepositAtomicRpcResult,
+  OpeningBalancePartyType,
+  OpeningBalanceStateRecord,
+  OpeningBalanceRpcResult,
+  EditOpeningBalanceRpcResult,
+  DeleteOpeningBalanceRpcResult,
   PatrimonialSummary,
   AdminSupplierDebtRecord,
   CustomerLastActivityRecord,
@@ -15,7 +21,12 @@ import {
   AccountMovementRecord,
 } from '@/repositories/patrimony.repository';
 import type { PatrimonialMovementType, ExpenseType } from '@/database/domain-types';
-import { DomainError } from '@/domain/errors';
+import {
+  DomainError,
+  OpeningBalanceAlreadyExistsError,
+  OpeningBalanceLockedError,
+  InvalidOpeningBalanceAccountError,
+} from '@/domain/errors';
 import { Decimal } from '@/domain/decimal';
 
 export interface FinancialEntryParam {
@@ -67,6 +78,50 @@ export interface RegisterOperatingExpenseParams {
   businessDate: string;
 }
 
+export interface RegisterCashDepositParams {
+  amountArs: Decimal | string;
+  description: string;
+  businessDate: string;
+}
+
+export interface RegisterOpeningBalanceParams {
+  partyType: OpeningBalancePartyType;
+  partyId: string;
+  amountArs: Decimal | string;
+  businessDate: string;
+  observation?: string;
+}
+
+export interface EditOpeningBalanceParams {
+  openingBalanceId: string;
+  newAmountArs: Decimal | string;
+  newBusinessDate: string;
+  observation?: string;
+}
+
+const PARTY_TYPES: readonly OpeningBalancePartyType[] = ['CUSTOMER', 'SUPPLIER'];
+
+/** Importe positivo exacto (string/Decimal, nunca Number) para operaciones de Fase 19.1. */
+function parsePositiveAmount(value: Decimal | string, message: string): Decimal {
+  let amount: Decimal;
+  try {
+    amount = new Decimal(value);
+  } catch {
+    throw new DomainError(message);
+  }
+  if (!amount.isFinite() || amount.lte(0)) {
+    throw new DomainError(message);
+  }
+  return amount;
+}
+
+function requireDate(value: string, message: string): string {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value.trim())) {
+    throw new DomainError(message);
+  }
+  return value.trim();
+}
+
 export interface IPatrimonyDomainService {
   getFinancialAccountBalance(accountId: string): Promise<Decimal>;
   listAccounts(): Promise<FinancialAccountRecord[]>;
@@ -80,6 +135,11 @@ export interface IPatrimonyDomainService {
   editPayment(params: EditPaymentParams): Promise<EditPaymentAtomicRpcResult>;
   registerWithdrawal(params: RegisterWithdrawalParams): Promise<WithdrawalAtomicRpcResult>;
   registerOperatingExpense(params: RegisterOperatingExpenseParams): Promise<OperatingExpenseAtomicRpcResult>;
+  registerCashDeposit(params: RegisterCashDepositParams): Promise<CashDepositAtomicRpcResult>;
+  getOpeningBalanceState(partyType: OpeningBalancePartyType, partyId: string): Promise<OpeningBalanceStateRecord>;
+  registerOpeningBalance(params: RegisterOpeningBalanceParams): Promise<OpeningBalanceRpcResult>;
+  editOpeningBalance(params: EditOpeningBalanceParams): Promise<EditOpeningBalanceRpcResult>;
+  deleteOpeningBalance(openingBalanceId: string): Promise<DeleteOpeningBalanceRpcResult>;
   getPayment(paymentId: string): Promise<PaymentDetailRecord | null>;
   listCustomerMovements(customerId: string): Promise<AccountMovementRecord[]>;
   listSupplierMovements(supplierId: string): Promise<AccountMovementRecord[]>;
@@ -279,6 +339,78 @@ export class PatrimonyDomainService implements IPatrimonyDomainService {
       amountArs: amount,
       businessDate: businessDate.trim(),
     });
+  }
+
+  /** Ingreso de caja: contraparte de Retiro (Caja Steffen += importe). */
+  async registerCashDeposit(params: RegisterCashDepositParams): Promise<CashDepositAtomicRpcResult> {
+    const description = (params.description || '').trim();
+    if (!description) {
+      throw new DomainError('El concepto del ingreso de caja es obligatorio.');
+    }
+    const businessDate = requireDate(params.businessDate, 'La fecha de la operación es obligatoria.');
+    const amount = parsePositiveAmount(params.amountArs, 'El importe del ingreso debe ser mayor a cero.');
+
+    return this.patrimonyRepo.registerCashDepositAtomic({ amountArs: amount, description, businessDate });
+  }
+
+  async getOpeningBalanceState(partyType: OpeningBalancePartyType, partyId: string): Promise<OpeningBalanceStateRecord> {
+    if (!PARTY_TYPES.includes(partyType)) {
+      throw new InvalidOpeningBalanceAccountError();
+    }
+    if (!partyId || !partyId.trim()) {
+      throw new DomainError('La cuenta corriente es obligatoria para el saldo de apertura.');
+    }
+    return this.patrimonyRepo.getOpeningBalanceState(partyType, partyId.trim());
+  }
+
+  /**
+   * Saldo de apertura (BUSINESS_RULES §20.2): deuda previa al inicio operativo.
+   * Las validaciones previas dan mensajes claros; la regla autoritativa (tipo de
+   * cuenta, duplicado, actividad, atomicidad) la aplica PostgreSQL.
+   */
+  async registerOpeningBalance(params: RegisterOpeningBalanceParams): Promise<OpeningBalanceRpcResult> {
+    const amount = parsePositiveAmount(params.amountArs, 'El importe del saldo de apertura debe ser mayor a cero.');
+    const businessDate = requireDate(params.businessDate, 'La fecha de apertura es obligatoria.');
+
+    const state = await this.getOpeningBalanceState(params.partyType, params.partyId);
+    if (!state.accountId) {
+      throw new DomainError('La contraparte no tiene cuenta corriente.');
+    }
+    if (state.opening) {
+      throw new OpeningBalanceAlreadyExistsError();
+    }
+    if (state.hasOtherActivity) {
+      throw new OpeningBalanceLockedError('No se puede registrar el saldo de apertura: la cuenta ya tiene movimientos.');
+    }
+
+    return this.patrimonyRepo.registerOpeningBalanceAtomic({
+      financialAccountId: state.accountId,
+      amountArs: amount,
+      businessDate,
+      observation: params.observation?.trim() || undefined,
+    });
+  }
+
+  async editOpeningBalance(params: EditOpeningBalanceParams): Promise<EditOpeningBalanceRpcResult> {
+    if (!params.openingBalanceId || !params.openingBalanceId.trim()) {
+      throw new DomainError('El identificador del saldo de apertura es obligatorio.');
+    }
+    const amount = parsePositiveAmount(params.newAmountArs, 'El importe del saldo de apertura debe ser mayor a cero.');
+    const businessDate = requireDate(params.newBusinessDate, 'La fecha de apertura es obligatoria.');
+
+    return this.patrimonyRepo.editOpeningBalanceAtomic({
+      openingBalanceId: params.openingBalanceId.trim(),
+      newAmountArs: amount,
+      newBusinessDate: businessDate,
+      observation: params.observation?.trim() || undefined,
+    });
+  }
+
+  async deleteOpeningBalance(openingBalanceId: string): Promise<DeleteOpeningBalanceRpcResult> {
+    if (!openingBalanceId || !openingBalanceId.trim()) {
+      throw new DomainError('El identificador del saldo de apertura es obligatorio.');
+    }
+    return this.patrimonyRepo.deleteOpeningBalanceAtomic(openingBalanceId.trim());
   }
 
   async getPayment(paymentId: string): Promise<PaymentDetailRecord | null> {

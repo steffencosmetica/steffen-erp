@@ -10,6 +10,30 @@ export class DomainError extends Error {
   }
 }
 
+/** Saldo de apertura: ya existe uno para la cuenta (máximo 1 por cuenta). */
+export class OpeningBalanceAlreadyExistsError extends DomainError {
+  constructor(message = 'La cuenta ya tiene un saldo de apertura registrado.') {
+    super(message);
+    this.name = 'OpeningBalanceAlreadyExistsError';
+  }
+}
+
+/** Saldo de apertura: la cuenta ya tiene actividad distinta de la apertura. */
+export class OpeningBalanceLockedError extends DomainError {
+  constructor(message = 'El saldo de apertura no puede modificarse: la cuenta ya tiene movimientos.') {
+    super(message);
+    this.name = 'OpeningBalanceLockedError';
+  }
+}
+
+/** Saldo de apertura: solo admite cuentas CUSTOMER_RECEIVABLE / SUPPLIER_PAYABLE. */
+export class InvalidOpeningBalanceAccountError extends DomainError {
+  constructor(message = 'El saldo de apertura solo admite cuentas de clientes o proveedores.') {
+    super(message);
+    this.name = 'InvalidOpeningBalanceAccountError';
+  }
+}
+
 export class InsufficientStockError extends DomainError {
   constructor(itemCode: string, requested: number, available: number) {
     super(`Stock insuficiente para el ítem ${itemCode}: solicitado ${requested}, disponible ${available}`);

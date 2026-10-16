@@ -18,8 +18,9 @@ import { toggleCustomerActiveAction, type CustomerDTO } from '@/actions/customer
 import { Pencil, Power, RefreshCw, Search, List, UserCheck, FileText } from 'lucide-react';
 import { RegistrarPagoClienteModal } from '@/ui/modals/RegistrarPagoClienteModal';
 import { EditarPagoModal } from '@/ui/modals/EditarPagoModal';
-import { getCustomerMovementsAction } from '@/actions/patrimony.actions';
-import type { AccountMovementDTO } from '@/actions/patrimony.dto';
+import { getCustomerMovementsAction, getOpeningBalanceStateAction } from '@/actions/patrimony.actions';
+import type { AccountMovementDTO, OpeningBalanceStateDTO } from '@/actions/patrimony.dto';
+import { SaldoAperturaModal } from '@/ui/modals/SaldoAperturaModal';
 import { formatArs } from '@/lib/format';
 import { resolveInitialSelectedId } from '@/lib/selection';
 import { DocumentPdfButton } from '@/ui/components/DocumentPdfButton';
@@ -56,6 +57,8 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
   const [isPagoModalOpen, setIsPagoModalOpen] = useState(false);
   const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
   const [customerMovements, setCustomerMovements] = useState<AccountMovementDTO[]>([]);
+  const [openingState, setOpeningState] = useState<OpeningBalanceStateDTO | null>(null);
+  const [isAperturaModalOpen, setIsAperturaModalOpen] = useState(false);
 
   // Confirm Dialog for deactivating
   const [confirmDialogCustomer, setConfirmDialogCustomer] = useState<CustomerDTO | null>(null);
@@ -70,6 +73,12 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
     getCustomerMovementsAction(selectedCustomer.id).then((res) => {
       if (res.success && res.data) {
         setCustomerMovements(res.data);
+      }
+    });
+    setOpeningState(null);
+    getOpeningBalanceStateAction('CUSTOMER', selectedCustomer.id).then((res) => {
+      if (res.success && res.data) {
+        setOpeningState(res.data);
       }
     });
   };
@@ -371,7 +380,29 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
                           </td>
                         </tr>
                       ) : (
-                        customerMovements.map((m) => (
+                        customerMovements.map((m) =>
+                          m.type === 'APERTURA' ? (
+                            <tr key={m.id} className={tableStyles.row}>
+                              <td className="py-1.5 px-3 font-semibold whitespace-nowrap">{m.date}</td>
+                              <td className="py-1.5 px-3 uppercase text-steffen-surface/80">Saldo de apertura</td>
+                              <td className="py-1.5 px-3">{m.documentCode || '—'}</td>
+                              <td className="py-1.5 px-3">—</td>
+                              <td className="py-1.5 px-3 text-right">{formatArs(m.amountArs)}</td>
+                              <td className="py-1.5 px-3 text-center">
+                                {openingState?.editable && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsAperturaModalOpen(true)}
+                                    title="Editar Saldo de Apertura"
+                                    aria-label="Editar Saldo de Apertura"
+                                    className="p-1 rounded-[5px] text-steffen-surface/70 hover:text-steffen-surface hover:bg-steffen-gray transition-colors cursor-pointer"
+                                  >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          ) : (
                           <tr key={m.id} className={tableStyles.row}>
                             <td className="py-1.5 px-3 font-semibold whitespace-nowrap">{m.date}</td>
                             <td className="py-1.5 px-3">{!m.isPayment ? formatArs(m.amountArs) : '—'}</td>
@@ -400,7 +431,8 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
                               ) : null}
                             </td>
                           </tr>
-                        ))
+                          )
+                        )
                       )}
 
                       {/* SALDO ACTUALIZADO: rojo oscuro si hay deuda (Figma) */}
@@ -425,6 +457,11 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
                 </div>
 
                 <div className="flex justify-end items-center gap-3 pt-6">
+                  {openingState?.hasAccount && openingState.editable && (
+                    <Button variant="secundario" onClick={() => setIsAperturaModalOpen(true)}>
+                      {openingState.opening ? 'Editar saldo de apertura' : 'Saldo de apertura'}
+                    </Button>
+                  )}
                   <Button variant="verde" onClick={() => setIsPagoModalOpen(true)}>
                     Registrar pago
                   </Button>
@@ -592,6 +629,22 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
           router.refresh();
         }}
       />
+
+      {/* Modal Saldo de Apertura */}
+      {selectedCustomer && (
+        <SaldoAperturaModal
+          isOpen={isAperturaModalOpen}
+          onClose={() => setIsAperturaModalOpen(false)}
+          partyType="CUSTOMER"
+          partyId={selectedCustomer.id}
+          partyName={selectedCustomer.name}
+          opening={openingState?.opening ?? null}
+          onSuccess={() => {
+            loadMovements();
+            router.refresh();
+          }}
+        />
+      )}
 
       {/* Modal Editar Pago */}
       <EditarPagoModal

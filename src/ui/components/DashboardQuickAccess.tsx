@@ -14,6 +14,7 @@ import { RegistrarPagoClienteModal } from '@/ui/modals/RegistrarPagoClienteModal
 import { RegistrarPagoProveedorModal } from '@/ui/modals/RegistrarPagoProveedorModal';
 import { NuevoPedidoModal } from '@/ui/modals/NuevoPedidoModal';
 import { GastoOperativoModal } from '@/ui/modals/GastoOperativoModal';
+import { IngresoCajaModal } from '@/ui/modals/IngresoCajaModal';
 
 export type DashboardAction =
   | 'purchase'
@@ -22,7 +23,8 @@ export type DashboardAction =
   | 'packaging'
   | 'customer-payment'
   | 'supplier-payment'
-  | 'expense';
+  | 'expense'
+  | 'cash-deposit';
 
 const DashboardActionsContext = createContext<((action: DashboardAction) => void) | null>(null);
 
@@ -117,6 +119,16 @@ export const DashboardActionsProvider: React.FC<DashboardActionsProviderProps> =
         }}
       />
 
+      {/* Modal Ingreso de caja (mismo modal que Administración; Retiro vive en DashboardCuentasCard) */}
+      <IngresoCajaModal
+        isOpen={activeModal === 'cash-deposit'}
+        onClose={() => setActiveModal(null)}
+        onSuccess={() => {
+          setActiveModal(null);
+          router.refresh();
+        }}
+      />
+
       {/* Modal Nuevo Pedido */}
       <NuevoPedidoModal
         isOpen={activeModal === 'order'}
@@ -146,6 +158,7 @@ const ACTION_META: Record<DashboardAction, { label: string; title: string }> = {
   'customer-payment': { label: 'Pago Clientes', title: 'Registrar Cobro / Pago de Cliente' },
   'supplier-payment': { label: 'Pago Proveedor', title: 'Registrar Pago a Proveedor' },
   expense: { label: 'Gasto operativo', title: 'Registrar Gasto Operativo' },
+  'cash-deposit': { label: 'Ingreso caja', title: 'Registrar Ingreso de Caja' },
 };
 
 const ACTION_ICON: Partial<Record<DashboardAction, ReactNode>> = {
@@ -153,6 +166,7 @@ const ACTION_ICON: Partial<Record<DashboardAction, ReactNode>> = {
   manufacturing: <ErpIcon name="formula" className="w-8 h-8" />,
   packaging: <ErpIcon name="envase" className="w-8 h-8" />,
   expense: <ErpIcon name="gasto" className="w-8 h-8" />,
+  'cash-deposit': <ErpIcon name="ingresos" className="w-7 h-7" />,
   // Sin ícono de referencia para pagos: ícono lineal neutro en plateado (DESIGN.md §4.4).
   'supplier-payment': <HandCoins className="w-7 h-7 text-steffen-silver group-hover:text-steffen-gold transition-colors" strokeWidth={1.6} />,
   'customer-payment': <HandCoins className="w-7 h-7 text-steffen-silver group-hover:text-steffen-gold transition-colors" strokeWidth={1.6} />,
@@ -166,6 +180,7 @@ const TILE_LABEL: Partial<Record<DashboardAction, string>> = {
   'supplier-payment': 'Pago Proveedor',
   'customer-payment': 'Pago Cliente',
   expense: 'Gasto Operativo',
+  'cash-deposit': 'Ingreso Caja',
 };
 
 interface DashboardActionButtonProps {

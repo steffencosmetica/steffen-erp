@@ -39,8 +39,9 @@ import {
 
 import { RegistrarPagoProveedorModal } from '@/ui/modals/RegistrarPagoProveedorModal';
 import { EditarPagoModal } from '@/ui/modals/EditarPagoModal';
-import { getSupplierMovementsAction } from '@/actions/patrimony.actions';
-import type { AccountMovementDTO } from '@/actions/patrimony.dto';
+import { getSupplierMovementsAction, getOpeningBalanceStateAction } from '@/actions/patrimony.actions';
+import type { AccountMovementDTO, OpeningBalanceStateDTO } from '@/actions/patrimony.dto';
+import { SaldoAperturaModal } from '@/ui/modals/SaldoAperturaModal';
 import { formatArs } from '@/lib/format';
 import { resolveInitialSelectedId } from '@/lib/selection';
 
@@ -83,6 +84,8 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({
   // Datos específicos del proveedor seleccionado en ficha
   const [supplierPurchases, setSupplierPurchases] = useState<PurchaseSummaryDTO[]>([]);
   const [supplierMovements, setSupplierMovements] = useState<AccountMovementDTO[]>([]);
+  const [openingState, setOpeningState] = useState<OpeningBalanceStateDTO | null>(null);
+  const [isAperturaModalOpen, setIsAperturaModalOpen] = useState(false);
   const [supplierCatalogItems, setSupplierCatalogItems] = useState<AvailableSupplierItemDTO[]>([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
@@ -97,12 +100,18 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({
   const fetchSupplierDetails = React.useCallback(async (supplierId: string) => {
     if (!supplierId) return;
     setLoadingDetails(true);
+    setOpeningState(null);
     try {
-      const [purchasesRes, catalogRes, movementsRes] = await Promise.all([
+      const [purchasesRes, catalogRes, movementsRes, openingRes] = await Promise.all([
         listPurchasesAction({ supplierId, limit: 30 }),
         getSupplierPurchaseCatalogAction(supplierId),
         getSupplierMovementsAction(supplierId),
+        getOpeningBalanceStateAction('SUPPLIER', supplierId),
       ]);
+
+      if (openingRes.success && openingRes.data) {
+        setOpeningState(openingRes.data);
+      }
 
       if (purchasesRes.success && purchasesRes.data) {
         setSupplierPurchases(purchasesRes.data);
@@ -458,6 +467,30 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({
                           ) : (
                             supplierMovements.map((m) => {
                               const grossNumber = parseFloat(m.amountArs) || 0;
+                              if (m.type === 'APERTURA') {
+                                return (
+                                  <tr key={m.id} className={tableStyles.row}>
+                                    <td className="py-1.5 px-2">{m.date}</td>
+                                    <td className="py-1.5 px-2 uppercase text-steffen-surface/80">Saldo de apertura</td>
+                                    <td className="py-1.5 px-2">{m.documentCode || '—'}</td>
+                                    <td className="py-1.5 px-2 text-steffen-surface/60">—</td>
+                                    <td className="py-1.5 px-2 text-right">{formatArs(m.amountArs)}</td>
+                                    <td className="py-1.5 px-2 text-center">
+                                      {openingState?.editable && (
+                                        <button
+                                          type="button"
+                                          onClick={() => setIsAperturaModalOpen(true)}
+                                          title="Editar Saldo de Apertura"
+                                          aria-label="Editar Saldo de Apertura"
+                                          className="p-1 rounded-[5px] text-steffen-surface/70 hover:text-steffen-surface hover:bg-steffen-gray transition-colors cursor-pointer"
+                                        >
+                                          <Pencil className="w-3.5 h-3.5" />
+                                        </button>
+                                      )}
+                                    </td>
+                                  </tr>
+                                );
+                              }
                               if (m.isPayment) {
                                 return (
                                   <tr key={m.id} className={tableStyles.row}>
@@ -539,6 +572,11 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({
                 </div>
 
                 <div className="flex justify-end items-center gap-3 pt-6">
+                  {openingState?.hasAccount && openingState.editable && (
+                    <Button variant="secundario" onClick={() => setIsAperturaModalOpen(true)}>
+                      {openingState.opening ? 'Editar saldo de apertura' : 'Saldo de apertura'}
+                    </Button>
+                  )}
                   <Button variant="verde" onClick={() => setIsPagoModalOpen(true)}>
                     Registrar pago
                   </Button>
@@ -746,6 +784,23 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({
           router.refresh();
         }}
       />
+
+      {/* Modal Saldo de Apertura */}
+      {selectedSupplier && (
+        <SaldoAperturaModal
+          isOpen={isAperturaModalOpen}
+          onClose={() => setIsAperturaModalOpen(false)}
+          partyType="SUPPLIER"
+          partyId={selectedSupplier.id}
+          partyName={selectedSupplier.name}
+          supplierCurrencyCode={selectedSupplier.currencyCode}
+          opening={openingState?.opening ?? null}
+          onSuccess={() => {
+            fetchSupplierDetails(selectedSupplier.id);
+            router.refresh();
+          }}
+        />
+      )}
 
       {/* Modal Editar Pago */}
       <EditarPagoModal

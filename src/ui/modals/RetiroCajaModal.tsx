@@ -3,6 +3,7 @@
 import React, { useState, useTransition } from 'react';
 import { X, AlertCircle, Loader2 } from 'lucide-react';
 import { registerWithdrawalAction } from '@/actions/patrimony.actions';
+import { normalizePositiveAmountInput } from '@/lib/amount-input';
 
 interface RetiroCajaModalProps {
   isOpen: boolean;
@@ -35,15 +36,16 @@ export const RetiroCajaModal: React.FC<RetiroCajaModalProps> = ({
       return;
     }
 
-    const numAmount = parseFloat(amountInput.replace(/\./g, '').replace(',', '.'));
-    if (isNaN(numAmount) || numAmount <= 0) {
+    // String decimal exacto (es-AR: "1.250,50" → "1250.50"); nunca Number.
+    const amountArs = normalizePositiveAmountInput(amountInput);
+    if (!amountArs) {
       setErrorMsg('El importe del retiro debe ser mayor a cero.');
       return;
     }
 
     startTransition(async () => {
       const res = await registerWithdrawalAction({
-        amountArs: numAmount,
+        amountArs,
         description: description.trim(),
         businessDate,
       });
@@ -118,9 +120,8 @@ export const RetiroCajaModal: React.FC<RetiroCajaModalProps> = ({
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-gray-500">$</span>
               <input
-                type="number"
-                step="any"
-                min="0.01"
+                type="text"
+                inputMode="decimal"
                 placeholder="0"
                 value={amountInput}
                 onChange={(e) => setAmountInput(e.target.value)}
