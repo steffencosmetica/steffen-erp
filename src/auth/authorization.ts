@@ -19,13 +19,24 @@ function parseIdList(value: string): string[] {
     .filter((id) => id.length > 0);
 }
 
-/** UUID autorizados según el entorno (lista vacía = nadie autorizado). */
-export function getAuthorizedUserIds(env: NodeJS.ProcessEnv = process.env): string[] {
-  const list = env.STEFFEN_AUTHORIZED_USER_IDS;
-  if (list !== undefined) {
-    return parseIdList(list);
+/** Resolución pura de la allowlist a partir de los valores crudos de ambas variables. */
+export function resolveAuthorizedIds(plural: string | undefined, singular: string | undefined): string[] {
+  if (plural !== undefined) {
+    return parseIdList(plural);
   }
-  return parseIdList(env.STEFFEN_AUTHORIZED_USER_ID ?? '');
+  return parseIdList(singular ?? '');
+}
+
+/**
+ * UUID autorizados según el entorno (lista vacía = nadie autorizado).
+ *
+ * Las variables se leen como `process.env.NOMBRE` literal y directo (sin alias ni
+ * parámetro por defecto): Next.js solo reconoce ese patrón estático al compilar el
+ * middleware (Edge Runtime); un acceso indirecto queda como lectura en runtime de un
+ * `process.env` que en Edge no trae estas variables.
+ */
+export function getAuthorizedUserIds(): string[] {
+  return resolveAuthorizedIds(process.env.STEFFEN_AUTHORIZED_USER_IDS, process.env.STEFFEN_AUTHORIZED_USER_ID);
 }
 
 /** Verifica si el usuario está en la allowlist (o coincide con `expectedUserId` explícito). */
