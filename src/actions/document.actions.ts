@@ -1,5 +1,6 @@
 'use server';
 
+import { requireAuthenticatedUser } from '@/auth/guard';
 import { getDocumentService } from '@/services/composition';
 import { ViewableDocumentDTO, RetryDocumentDTO, serializeViewableDocument, serializeRetryOutcome } from './document.dto';
 
@@ -19,6 +20,7 @@ export async function getDocumentViewAction(
   sourceId: string
 ): Promise<ActionResponse<ViewableDocumentDTO>> {
   try {
+    await requireAuthenticatedUser();
     const service = getDocumentService();
     const result = await service.getViewableDocument(sourceType, sourceId);
     return {
@@ -40,6 +42,7 @@ export async function getDocumentViewAction(
  */
 export async function retryDocumentAction(documentId: string): Promise<ActionResponse<RetryDocumentDTO>> {
   try {
+    await requireAuthenticatedUser();
     const service = getDocumentService();
     const outcome = await service.retryDocument(documentId);
     return {
