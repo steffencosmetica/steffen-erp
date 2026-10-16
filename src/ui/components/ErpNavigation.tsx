@@ -63,10 +63,11 @@ function isItemActive(item: NavItem, pathname: string): boolean {
  * Accesos directos a pantallas secundarias existentes (sin rutas ni funciones nuevas).
  * Se resaltan solo en su propia ruta; ADMIN mantiene su regla de activo.
  */
-const shortcutItems: { name: string; href: string; icon: ErpIconName }[] = [
+const shortcutItems: { name: string; href: string; icon: ErpIconName; alsoActiveOn?: string[] }[] = [
   { name: 'Clientes', href: '/clientes', icon: 'usuario' },
   { name: 'Proveedores', href: '/proveedores', icon: 'compra' },
   { name: 'Precios', href: '/precios', icon: 'lista-precios' },
+  { name: 'Reportes', href: '/reportes', icon: 'ingresos', alsoActiveOn: ['/ventas'] },
 ];
 
 const SidebarLink: React.FC<{ href: string; icon: ErpIconName; name: string; isActive: boolean }> = ({
@@ -114,7 +115,7 @@ export const ErpSidebarNav: React.FC = () => {
           href={item.href}
           icon={item.icon}
           name={item.name}
-          isActive={pathname.startsWith(item.href)}
+          isActive={[item.href, ...(item.alsoActiveOn ?? [])].some((h) => pathname.startsWith(h))}
         />
       ))}
     </nav>

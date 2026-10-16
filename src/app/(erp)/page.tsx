@@ -83,7 +83,13 @@ function MonthlyKpisGrid({
           <KpiCard className="flex-1" label="Ganancia" value={gain} variant="positive" />
         </div>
         <DashboardActionButton action="order" appearance="secondary" className="w-full" />
-        <div aria-hidden />
+        {/* VER VENTAS (Figma): Ventas abre por defecto el período comercial vigente (fecha de la base). */}
+        <Link
+          href="/ventas"
+          className="ui-btn-dark h-[30px] px-5 w-full inline-flex items-center justify-center rounded-[5px] text-sm font-semibold uppercase transition-colors"
+        >
+          Ver ventas
+        </Link>
       </div>
       {error && <p className="mt-2 text-xs text-steffen-red">{error}</p>}
     </>

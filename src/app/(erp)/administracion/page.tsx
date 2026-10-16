@@ -6,6 +6,7 @@ import {
   getSupplierItemRepository,
   getRemittanceService,
   getReportService,
+  getSupplierService,
 } from '@/services/composition';
 import { AdministracionView } from '@/ui/views/AdministracionView';
 import { type AdministracionDashboardDTO } from '@/actions/administracion.dto';
@@ -35,7 +36,7 @@ export default async function AdministracionPage() {
   // Período comercial desde la fecha de la base (misma fuente que el Dashboard); nunca la hora de Node.
   const { year: currentYear, month: currentMonth } = await getReportService().getCurrentBusinessPeriod();
 
-  const [customerRecords, customerLastActivityMap, supplierDebts, summary, recentMovements, usdRate, monthlySales] =
+  const [customerRecords, customerLastActivityMap, supplierDebts, summary, recentMovements, usdRate, monthlySales, suppliers] =
     await Promise.all([
       customerService.listCustomers(true).catch(() => []),
       patrimonyService.getCustomerLastActivityMap().catch(() => new Map()),
@@ -50,7 +51,16 @@ export default async function AdministracionPage() {
       patrimonyService.listRecentMovements(10).catch(() => []),
       supplierItemRepo.getCurrentUsdExchangeRate().catch(() => null),
       remittanceService.listCompletedSalesForMonth(currentYear, currentMonth).catch(() => []),
+      getSupplierService().listSuppliers().catch(() => []),
     ]);
+
+  const supplierCurrency = new Map(suppliers.map((s) => [s.id, s.currencyCode as 'ARS' | 'USD']));
+
+  // Resumen de clientes (DESIGN.md §22.4): deudores (saldo > 0) primero; orden estable dentro de cada grupo.
+  const sortedCustomers = [
+    ...customerRecords.filter((c) => c.balanceArs.gt(0)),
+    ...customerRecords.filter((c) => !c.balanceArs.gt(0)),
+  ];
 
   // Total de la tabla Deudas Proveedores: suma únicamente los saldos > 0 mostrados
   const totalTablaProveedores = supplierDebts.reduce(
@@ -67,7 +77,7 @@ export default async function AdministracionPage() {
     deudasProveedoresArs: toNumericString(summary.deudasProveedores),
     totalDeudasProveedoresTablaArs: toNumericString(totalTablaProveedores),
     netoArs: toNumericString(summary.neto),
-    customerRows: customerRecords.map((c) => ({
+    customerRows: sortedCustomers.map((c) => ({
       id: c.id,
       name: c.name,
       balanceArs: toNumericString(c.balanceArs),
@@ -77,6 +87,7 @@ export default async function AdministracionPage() {
     supplierRows: supplierDebts.map((s) => ({
       id: s.supplierId,
       name: s.name,
+      currencyCode: supplierCurrency.get(s.supplierId) ?? null,
       balanceArs: toNumericString(s.balanceArs),
       lastPaymentDate: s.lastPaymentDate,
       lastPurchaseDate: s.lastPurchaseDate,

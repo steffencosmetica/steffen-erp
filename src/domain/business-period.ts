@@ -25,3 +25,14 @@ export function businessPeriodFromDate(businessDate: string): BusinessPeriod {
   }
   return { businessDate, year, month };
 }
+
+/**
+ * Suma/resta días a una fecha comercial 'YYYY-MM-DD' (aritmética de calendario pura,
+ * en UTC solo como contenedor; no interpreta zona horaria).
+ */
+export function addDaysToBusinessDate(businessDate: string, days: number): string {
+  const { year, month } = businessPeriodFromDate(businessDate);
+  const day = Number(businessDate.slice(8, 10));
+  const d = new Date(Date.UTC(year, month - 1, day + days));
+  return d.toISOString().slice(0, 10);
+}

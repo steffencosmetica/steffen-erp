@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Search, Filter } from 'lucide-react';
 import type { PatrimonialMovementDTO } from '@/actions/patrimony.dto';
+import { getPatrimonialMovementsAction } from '@/actions/patrimony.actions';
 import { formatArs } from '@/lib/format';
 
 interface MovimientosViewProps {
@@ -22,9 +23,36 @@ export const MovimientosView: React.FC<MovimientosViewProps> = ({
   const [startDate, setStartDate] = useState<string>(defaultStartDate);
   const [endDate, setEndDate] = useState<string>(defaultEndDate);
 
-  // Filtrado reactivo en cliente (los movimientos de los últimos 90 días o el rango cargado)
+  // Movimientos del rango cargado. Por defecto, los últimos 90 días filtrados en el servidor
+  // por business_date; si el usuario cambia el rango, se vuelve a consultar ese rango.
+  const [movements, setMovements] = useState<PatrimonialMovementDTO[]>(initialMovements);
+  const [loadedRange, setLoadedRange] = useState({ start: defaultStartDate, end: defaultEndDate });
+  const [rangeError, setRangeError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (startDate === loadedRange.start && endDate === loadedRange.end) return;
+    if (!startDate || !endDate || startDate > endDate) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const res = await getPatrimonialMovementsAction({ startDate, endDate });
+      if (cancelled) return;
+      if (res.success && res.data) {
+        setMovements(res.data);
+        setLoadedRange({ start: startDate, end: endDate });
+        setRangeError(null);
+      } else {
+        setRangeError(res.error || 'No se pudieron cargar los movimientos del rango.');
+      }
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [startDate, endDate, loadedRange]);
+
+  // Filtrado reactivo en cliente sobre el rango cargado (tipo, búsqueda y fechas)
   const filteredMovements = useMemo(() => {
-    return initialMovements.filter((m) => {
+    return movements.filter((m) => {
       // Filtro fecha
       if (startDate && m.date && m.date < startDate) return false;
       if (endDate && m.date && m.date > endDate) return false;
@@ -48,7 +76,7 @@ export const MovimientosView: React.FC<MovimientosViewProps> = ({
 
       return true;
     });
-  }, [initialMovements, startDate, endDate, selectedType, searchTerm]);
+  }, [movements, startDate, endDate, selectedType, searchTerm]);
 
   const formatDateDisplay = (dateStr: string) => {
     if (!dateStr) return '—';
@@ -159,6 +187,13 @@ export const MovimientosView: React.FC<MovimientosViewProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-steffen-gray">
+              {rangeError && (
+                <tr>
+                  <td colSpan={6} className="py-3 text-center text-xs text-steffen-red">
+                    {rangeError}
+                  </td>
+                </tr>
+              )}
               {filteredMovements.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-xs text-neutral-400">

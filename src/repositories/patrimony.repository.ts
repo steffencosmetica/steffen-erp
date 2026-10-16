@@ -313,52 +313,73 @@ export class PatrimonyRepository extends BaseSupabaseRepository implements IPatr
   }
 
   async listMovements(filter: MovementsFilter = {}): Promise<PatrimonialMovementFullRecord[]> {
-    let query = this.client
-      .from('patrimonial_movements')
-      .select(`
-        id,
-        code,
-        operation_id,
-        movement_type,
-        description,
-        amount_ars,
-        created_at,
-        business_operations(id, business_date),
-        financial_entries(
+    // Con rango de fechas se usa !inner: el filtro sobre business_operations.business_date
+    // debe excluir los MOV fuera del período (sin !inner PostgREST solo filtra el embed).
+    const hasDateRange = Boolean(filter.startDate || filter.endDate);
+    const buildQuery = () => {
+      let query = this.client
+        .from('patrimonial_movements')
+        .select(`
           id,
-          delta_ars,
-          financial_accounts(id, account_type, name)
-        )
-      `)
-      .order('created_at', { ascending: false });
+          code,
+          operation_id,
+          movement_type,
+          description,
+          amount_ars,
+          created_at,
+          ${hasDateRange ? 'business_operations!inner(id, business_date)' : 'business_operations(id, business_date)'},
+          financial_entries(
+            id,
+            delta_ars,
+            financial_accounts(id, account_type, name)
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false });
 
-    if (filter.movementType && filter.movementType !== 'TODOS') {
-      query = query.eq('movement_type', filter.movementType);
+      if (filter.movementType && filter.movementType !== 'TODOS') {
+        query = query.eq('movement_type', filter.movementType);
+      }
+
+      if (filter.startDate) {
+        query = query.gte('business_operations.business_date', filter.startDate);
+      }
+
+      if (filter.endDate) {
+        query = query.lte('business_operations.business_date', filter.endDate);
+      }
+      return query;
+    };
+
+    let data: unknown[] = [];
+    if (filter.limit || filter.offset) {
+      let query = buildQuery();
+      if (filter.limit) {
+        query = query.limit(filter.limit);
+      }
+      if (filter.offset) {
+        query = query.range(filter.offset, filter.offset + (filter.limit || 50) - 1);
+      }
+      const { data: page, error } = await query;
+      if (error) {
+        throw new DomainError(`Error obteniendo movimientos patrimoniales: ${error.message}`);
+      }
+      data = page || [];
+    } else {
+      // Sin límite explícito: se pagina hasta agotar el rango (PostgREST corta cada respuesta
+      // en su máximo de filas), así un período nunca queda truncado en silencio.
+      const PAGE_SIZE = 1000;
+      for (let from = 0; ; from += PAGE_SIZE) {
+        const { data: page, error } = await buildQuery().range(from, from + PAGE_SIZE - 1);
+        if (error) {
+          throw new DomainError(`Error obteniendo movimientos patrimoniales: ${error.message}`);
+        }
+        data = data.concat(page || []);
+        if (!page || page.length < PAGE_SIZE) break;
+      }
     }
 
-    if (filter.startDate) {
-      query = query.gte('business_operations.business_date', filter.startDate);
-    }
-
-    if (filter.endDate) {
-      query = query.lte('business_operations.business_date', filter.endDate);
-    }
-
-    if (filter.limit) {
-      query = query.limit(filter.limit);
-    }
-
-    if (filter.offset) {
-      query = query.range(filter.offset, filter.offset + (filter.limit || 50) - 1);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      throw new DomainError(`Error obteniendo movimientos patrimoniales: ${error.message}`);
-    }
-
-    let records: PatrimonialMovementFullRecord[] = (data || []).map((row: any) => {
+    let records: PatrimonialMovementFullRecord[] = data.map((row: any) => {
       const bDate = row.business_operations?.business_date || (row.created_at ? row.created_at.split('T')[0] : '');
       const variation = formatPatrimonialVariationFromEntries(row.financial_entries || []);
 

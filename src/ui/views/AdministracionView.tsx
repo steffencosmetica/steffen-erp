@@ -163,13 +163,12 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({
               <span className="font-semibold tabular-nums">{formatArs(totalFacturadoMes)}</span>
               <span className="font-semibold tabular-nums text-steffen-green">{formatArs(gananciaMes)}</span>
             </div>
-            <button
-              type="button"
-              className={`${forwardLinkClass} opacity-60 cursor-not-allowed`}
-              title="Módulo de Reportes próximo en Fase 17"
+            <Link
+              href={`/ventas?year=${selectedMonth.slice(0, 4)}&month=${Number(selectedMonth.slice(5, 7))}`}
+              className={forwardLinkClass}
             >
               IR A VENTAS <ForwardArrow />
-            </button>
+            </Link>
           </div>
         </Panel>
 
@@ -286,7 +285,13 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({
                   data.customerRows.map((c) => (
                     <tr key={c.id} className={tableStyles.row}>
                       <td className="py-1.5 px-3 font-medium truncate max-w-0">{c.name}</td>
-                      <td className="py-1.5 px-3 text-right tabular-nums font-semibold whitespace-nowrap">{formatArs(c.balanceArs)}</td>
+                      <td
+                        className={`py-1.5 px-3 text-right tabular-nums font-semibold whitespace-nowrap ${
+                          new Decimal(c.balanceArs).gt(0) ? 'text-steffen-red' : ''
+                        }`}
+                      >
+                        {formatArs(c.balanceArs)}
+                      </td>
                       <td className="py-1.5 px-3 text-center whitespace-nowrap">{c.lastPaymentDate || '—'}</td>
                       <td className="py-1.5 px-3 text-center whitespace-nowrap">{c.lastPurchaseDate || '—'}</td>
                       <td className="py-1.5 px-3 text-center">
@@ -330,8 +335,9 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({
             <table className={tableStyles.table}>
               <thead>
                 <tr className={`${tableStyles.headRow} sticky top-0 z-10`}>
-                  <th className="py-2 px-3 text-left w-[34%]">PROVEEDOR</th>
-                  <th className="py-2 px-3 text-right w-[20%]">SALDO</th>
+                  <th className="py-2 px-3 text-left w-[28%]">PROVEEDOR</th>
+                  <th className="py-2 px-3 text-center w-[8%]">MONEDA</th>
+                  <th className="py-2 px-3 text-right w-[18%]">SALDO</th>
                   <th className="py-2 px-3 text-center w-[17%]">ULTIMO PAGO</th>
                   <th className="py-2 px-3 text-center w-[19%]">ULTIMA COMPRA</th>
                   <th className="py-2 px-3 text-center w-[10%]">CUENTA</th>
@@ -342,6 +348,7 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({
                   data.supplierRows.map((s) => (
                     <tr key={s.id} className={tableStyles.row}>
                       <td className="py-1.5 px-3 font-medium truncate max-w-0">{s.name}</td>
+                      <td className="py-1.5 px-3 text-center">{s.currencyCode ?? '—'}</td>
                       <td className="py-1.5 px-3 text-right tabular-nums font-semibold whitespace-nowrap">{formatArs(s.balanceArs)}</td>
                       <td className="py-1.5 px-3 text-center whitespace-nowrap">{s.lastPaymentDate || '—'}</td>
                       <td className="py-1.5 px-3 text-center whitespace-nowrap">{s.lastPurchaseDate || '—'}</td>
@@ -354,7 +361,7 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-xs text-steffen-surface/60">
+                    <td colSpan={6} className="py-12 text-center text-xs text-steffen-surface/60">
                       Sin deudas con proveedores registradas
                     </td>
                   </tr>

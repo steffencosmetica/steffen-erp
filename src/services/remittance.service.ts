@@ -18,6 +18,7 @@ import { IDocumentRepository, DocumentRepository } from '@/repositories/document
 import { DomainError } from '@/domain/errors';
 import { Decimal, toKgPrecision, toWholePesos } from '@/domain/decimal';
 import type { GenerationStatus } from '@/database/domain-types';
+import { aggregateSalesByPeriod, type SalesPeriodTotal } from '@/domain/sales-period';
 
 export interface MonthlySaleWithDocumentsRecord extends MonthlySaleRecord {
   rtoDocumentStatus: GenerationStatus | 'MISSING';
@@ -105,6 +106,7 @@ export interface IRemittanceDomainService {
   completeRtm(remittanceId: string, transportCostArs: Decimal.Value): Promise<CompletedRtmResult>;
   getMarginRemittanceByRemittanceId(remittanceId: string): Promise<MarginRemittanceRecord | null>;
   listCompletedSalesForMonth(year: number, month: number): Promise<MonthlySaleWithDocumentsRecord[]>;
+  listSalesByPeriod(): Promise<SalesPeriodTotal[]>;
 }
 
 export class RemittanceDomainService implements IRemittanceDomainService {
@@ -383,5 +385,10 @@ export class RemittanceDomainService implements IRemittanceDomainService {
       rtoDocumentStatus: rtoStatuses.get(s.remittanceId) || 'MISSING',
       rtmDocumentStatus: rtmStatuses.get(s.marginRemittanceId) || 'MISSING',
     }));
+  }
+
+  /** Ventas por mes / año: agregación por período comercial (business_date) de RTO COMPLETED con RTM. */
+  async listSalesByPeriod(): Promise<SalesPeriodTotal[]> {
+    return aggregateSalesByPeriod(await this.remittanceRepo.listCompletedSaleAmounts());
   }
 }
