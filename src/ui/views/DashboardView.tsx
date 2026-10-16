@@ -50,7 +50,7 @@ export const DashboardView: React.FC<{
     <div className="space-y-6">
       {/* Alert for Pending RTM */}
       {pendingRtm && (
-        <div className="p-4 bg-amber-100 border-2 border-amber-500 rounded-lg flex items-center justify-between shadow-sm animate-pulse">
+        <div className="p-4 bg-amber-100 border-2 border-amber-500 rounded-[5px] flex items-center justify-between shadow-sm animate-pulse">
           <div className="flex items-center gap-3">
             <AlertTriangle className="w-6 h-6 text-amber-700" />
             <div>
@@ -70,49 +70,49 @@ export const DashboardView: React.FC<{
 
       {/* KPI Cards Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg border border-[#D9D9D9] shadow-xs">
+        <div className="bg-white p-4 rounded-[5px] border border-steffen-border shadow-xs">
           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Ventas del Mes</span>
-          <p className="text-2xl font-bold text-[#000000] mt-1">{reportsData.salesCurrentMonth}</p>
+          <p className="text-2xl font-bold text-steffen-surface mt-1">{reportsData.salesCurrentMonth}</p>
           <span className="text-xs text-gray-400">RTOs completados</span>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border border-[#D9D9D9] shadow-xs">
+        <div className="bg-white p-4 rounded-[5px] border border-steffen-border shadow-xs">
           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Facturado</span>
-          <p className="text-2xl font-bold text-[#000000] mt-1">
+          <p className="text-2xl font-bold text-steffen-surface mt-1">
             <MoneyDisplay amount={reportsData.billedCurrentMonthArs} />
           </p>
           <span className="text-xs text-gray-400">Mes calendario actual</span>
         </div>
 
-        <div className="bg-[#008102] text-white p-4 rounded-lg shadow-xs">
+        <div className="bg-steffen-green text-white p-4 rounded-[5px] shadow-xs">
           <span className="text-xs font-semibold uppercase tracking-wider text-green-100">Ganancia Neta</span>
           <p className="text-2xl font-bold mt-1">$ {Math.round(reportsData.gainCurrentMonthArs).toLocaleString('es-AR')}</p>
           <span className="text-xs text-green-200">Margen real de ventas cerradas</span>
         </div>
 
-        <div className="bg-[#000000] text-white p-4 rounded-lg shadow-xs">
+        <div className="bg-steffen-bg text-white p-4 rounded-[5px] shadow-xs">
           <span className="text-xs font-semibold uppercase tracking-wider text-gray-300">Pedidos Abiertos</span>
-          <p className="text-2xl font-bold text-[#B99D22] mt-1">{reportsData.openOrdersCount}</p>
+          <p className="text-2xl font-bold text-steffen-gold mt-1">{reportsData.openOrdersCount}</p>
           <span className="text-xs text-gray-400">Pendientes de preparación</span>
         </div>
       </div>
 
       {/* Quick Action Grid */}
-      <div className="bg-white p-5 rounded-lg border border-[#D9D9D9] shadow-xs">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[#393939] mb-3">Accesos Rápidos</h2>
+      <div className="bg-white p-5 rounded-[5px] border border-steffen-border shadow-xs">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-steffen-surface/80 mb-3">Accesos Rápidos</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
           <Button variant="secundario" onClick={() => onOpenModal('NEW_ORDER')} className="flex flex-col gap-1 py-3 h-auto">
-            <ShoppingCart className="w-5 h-5 text-[#B99D22]" />
+            <ShoppingCart className="w-5 h-5 text-steffen-gold" />
             <span className="text-xs">Nuevo Pedido</span>
           </Button>
 
           <Button variant="secundario" onClick={() => onOpenModal('MANUFACTURE')} className="flex flex-col gap-1 py-3 h-auto">
-            <Factory className="w-5 h-5 text-[#B99D22]" />
+            <Factory className="w-5 h-5 text-steffen-gold" />
             <span className="text-xs">Fabricar Granel</span>
           </Button>
 
           <Button variant="secundario" onClick={() => onOpenModal('PACKAGING')} className="flex flex-col gap-1 py-3 h-auto">
-            <Package className="w-5 h-5 text-[#B99D22]" />
+            <Package className="w-5 h-5 text-steffen-gold" />
             <span className="text-xs">Envasar PRO</span>
           </Button>
 
@@ -122,12 +122,12 @@ export const DashboardView: React.FC<{
           </Button>
 
           <Button variant="secundario" onClick={() => onOpenModal('PAYMENT_CUSTOMER')} className="flex flex-col gap-1 py-3 h-auto">
-            <Wallet className="w-5 h-5 text-[#008102]" />
+            <Wallet className="w-5 h-5 text-steffen-green" />
             <span className="text-xs">Cobro Cliente</span>
           </Button>
 
           <Button variant="secundario" onClick={() => onOpenModal('PAYMENT_SUPPLIER')} className="flex flex-col gap-1 py-3 h-auto">
-            <Wallet className="w-5 h-5 text-[#DD0000]" />
+            <Wallet className="w-5 h-5 text-steffen-red" />
             <span className="text-xs">Pago Proveedor</span>
           </Button>
         </div>
@@ -136,11 +136,11 @@ export const DashboardView: React.FC<{
       {/* Main Grid: Planning preview & Accounts summary */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Planning Matrix Preview */}
-        <div className="lg:col-span-2 bg-white p-5 rounded-lg border border-[#D9D9D9] shadow-xs flex flex-col justify-between">
+        <div className="lg:col-span-2 bg-white p-5 rounded-[5px] border border-steffen-border shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex justify-between items-center mb-3">
               <div>
-                <h2 className="text-base font-bold text-[#000000]">Resumen de Pedidos (Planificación)</h2>
+                <h2 className="text-base font-bold text-steffen-surface">Resumen de Pedidos (Planificación)</h2>
                 <span className="text-xs text-gray-500">
                   Simulación de cobertura en tiempo real con stock existente y granel disponible.
                 </span>
@@ -156,7 +156,7 @@ export const DashboardView: React.FC<{
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="border-b border-[#D9D9D9] text-gray-500 font-semibold text-left">
+                    <tr className="border-b border-steffen-border text-gray-500 font-semibold text-left">
                       <th className="py-2">PRODUCTO</th>
                       <th className="py-2 text-right">SOLICITADO</th>
                       <th className="py-2 text-right">STOCK DISP.</th>
@@ -167,11 +167,11 @@ export const DashboardView: React.FC<{
                   <tbody className="divide-y divide-gray-100">
                     {planningData.products.slice(0, 5).map((p) => (
                       <tr key={p.productId} className="hover:bg-gray-50">
-                        <td className="py-2.5 font-medium text-[#393939]">{p.productName}</td>
+                        <td className="py-2.5 font-medium text-steffen-surface/80">{p.productName}</td>
                         <td className="py-2.5 text-right font-bold">{p.totalRequested} un</td>
                         <td className="py-2.5 text-right text-gray-600">{p.coverageFromStock} un</td>
                         <td className="py-2.5 text-right text-blue-600">{p.coveredFromBulk} un</td>
-                        <td className={`py-2.5 text-right font-bold ${p.finalShortage > 0 ? 'text-[#DD0000]' : 'text-[#008102]'}`}>
+                        <td className={`py-2.5 text-right font-bold ${p.finalShortage > 0 ? 'text-steffen-red' : 'text-steffen-green'}`}>
                           {p.finalShortage > 0 ? `${p.finalShortage} un` : 'Cubierto'}
                         </td>
                       </tr>
@@ -184,9 +184,9 @@ export const DashboardView: React.FC<{
         </div>
 
         {/* Financial Overview Card */}
-        <div className="bg-white p-5 rounded-lg border border-[#D9D9D9] shadow-xs">
+        <div className="bg-white p-5 rounded-[5px] border border-steffen-border shadow-xs">
           <div className="flex justify-between items-center mb-3">
-            <h2 className="text-base font-bold text-[#000000]">Estado Patrimonial</h2>
+            <h2 className="text-base font-bold text-steffen-surface">Estado Patrimonial</h2>
             <Button variant="secundario" onClick={() => onNavigate('administracion')} className="text-xs">
               Administrar
             </Button>
@@ -205,17 +205,17 @@ export const DashboardView: React.FC<{
 
             <div className="flex justify-between items-center p-2 rounded bg-gray-50">
               <span className="text-gray-600">Cuentas por Cobrar (Clientes):</span>
-              <span className="font-bold text-[#008102]">$ {Math.round(totalCustomerDebt).toLocaleString('es-AR')}</span>
+              <span className="font-bold text-steffen-green">$ {Math.round(totalCustomerDebt).toLocaleString('es-AR')}</span>
             </div>
 
             <div className="flex justify-between items-center p-2 rounded bg-gray-50">
               <span className="text-gray-600">Deudas a Proveedores:</span>
-              <span className="font-bold text-[#DD0000]">$ {Math.round(totalSupplierDebt).toLocaleString('es-AR')}</span>
+              <span className="font-bold text-steffen-red">$ {Math.round(totalSupplierDebt).toLocaleString('es-AR')}</span>
             </div>
 
-            <div className="p-3 bg-[#FBFBFB] border-t-2 border-[#B99D22] rounded flex justify-between items-center mt-2">
-              <span className="font-bold text-xs uppercase tracking-wider text-[#393939]">PATRIMONIO NETO:</span>
-              <span className="text-xl font-bold text-[#B99D22]">$ {Math.round(netBalance).toLocaleString('es-AR')}</span>
+            <div className="p-3 bg-steffen-bg border-t-2 border-steffen-gold rounded flex justify-between items-center mt-2">
+              <span className="font-bold text-xs uppercase tracking-wider text-steffen-surface/80">PATRIMONIO NETO:</span>
+              <span className="text-xl font-bold text-steffen-gold">$ {Math.round(netBalance).toLocaleString('es-AR')}</span>
             </div>
           </div>
         </div>
@@ -224,9 +224,9 @@ export const DashboardView: React.FC<{
       {/* Second Row: Granel disponible & Alertas de Stock */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Granel disponible */}
-        <div className="bg-white p-5 rounded-lg border border-[#D9D9D9] shadow-xs">
+        <div className="bg-white p-5 rounded-[5px] border border-steffen-border shadow-xs">
           <div className="flex justify-between items-center mb-3">
-            <h2 className="text-base font-bold text-[#000000]">Granel Disponible en Fábrica</h2>
+            <h2 className="text-base font-bold text-steffen-surface">Granel Disponible en Fábrica</h2>
             <Button variant="secundario" onClick={() => onNavigate('fabrica')} className="text-xs">
               Ver Fábrica
             </Button>
@@ -241,13 +241,13 @@ export const DashboardView: React.FC<{
                 return (
                   <div key={lot.id} className="py-2.5 flex justify-between items-center">
                     <div>
-                      <p className="font-bold text-sm text-[#000000]">
+                      <p className="font-bold text-sm text-steffen-surface">
                         {lot.code} — {bp?.name}
                       </p>
                       <p className="text-xs text-gray-500">Fabricado: {new Date(lot.created_at).toLocaleDateString('es-AR')}</p>
                     </div>
                     <div className="text-right">
-                      <span className="text-base font-bold text-[#008102]">{lot.kg_available.toFixed(3)} kg</span>
+                      <span className="text-base font-bold text-steffen-green">{lot.kg_available.toFixed(3)} kg</span>
                       <p className="text-xs text-gray-400">de {lot.kg_fabricated.toFixed(3)} kg</p>
                     </div>
                   </div>
@@ -258,16 +258,16 @@ export const DashboardView: React.FC<{
         </div>
 
         {/* Alertas de Stock */}
-        <div className="bg-white p-5 rounded-lg border border-[#D9D9D9] shadow-xs">
+        <div className="bg-white p-5 rounded-[5px] border border-steffen-border shadow-xs">
           <div className="flex justify-between items-center mb-3">
-            <h2 className="text-base font-bold text-[#000000]">Alertas de Stock Crítico</h2>
+            <h2 className="text-base font-bold text-steffen-surface">Alertas de Stock Crítico</h2>
             <Button variant="secundario" onClick={() => onNavigate('stock')} className="text-xs">
               Ver Stock
             </Button>
           </div>
 
           {criticalStock.length === 0 ? (
-            <div className="py-6 text-center text-sm text-[#008102] font-semibold">
+            <div className="py-6 text-center text-sm text-steffen-green font-semibold">
               ✓ Todos los ítems se encuentran por encima de su stock mínimo.
             </div>
           ) : (
@@ -276,7 +276,7 @@ export const DashboardView: React.FC<{
                 <div key={item.id} className="py-2.5 flex justify-between items-center">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-[#DD0000]">{item.name}</span>
+                      <span className="text-sm font-bold text-steffen-red">{item.name}</span>
                       <StatusBadge type="POCO_STOCK" />
                     </div>
                     <p className="text-xs text-gray-500">
@@ -284,7 +284,7 @@ export const DashboardView: React.FC<{
                     </p>
                   </div>
                   <div className="text-right">
-                    <span className="text-sm font-bold text-[#DD0000]">
+                    <span className="text-sm font-bold text-steffen-red">
                       {current.toFixed(item.unit_type === 'KG' ? 3 : 0)} {item.unit_type}
                     </span>
                     <p className="text-xs text-gray-400">

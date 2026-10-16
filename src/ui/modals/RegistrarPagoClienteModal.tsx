@@ -119,7 +119,7 @@ export const RegistrarPagoClienteModal: React.FC<RegistrarPagoClienteModalProps>
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-      <div className="bg-white border border-[#D9D9D9] rounded-[5px] w-full max-w-md shadow-xl flex flex-col max-h-[90vh]">
+      <div className="bg-white border border-steffen-border rounded-[10px] w-full max-w-md shadow-xl flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-black">
           <h2 className="text-base font-bold text-black uppercase tracking-wider">
@@ -137,7 +137,7 @@ export const RegistrarPagoClienteModal: React.FC<RegistrarPagoClienteModalProps>
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5 space-y-4 text-xs">
           {errorMsg && (
-            <div className="p-3 bg-red-50 border border-[#DD0000] text-[#DD0000] rounded-[3px] flex items-center gap-2">
+            <div className="p-3 bg-red-50 border border-steffen-red text-steffen-red rounded-[5px] flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>
@@ -151,7 +151,7 @@ export const RegistrarPagoClienteModal: React.FC<RegistrarPagoClienteModalProps>
               onChange={(e) => setSelectedCustomerId(e.target.value)}
               disabled={loadingCustomers || isPending}
               required
-              className="w-full h-9 px-3 border border-[#D9D9D9] rounded-[5px] bg-white text-black font-medium focus:outline-none focus:border-[#008102]"
+              className="w-full h-9 px-3 border border-steffen-border rounded-[10px] bg-white text-black font-medium focus:outline-none focus:border-steffen-green"
             >
               {visibleOptions.length === 0 ? (
                 <option value="">No hay clientes con deuda pendiente</option>
@@ -167,11 +167,11 @@ export const RegistrarPagoClienteModal: React.FC<RegistrarPagoClienteModalProps>
 
           {/* Saldo Actual informativo */}
           {selectedCustomer && (
-            <div className="p-2.5 bg-gray-50 border border-gray-200 rounded-[5px] flex items-center justify-between text-xs">
+            <div className="p-2.5 bg-gray-50 border border-gray-200 rounded-[10px] flex items-center justify-between text-xs">
               <span className="text-gray-600 font-medium">Saldo actual del cliente:</span>
               <span
-                className={`font-mono font-bold ${
-                  selectedCustomer.hasDebt ? 'text-[#008102]' : 'text-gray-700'
+                className={`font-bold ${
+                  selectedCustomer.hasDebt ? 'text-steffen-green' : 'text-gray-700'
                 }`}
               >
                 {formatArs(selectedCustomer.balanceArs)}
@@ -188,7 +188,7 @@ export const RegistrarPagoClienteModal: React.FC<RegistrarPagoClienteModalProps>
               onChange={(e) => setBusinessDate(e.target.value)}
               disabled={isPending}
               required
-              className="w-full h-9 px-3 border border-[#D9D9D9] rounded-[5px] text-black focus:outline-none focus:border-[#008102]"
+              className="w-full h-9 px-3 border border-steffen-border rounded-[10px] text-black focus:outline-none focus:border-steffen-green"
             />
           </div>
 
@@ -206,7 +206,7 @@ export const RegistrarPagoClienteModal: React.FC<RegistrarPagoClienteModalProps>
                 onChange={(e) => setAmountInput(e.target.value)}
                 disabled={isPending}
                 required
-                className="w-full h-9 pl-8 pr-3 border border-[#D9D9D9] rounded-[5px] font-mono font-bold text-right text-black focus:outline-none focus:border-[#008102]"
+                className="w-full h-9 pl-8 pr-3 border border-steffen-border rounded-[10px] font-bold text-right text-black focus:outline-none focus:border-steffen-green"
               />
             </div>
             <p className="text-[10px] text-gray-400">
@@ -220,14 +220,14 @@ export const RegistrarPagoClienteModal: React.FC<RegistrarPagoClienteModalProps>
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="h-9 px-4 border border-[#D9D9D9] rounded-[5px] font-bold text-gray-700 hover:bg-gray-100 transition-colors uppercase tracking-wider"
+              className="h-9 px-4 border border-steffen-border rounded-[10px] font-bold text-gray-700 hover:bg-gray-100 transition-colors uppercase tracking-wider"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isPending || !selectedCustomerId}
-              className="h-9 px-5 bg-[#008102] hover:bg-[#007002] text-white rounded-[5px] font-bold transition-colors uppercase tracking-wider flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              className="h-9 px-5 bg-steffen-green hover:bg-steffen-green-hover text-white rounded-[10px] font-bold transition-colors uppercase tracking-wider flex items-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
               <span>REGISTRAR PAGO</span>

@@ -1,5 +1,6 @@
 'use server';
 
+import { requireAuthenticatedUser } from '@/auth/guard';
 import { revalidatePath } from 'next/cache';
 import { getRemittanceService, getDocumentService } from '@/services/composition';
 import {
@@ -27,6 +28,7 @@ export async function confirmOrderToRemittanceAction(
   businessDate?: string
 ): Promise<ActionResponse<ConfirmedRemittanceDTO>> {
   try {
+    await requireAuthenticatedUser();
     const service = getRemittanceService();
     const result = await service.confirmOrderToRemittance(orderId, businessDate);
 
@@ -63,6 +65,7 @@ export async function confirmOrderToRemittanceAction(
 
 export async function getPendingRtmRemittanceAction(): Promise<ActionResponse<PendingRtmBannerDTO | null>> {
   try {
+    await requireAuthenticatedUser();
     const service = getRemittanceService();
     const pending = await service.getPendingRtmRemittance();
 
@@ -82,6 +85,7 @@ export async function getRemittanceDetailAction(
   remittanceId: string
 ): Promise<ActionResponse<RemittanceDetailDTO | null>> {
   try {
+    await requireAuthenticatedUser();
     const service = getRemittanceService();
     const remittance = await service.getRemittanceById(remittanceId);
 
@@ -101,6 +105,7 @@ export async function getRemittanceByOrderIdAction(
   orderId: string
 ): Promise<ActionResponse<RemittanceDetailDTO | null>> {
   try {
+    await requireAuthenticatedUser();
     const service = getRemittanceService();
     const remittance = await service.getRemittanceByOrderId(orderId);
 
@@ -121,6 +126,7 @@ export async function previewRtoAction(
   agOverrides?: Record<string, number>
 ): Promise<ActionResponse<RtoPreviewDTO>> {
   try {
+    await requireAuthenticatedUser();
     const service = getRemittanceService();
     const preview = await service.previewRto(orderId, agOverrides);
 
@@ -141,6 +147,7 @@ export async function getMonthlySalesAction(
   month: number
 ): Promise<ActionResponse<MonthlySaleDTO[]>> {
   try {
+    await requireAuthenticatedUser();
     const service = getRemittanceService();
     const sales = await service.listCompletedSalesForMonth(year, month);
 

@@ -2,7 +2,16 @@
 
 import React, { useState, useTransition, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, ConfirmDialog } from '../components/UIComponents';
+import {
+  Button,
+  ConfirmDialog,
+  IconButton,
+  ListItemButton,
+  Panel,
+  SectionHeader,
+  tableStyles,
+} from '../components/UIComponents';
+import { StockListToolbar } from '../components/StockListToolbar';
 import { NewRawMaterialModal } from '../modals/NewRawMaterialModal';
 import { EditRawMaterialModal } from '../modals/EditRawMaterialModal';
 import { toggleRawMaterialActiveAction } from '@/actions/master-item.actions';
@@ -18,14 +27,8 @@ import { NewProductModal } from '../modals/NewProductModal';
 import { StockAdjustmentModal, type StockAdjustableItem } from '../modals/StockAdjustmentModal';
 import type { StockMovementDTO } from '@/actions/stock.dto';
 import { formatArs, formatKg } from '@/lib/format';
-import {
-  Search,
-  Edit3,
-  Power,
-  RefreshCw,
-  AlertTriangle,
-  ChevronDown,
-} from 'lucide-react';
+import { Edit3, Power, RefreshCw } from 'lucide-react';
+import { ErpIcon } from '../components/ErpIcon';
 
 interface RawMaterialsViewProps {
   initialRawMaterials: RawMaterialDTO[];
@@ -169,75 +172,43 @@ export const RawMaterialsView: React.FC<RawMaterialsViewProps> = ({
     };
   };
 
+  const stockTabs: { key: 'PRO' | 'MPR' | 'COM'; label: string; icon: React.ReactNode }[] = [
+    { key: 'PRO', label: 'Productos', icon: <ErpIcon name="productos" className="w-6 h-6" /> },
+    { key: 'MPR', label: 'Materia Prima', icon: <ErpIcon name="materia-prima" className="w-6 h-6" /> },
+    { key: 'COM', label: 'Componentes', icon: <ErpIcon name="envase" className="w-6 h-6" /> },
+  ];
+
   return (
     <div className="space-y-6">
-
-      {/* Tarjeta Principal de Stock según Figma: SOLAPA-MATERIA-Y-COMPONENTES.png */}
-      <div className="bg-white rounded-[5px] border border-[#D9D9D9] p-6">
-        
-        {/* Barra Superior de Subpestañas y Botón Nuevo */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          
-          {/* Subpestañas idénticas a Figma */}
-          <div className="flex items-center gap-3">
-            {/* Solapa Productos */}
-            <button
-              type="button"
-              onClick={() => setActiveTab('PRO')}
-              className={
-                activeTab === 'PRO'
-                  ? 'border-2 border-[#0E50A0] text-[#0E50A0] bg-white rounded-lg px-4 py-1.5 font-bold text-xs uppercase flex items-center gap-1.5 cursor-default'
-                  : 'text-[#0E50A0] font-semibold text-xs uppercase px-3 py-1.5 flex items-center gap-1 hover:bg-blue-50/50 rounded-lg transition-colors cursor-pointer'
-              }
-            >
-              <span>Productos</span>
-              <ChevronDown className="w-3.5 h-3.5" />
-            </button>
-
-            {/* Solapa Materia Prima */}
-            <button
-              type="button"
-              onClick={() => setActiveTab('MPR')}
-              className={
-                activeTab === 'MPR'
-                  ? 'border-2 border-[#0E50A0] text-[#0E50A0] bg-white rounded-lg px-4 py-1.5 font-bold text-xs uppercase flex items-center gap-1.5 cursor-default'
-                  : 'text-[#0E50A0] font-semibold text-xs uppercase px-3 py-1.5 flex items-center gap-1 hover:bg-blue-50/50 rounded-lg transition-colors cursor-pointer'
-              }
-            >
-              <span>Materia Prima</span>
-              <ChevronDown className="w-3.5 h-3.5" />
-            </button>
-
-            {/* Solapa Componentes */}
-            <button
-              type="button"
-              onClick={() => setActiveTab('COM')}
-              className={
-                activeTab === 'COM'
-                  ? 'border-2 border-[#0E50A0] text-[#0E50A0] bg-white rounded-lg px-4 py-1.5 font-bold text-xs uppercase flex items-center gap-1.5 cursor-default'
-                  : 'text-[#0E50A0] font-semibold text-xs uppercase px-3 py-1.5 flex items-center gap-1 hover:bg-blue-50/50 rounded-lg transition-colors cursor-pointer'
-              }
-            >
-              <span>Componentes</span>
-              <ChevronDown className="w-3.5 h-3.5" />
-            </button>
+      {/* Barra de Stock (Figma Stock): pestañas como ítems de lista + acciones */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3" role="tablist" aria-label="Tipo de stock">
+            {stockTabs.map((t) => (
+              <ListItemButton
+                key={t.key}
+                role="tab"
+                aria-selected={activeTab === t.key}
+                selected={activeTab === t.key}
+                onClick={() => setActiveTab(t.key)}
+                icon={t.icon}
+                className="w-auto font-normal text-base whitespace-nowrap"
+              >
+                {t.label}
+              </ListItemButton>
+            ))}
           </div>
 
-          {/* Botones a la derecha: Refrescar y Nuevo */}
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
+          <div className="flex flex-wrap items-center gap-3">
+            <IconButton
+              label="Refrescar datos del servidor"
+              icon={<RefreshCw className={`w-4 h-4 ${isPending ? 'animate-spin' : ''}`} />}
               onClick={() => {
                 startTransition(() => {
                   router.refresh();
                 });
               }}
               disabled={isPending}
-              title="Refrescar datos del servidor"
-              className="p-2 border border-[#D9D9D9] rounded-[2px] text-gray-600 hover:text-black hover:bg-gray-50 transition-colors cursor-pointer"
-            >
-              <RefreshCw className={`w-4 h-4 ${isPending ? 'animate-spin' : ''}`} />
-            </button>
+            />
 
             <Button
               variant="secundario"
@@ -245,50 +216,49 @@ export const RawMaterialsView: React.FC<RawMaterialsViewProps> = ({
                 setPreselectedAdjustItemId(null);
                 setAdjustmentModalOpen(true);
               }}
-              className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider"
             >
-              AJUSTE DE STOCK
+              Ajuste de stock
             </Button>
 
             {activeTab === 'PRO' ? (
-              <Button
-                variant="azul"
-                onClick={() => setCreateProductOpen(true)}
-                className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider"
-              >
-                NUEVO PRODUCTO
+              <Button variant="secundario" onClick={() => setCreateProductOpen(true)}>
+                Nuevo producto
               </Button>
             ) : (
-              <Button
-                variant="azul"
-                onClick={() => setCreateOpen(true)}
-                className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider"
-              >
-                NUEVA MATERIA PRIMA/COMPONENTE
+              <Button variant="secundario" onClick={() => setCreateOpen(true)}>
+                Nueva materia prima/componente
               </Button>
             )}
           </div>
-
         </div>
 
         {movementNotice && (
-          <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-[2px] text-xs font-semibold text-emerald-800 flex justify-between items-center">
+          <div className="mt-4 p-3 border border-steffen-green rounded-[5px] text-xs font-semibold text-steffen-surface flex justify-between items-center">
             <span>{movementNotice}</span>
-            <button onClick={() => setMovementNotice(null)} className="text-gray-400 hover:text-black font-bold">
+            <button
+              onClick={() => setMovementNotice(null)}
+              aria-label="Cerrar aviso"
+              className="text-steffen-surface/60 hover:text-steffen-surface font-bold"
+            >
               ✕
             </button>
           </div>
         )}
 
         {actionError && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-[2px] text-xs font-semibold text-[#DD0000] flex justify-between items-center">
+          <div className="mt-4 p-3 border border-steffen-red rounded-[5px] text-xs font-semibold text-steffen-red flex justify-between items-center">
             <span>{actionError}</span>
-            <button onClick={() => setActionError(null)} className="text-gray-400 hover:text-black font-bold">
+            <button
+              onClick={() => setActionError(null)}
+              aria-label="Cerrar error"
+              className="text-steffen-surface/60 hover:text-steffen-surface font-bold"
+            >
               ✕
             </button>
           </div>
         )}
 
+      <Panel>
         {/* Contenido según pestaña activa */}
         {activeTab === 'PRO' ? (
           <ProductsView
@@ -303,82 +273,48 @@ export const RawMaterialsView: React.FC<RawMaterialsViewProps> = ({
           />
         ) : (
           /* Contenedor Interior de Tabla idéntico a Figma */
-          <div className="rounded-[5px] border border-[#D9D9D9] p-5 mt-5">
+          <div>
             
-            {/* Encabezado: Título a la izquierda, Buscador y Filtros a la derecha */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-black pb-2 mb-4">
-              <h2 className="text-xl font-bold text-black tracking-tight">
-                Listado de materia prima
-              </h2>
-
-              <div className="flex items-center gap-4">
-                {/* Filtro rápido bajo mínimo */}
-                <button
-                  type="button"
-                  onClick={() => setOnlyCritical(!onlyCritical)}
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold transition-colors ${
-                    onlyCritical
-                      ? 'bg-red-100 text-red-800 border border-red-300 font-bold'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  <AlertTriangle className="w-3 h-3 text-red-600" />
-                  <span>Bajo mínimo ({criticalCount})</span>
-                </button>
-
-                {/* Toggle inactivos */}
-                <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={showInactive}
-                    onChange={(e) => setShowInactive(e.target.checked)}
-                    className="rounded border-gray-300 text-[#0E50A0] focus:ring-[#0E50A0] h-3.5 w-3.5"
-                  />
-                  <span>Inactivos</span>
-                </label>
-
-                {/* Input Buscar como en Figma */}
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Buscar"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="h-8 pl-3 pr-8 text-xs border border-[#D9D9D9] rounded-lg w-52 sm:w-64 focus:outline-none focus:border-[#0E50A0] placeholder-gray-400 text-black"
-                  />
-                  <Search className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-              </div>
-            </div>
+            {/* Encabezado (Figma Stock): TÍTULO ——— filtros + Buscar */}
+            <StockListToolbar
+              title="Materia prima"
+              criticalCount={criticalCount}
+              onlyCritical={onlyCritical}
+              onToggleCritical={() => setOnlyCritical(!onlyCritical)}
+              showInactive={showInactive}
+              onShowInactiveChange={setShowInactive}
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+            />
 
             {/* Tabla de Materia Prima con columnas exactas de Figma SOLAPA-MATERIA-Y-COMPONENTES.png */}
             {filteredMaterials.length === 0 ? (
-              <div className="py-12 text-center text-gray-400 text-xs font-medium">
+              <div className="py-12 text-center text-steffen-surface/60 text-xs">
                 No hay materias primas registradas para los filtros seleccionados.
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-xs">
+                <table className={tableStyles.table}>
                   <thead>
-                    <tr className="bg-[#D9D9D9] text-black font-bold uppercase text-[11px]">
-                      <th className="py-2.5 px-3 text-left">CODIGO</th>
-                      <th className="py-2.5 px-3 text-left">PROVEEDOR</th>
-                      <th className="py-2.5 px-3 text-left">MATERIA PRIMA</th>
-                      <th className="py-2.5 px-3 text-left">INCI</th>
-                      <th className="py-2.5 px-3 text-left">ULTIMA COMPRA</th>
-                      <th className="py-2.5 px-3 text-left">ULTIMA ACT PRECIO</th>
-                      <th className="py-2.5 px-3 text-right">P.U. USD</th>
-                      <th className="py-2.5 px-3 text-right">P.U $</th>
-                      <th className="py-2.5 px-3 text-right">P.U+ IVA</th>
-                      <th className="py-2.5 px-3 text-right">STOCK ACTUAL</th>
-                      <th className="py-2.5 px-3 text-right">STOCK MINIMO</th>
-                      <th className="py-2.5 px-3 text-center">ACCIONES</th>
+                    <tr className={tableStyles.headRow}>
+                      <th className="py-2 px-3 text-left">CODIGO</th>
+                      <th className="py-2 px-3 text-left">PROVEEDOR</th>
+                      <th className="py-2 px-3 text-left">MATERIA PRIMA</th>
+                      <th className="py-2 px-3 text-left">INCI</th>
+                      <th className="py-2 px-3 text-left">ULTIMA COMPRA</th>
+                      <th className="py-2 px-3 text-left">ULTIMA ACT PRECIO</th>
+                      <th className="py-2 px-3 text-right">P.U. USD</th>
+                      <th className="py-2 px-3 text-right">P.U $</th>
+                      <th className="py-2 px-3 text-right">P.U+ IVA</th>
+                      <th className="py-2 px-3 text-right">STOCK ACTUAL</th>
+                      <th className="py-2 px-3 text-right">STOCK MINIMO</th>
+                      <th className="py-2 px-3 text-center">ACCIONES</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#E5E5E5]">
+                  <tbody>
                     {filteredMaterials.map((m) => {
                       const prices = getPriceDisplays(m);
-                      // Regla Figma: Si está bajo mínimo, fila completa en color salmón/rojo claro (#FFA8A8)
+                      // Regla Figma: Si está bajo mínimo, fila completa en color salmón/rojo claro (#B10000)
                       const isRowCritical = m.isBelowMinimum;
 
                       return (
@@ -386,83 +322,83 @@ export const RawMaterialsView: React.FC<RawMaterialsViewProps> = ({
                           key={m.id}
                           className={`transition-colors ${
                             isRowCritical
-                              ? 'bg-[#FFA8A8] text-black font-medium'
+                              ? tableStyles.rowAlert
                               : !m.active
-                              ? 'opacity-60 bg-gray-50 text-gray-600'
-                              : 'hover:bg-gray-50 text-black'
+                              ? `${tableStyles.row} opacity-60`
+                              : `${tableStyles.row} hover:bg-steffen-gray/40`
                           }`}
                         >
                           {/* Código */}
-                          <td className="py-3 px-3 font-bold font-mono">
+                          <td className="py-1.5 px-3 font-bold">
                             {m.code}
                           </td>
 
                           {/* Proveedor */}
-                          <td className="py-3 px-3 font-semibold">
+                          <td className="py-1.5 px-3 font-semibold">
                             {m.supplierName || '-'}
                           </td>
 
                           {/* Nombre Materia Prima */}
-                          <td className="py-3 px-3 font-medium">
+                          <td className="py-1.5 px-3 font-medium">
                             {m.name}
                           </td>
 
                           {/* INCI */}
-                          <td className="py-3 px-3 italic text-gray-700">
+                          <td className="py-1.5 px-3 italic text-gray-700">
                             {m.inci || '-'}
                           </td>
 
                           {/* Última Compra */}
-                          <td className="py-3 px-3 text-gray-700">
+                          <td className="py-1.5 px-3 text-gray-700">
                             -
                           </td>
 
                           {/* Última Act Precio */}
-                          <td className="py-3 px-3 text-gray-700">
+                          <td className="py-1.5 px-3 text-gray-700">
                             {m.priceUpdatedAt
                               ? new Date(m.priceUpdatedAt).toLocaleDateString('es-AR')
                               : '-'}
                           </td>
 
                           {/* P.U. USD */}
-                          <td className="py-3 px-3 text-right font-mono">
+                          <td className="py-1.5 px-3 text-right">
                             {prices.usd}
                           </td>
 
                           {/* P.U $ (Neto) */}
-                          <td className="py-3 px-3 text-right font-mono">
+                          <td className="py-1.5 px-3 text-right">
                             {prices.ars}
                           </td>
 
                           {/* P.U+ IVA */}
-                          <td className="py-3 px-3 text-right font-mono font-semibold">
+                          <td className="py-1.5 px-3 text-right font-semibold">
                             {prices.grossArs}
                           </td>
 
                           {/* Stock Actual */}
-                          <td className="py-3 px-3 text-right font-mono font-bold">
+                          <td className="py-1.5 px-3 text-right">
                             {m.stockCurrentKg} kg
                           </td>
 
                           {/* Stock Mínimo */}
-                          <td className="py-3 px-3 text-right font-mono text-gray-700">
+                          <td className="py-1.5 px-3 text-right text-gray-700">
                             {m.stockMinimumKg} kg
                           </td>
 
                           {/* Acciones */}
-                          <td className="py-3 px-3 text-center whitespace-nowrap space-x-1">
+                          <td className="py-1.5 px-3 text-center whitespace-nowrap space-x-1">
                             <button
                               onClick={() => setSelectedRawMaterial(m)}
                               title="Editar Ficha / Cotización"
-                              className="p-1 rounded hover:bg-black/10 text-[#0E50A0] transition-colors cursor-pointer"
+                              className="p-1 rounded-[5px] hover:bg-steffen-gray text-steffen-surface/80 hover:text-steffen-surface transition-colors cursor-pointer"
                             >
                               <Edit3 className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleToggleActiveClick(m)}
                               title={m.active ? 'Desactivar insumo' : 'Activar insumo'}
-                              className={`p-1 rounded hover:bg-black/10 transition-colors cursor-pointer ${
-                                m.active ? 'text-gray-500 hover:text-red-700' : 'text-[#008102]'
+                              className={`p-1 rounded-[5px] hover:bg-steffen-gray transition-colors cursor-pointer ${
+                                m.active ? 'text-steffen-surface/60 hover:text-steffen-surface' : 'text-steffen-green'
                               }`}
                             >
                               <Power className="w-3.5 h-3.5" />
@@ -478,35 +414,32 @@ export const RawMaterialsView: React.FC<RawMaterialsViewProps> = ({
 
           </div>
         )}
+      </Panel>
 
-      </div>
+      {/* MOVIMIENTOS DE STOCK (Figma Stock) */}
+      <Panel>
+        <SectionHeader
+          title="Movimientos de stock"
+          actions={
+            <span className="text-xs text-steffen-surface/60">Últimos {initialMovements.length} movimientos (MST)</span>
+          }
+        />
 
-      {/* Tarjeta Inferior de Movimientos de Stock según Figma: STOCK.png */}
-      <div className="bg-white rounded-[5px] border border-[#D9D9D9] p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-black tracking-tight">
-            Movimientos de stock
-          </h2>
-          <span className="text-xs text-gray-500 font-medium">
-            Últimos {initialMovements.length} movimientos (MST)
-          </span>
-        </div>
-
-        <div className="overflow-x-auto max-h-[420px] overflow-y-auto">
-          <table className="w-full text-xs">
-            <thead className="sticky top-0 bg-[#D9D9D9] z-10">
-              <tr className="text-black font-bold text-left uppercase text-[11px]">
-                <th className="py-2.5 px-3">CODIGO</th>
-                <th className="py-2.5 px-3">FECHA</th>
-                <th className="py-2.5 px-3">TIPO</th>
-                <th className="py-2.5 px-3">REGISTRO</th>
-                <th className="py-2.5 px-3">DESCRIPCION</th>
+        <div className="overflow-x-auto max-h-[315px] overflow-y-auto">
+          <table className={tableStyles.table}>
+            <thead className="sticky top-0 z-10">
+              <tr className={tableStyles.headRow}>
+                <th className="py-2 px-3 text-left">CODIGO</th>
+                <th className="py-2 px-3 text-left">FECHA</th>
+                <th className="py-2 px-3 text-left">TIPO</th>
+                <th className="py-2 px-3 text-left">REGISTRO</th>
+                <th className="py-2 px-3 text-left">DESCRIPCION</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E5E5E5]">
+            <tbody>
               {initialMovements.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-gray-400 font-medium text-xs">
+                  <td colSpan={5} className="py-8 text-center text-steffen-surface/60 text-xs">
                     No hay movimientos de stock registrados en el sistema.
                   </td>
                 </tr>
@@ -514,43 +447,23 @@ export const RawMaterialsView: React.FC<RawMaterialsViewProps> = ({
                 initialMovements.map((m) => {
                   const isPositive = m.quantityDeltaFormatted.startsWith('+');
                   return (
-                    <tr key={m.id} className="hover:bg-gray-50 text-black">
-                      <td className="py-2.5 px-3 font-bold font-mono text-[11px]">
-                        {m.code}
-                      </td>
-                      <td className="py-2.5 px-3 text-[11px] text-gray-700 whitespace-nowrap">
-                        {m.businessDate || m.createdAt.slice(0, 10)}
-                      </td>
-                      <td className="py-2.5 px-3 text-[11px] whitespace-nowrap">
-                        <span
-                          className={`px-2 py-0.5 rounded-[2px] font-bold text-[10px] uppercase ${
-                            m.movementType === 'AJUSTE'
-                              ? 'bg-amber-100 text-amber-800'
-                              : m.movementType === 'FABRICACIÓN' || m.movementType === 'ENVASADO'
-                              ? 'bg-blue-100 text-[#0E50A0]'
-                              : m.movementType === 'VENTA'
-                              ? 'bg-rose-100 text-rose-800'
-                              : 'bg-emerald-100 text-emerald-800'
-                          }`}
-                        >
-                          {m.movementType}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 text-[11px]">
-                        <span className="font-semibold text-black">
+                    <tr key={m.id} className={tableStyles.row}>
+                      <td className="py-1.5 px-3">{m.code}</td>
+                      <td className="py-1.5 px-3 whitespace-nowrap">{m.businessDate || m.createdAt.slice(0, 10)}</td>
+                      <td className="py-1.5 px-3 whitespace-nowrap">{m.movementType}</td>
+                      <td className="py-1.5 px-3">
+                        <span>
                           [{m.itemCode}] {m.itemName}
                         </span>
                         <span
-                          className={`ml-2 font-mono font-bold whitespace-nowrap ${
-                            isPositive ? 'text-emerald-700' : 'text-rose-700'
+                          className={`ml-2 font-semibold whitespace-nowrap ${
+                            isPositive ? 'text-steffen-green' : 'text-steffen-red'
                           }`}
                         >
                           {m.quantityDeltaFormatted}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3 text-[11px] text-gray-600">
-                        {m.description}
-                      </td>
+                      <td className="py-1.5 px-3 text-steffen-surface/80">{m.description}</td>
                     </tr>
                   );
                 })
@@ -558,7 +471,7 @@ export const RawMaterialsView: React.FC<RawMaterialsViewProps> = ({
             </tbody>
           </table>
         </div>
-      </div>
+      </Panel>
 
       {/* Modal de Alta */}
       <NewRawMaterialModal

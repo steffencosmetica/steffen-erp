@@ -1,24 +1,37 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getAuthenticatedUser, isUserAuthorized } from '@/auth/guard';
 import {
-  getCustomerService,
   getSupplierService,
+  getSupplierItemRepository,
   getMasterItemService,
   getFormulaService,
   getProductService,
   getFactoryService,
   getPatrimonyService,
-  getOrderService,
+  getPlanningService,
+  getReportService,
 } from '@/services/composition';
-import { Decimal, toNumericString } from '@/domain/decimal';
-import { serializeBulkLot } from '@/actions/factory.dto';
+import { toNumericString } from '@/domain/decimal';
+import { compareStockPriority, isBelowStockMinimum } from '@/domain/stock-priority';
+import {
+  serializeBulkLot,
+  serializeNextManufacturingProduct,
+  type NextManufacturingProductDTO,
+} from '@/actions/factory.dto';
+import { selectNextManufacturingProducts, urgentProductIdsFromPlanning } from '@/domain/next-manufacturing';
+import { DashboardLowStock, type LowStockMaterialDTO } from '@/ui/components/DashboardLowStock';
+import { serializePlanningMatrix, type PlanningMatrixDTO } from '@/actions/planning.dto';
 import type { BaseProductOption } from '@/ui/modals/RegistrarFabricacionModal';
 import type { PackagingProductOption } from '@/ui/modals/RegistrarEnvasadoModal';
-import { DashboardQuickAccess } from '@/ui/components/DashboardQuickAccess';
+import { DashboardActionsProvider, DashboardActionButton } from '@/ui/components/DashboardQuickAccess';
 import { DashboardCuentasCard } from '@/ui/components/DashboardCuentasCard';
-import { formatArs, formatKg } from '@/lib/format';
+import { PlanningMatrixTable } from '@/ui/components/PlanningMatrixTable';
+import { SectionHeader, KpiCard, Panel, IconTile } from '@/ui/components/UIComponents';
+import { UsdRateCard } from '@/ui/components/UsdRateCard';
+import { ErpIcon } from '@/ui/components/ErpIcon';
+import { formatArs } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,58 +40,180 @@ export const metadata = {
   description: 'Panel operativo principal y centro de control según Figma.',
 };
 
+// Cantidad de ítems más urgentes mostrados en BAJO STOCK (orden normativo por ratio).
+const LOW_STOCK_LIMIT = 5;
+
+/** Importes de KPI: misma escala tipográfica compacta, sin desbordar la card. */
+const MoneyValue: React.FC<{ value: string }> = ({ value }) => (
+  <span className="text-[19px] whitespace-nowrap">{value}</span>
+);
+
+/** Total facturado: Display ExtraLight (Inter 200), como las cards de caja (DESIGN.md §5.1). */
+const LightMoneyValue: React.FC<{ value: string }> = ({ value }) => (
+  <span className="text-[22px] ui-display-extralight whitespace-nowrap">{value}</span>
+);
+
+/* ==========================================================================
+   REPORTE MENSUAL — v_current_reports (BUSINESS_RULES §36)
+   ========================================================================== */
+
+function MonthlyKpisGrid({
+  openOrders,
+  sales,
+  billed,
+  gain,
+  error,
+}: {
+  openOrders: React.ReactNode;
+  sales: React.ReactNode;
+  billed: React.ReactNode;
+  gain: React.ReactNode;
+  error?: string;
+}) {
+  return (
+    <>
+      <div className="grid grid-cols-2 md:grid-cols-[1fr_1fr_1.35fr] gap-x-4 gap-y-3 items-stretch">
+        <KpiCard
+          className="min-h-[109px]"
+          label="Pedidos abiertos"
+          value={openOrders}
+          icon={<ErpIcon name="orden" tone="chrome" className="w-10 h-10" />}
+        />
+        <KpiCard
+          className="min-h-[109px]"
+          label="Ventas del mes"
+          value={sales}
+          icon={<ErpIcon name="ingresos" tone="chrome" className="w-10 h-10" />}
+        />
+        <div className="col-span-2 md:col-span-1 md:row-span-2 flex flex-col gap-3">
+          <KpiCard className="flex-1" label="Total facturado" value={billed} labelClassName="text-steffen-gold" />
+          <KpiCard className="flex-1" label="Ganancia" value={gain} variant="positive" />
+        </div>
+        <DashboardActionButton action="order" appearance="secondary" className="w-full" />
+        {/* VER VENTAS (Figma): Ventas abre por defecto el período comercial vigente (fecha de la base). */}
+        <Link
+          href="/ventas"
+          className="ui-btn-dark h-[30px] px-5 w-full inline-flex items-center justify-center rounded-[5px] text-sm font-semibold uppercase transition-colors"
+        >
+          Ver ventas
+        </Link>
+      </div>
+      {error && <p className="mt-2 text-xs text-steffen-red">{error}</p>}
+    </>
+  );
+}
+
+async function MonthlyKpis() {
+  try {
+    const reports = await getReportService().getCurrentReports();
+    return (
+      <MonthlyKpisGrid
+        openOrders={reports.openOrders}
+        sales={reports.salesCurrentMonth}
+        billed={<LightMoneyValue value={formatArs(reports.billedCurrentMonthArs)} />}
+        gain={<MoneyValue value={formatArs(reports.gainCurrentMonthArs)} />}
+      />
+    );
+  } catch {
+    return (
+      <MonthlyKpisGrid
+        openOrders="—"
+        sales="—"
+        billed="—"
+        gain="—"
+        error="No se pudieron cargar las métricas del mes."
+      />
+    );
+  }
+}
+
+/* ==========================================================================
+   RESUMEN DE PEDIDOS — mismo motor de planificación que Pedidos (§35.1)
+   ========================================================================== */
+
+function PlanningSummary({ planning }: { planning: PlanningMatrixDTO | null }) {
+  if (!planning) {
+    return <p className="py-12 text-center text-xs text-steffen-red">No se pudo cargar el resumen de pedidos.</p>;
+  }
+  return <PlanningMatrixTable planning={planning} />;
+}
+
+/* ==========================================================================
+   BAJO STOCK — MPR/COM debajo del mínimo, prioridad por ratio (§8.3)
+   ========================================================================== */
+
+async function LowStock({
+  products,
+  baseProducts,
+  urgencyUnavailable,
+}: {
+  products: NextManufacturingProductDTO[];
+  baseProducts: BaseProductOption[];
+  urgencyUnavailable: boolean;
+}) {
+  let materials: LowStockMaterialDTO[];
+  try {
+    const service = getMasterItemService();
+    const [mpr, com] = await Promise.all([service.listMasterItems('MPR', false), service.listMasterItems('COM', false)]);
+    materials = [...mpr, ...com]
+      .filter((it) => it.active && isBelowStockMinimum(it))
+      .sort(compareStockPriority)
+      .slice(0, LOW_STOCK_LIMIT)
+      .map((it) => ({
+        id: it.id,
+        name: it.name,
+        itemType: it.itemType === 'COM' ? 'COM' : 'MPR',
+        supplierName: it.referenceSupplierName,
+        balance: toNumericString(it.balance),
+        unitCostGrossArs: it.currentTheoreticalCostGrossArs ? toNumericString(it.currentTheoreticalCostGrossArs) : null,
+      }));
+  } catch {
+    return (
+      <Panel variant="alert">
+        <p className="py-6 text-center text-xs text-steffen-red">No se pudo cargar el bajo stock.</p>
+      </Panel>
+    );
+  }
+
+  return (
+    <DashboardLowStock
+      materials={materials}
+      products={products}
+      baseProducts={baseProducts}
+      urgencyUnavailable={urgencyUnavailable}
+    />
+  );
+}
+
+const BlockLoading: React.FC<{ label: string }> = ({ label }) => (
+  <p className="py-12 text-center text-xs text-steffen-muted">Cargando {label}…</p>
+);
+
 export default async function ErpHomePage() {
   const user = await getAuthenticatedUser();
   if (!user || !isUserAuthorized(user)) {
     redirect('/login');
   }
 
-  // Carga de datos reales sin mocks para el Dashboard
-  const [
-    mprItems,
-    customers,
-    suppliers,
-    baseProductRecords,
-    productRecords,
-    openLotsRecords,
-    patrimonialSummary,
-    openOrdersCount,
-  ] = await Promise.all([
-    getMasterItemService().listMasterItems('MPR').catch(() => []),
-    getCustomerService().listCustomers().catch(() => []),
+  // Datos de las operaciones rápidas y de CUENTAS (fuentes reales).
+  const [suppliers, usdRate, baseProductRecords, productRecords, openLotsRecords, patrimonialSummary, planningMatrix] = await Promise.all([
     getSupplierService().listSuppliers().catch(() => []),
+    getSupplierItemRepository()
+      .getCurrentUsdExchangeRate()
+      .catch(() => null),
     getFormulaService().listBaseProducts(true).catch(() => []),
     getProductService().listProducts(false).catch(() => []),
     getFactoryService().listOpenBulkLots().catch(() => []),
-    getPatrimonyService().getSummary().catch(() => ({
-      cajaSteffen: new Decimal(0),
-      cajaMercadoLibre: new Decimal(0),
-      deudasClientes: new Decimal(0),
-      deudasProveedores: new Decimal(0),
-      neto: new Decimal(0),
-    })),
-    getOrderService().countOpenOrders().catch(() => 0),
+    getPatrimonyService()
+      .getSummary()
+      .catch(() => null),
+    // Mismo motor que Pedidos: alimenta RESUMEN DE PEDIDOS y la urgencia de Producto Final.
+    getPlanningService()
+      .getPlanningMatrix()
+      .catch(() => null),
   ]);
 
-  // Filtrar insumos críticos reales (por debajo del mínimo)
-  const criticalItems = mprItems
-    .filter((it) => it.stockMinimum && it.balance.lt(it.stockMinimum) && it.active)
-    .sort((a, b) => {
-      const minA = a.stockMinimum || new Decimal(1);
-      const minB = b.stockMinimum || new Decimal(1);
-      const ratioA = a.balance.div(minA).toNumber();
-      const ratioB = b.balance.div(minB).toNumber();
-      return ratioA - ratioB;
-    });
-
-  // Cálculo de totales financieros reales
-  const totalCustomerDebt = customers.reduce((acc, c) => {
-    return acc.plus(c.balanceArs.gt(0) ? c.balanceArs : new Decimal(0));
-  }, new Decimal(0));
-
-  const totalSupplierDebt = suppliers.reduce((acc, s) => {
-    return acc.plus(s.balance.gt(0) ? s.balance : new Decimal(0));
-  }, new Decimal(0));
+  const currentUsdRate = usdRate ? toNumericString(usdRate) : null;
 
   const supplierOptions = suppliers.map((s) => ({
     id: s.id,
@@ -98,6 +233,12 @@ export default async function ErpHomePage() {
       code: bp.code,
     }));
 
+  const planning = planningMatrix ? serializePlanningMatrix(planningMatrix) : null;
+  const nextManufacturingProducts = selectNextManufacturingProducts(
+    productRecords,
+    urgentProductIdsFromPlanning(planning?.products ?? [])
+  ).map(serializeNextManufacturingProduct);
+
   const productsForPackaging: PackagingProductOption[] = productRecords
     .filter((p) => p.active)
     .map((p) => ({
@@ -110,250 +251,101 @@ export default async function ErpHomePage() {
     }));
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-      
-      {/* =========================================================================
-          COLUMNA IZQUIERDA DE FIGMA DASHBOARD.png (5 de 12 columnas)
-          Contiene: REPORTES -> ACCESO RAPIDO -> ALERTA STOCK MP/COMP
-         ========================================================================= */}
-      <div className="lg:col-span-5 space-y-6">
-        
-        {/* 1. REPORTES */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <span className="font-bold text-xs uppercase tracking-wider text-[#D2AB68]">
-              REPORTES
-            </span>
-            <div className="flex-1 h-[2px] bg-[#D2AB68]/60"></div>
+    <DashboardActionsProvider
+      suppliers={supplierOptions}
+      baseProducts={baseProductsForFabrication}
+      bulkLots={bulkLotsDTO}
+      packagingProducts={productsForPackaging}
+    >
+      <div className="space-y-8">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start xl:items-stretch">
+          {/* Columna izquierda (Figma Dashboard): REPORTE MENSUAL → ACCESO RÁPIDO + COTIZACIÓN */}
+          <div className="xl:col-span-5 space-y-6">
+            <div>
+              <SectionHeader title="Reporte mensual" />
+              <Suspense
+                fallback={<MonthlyKpisGrid openOrders="…" sales="…" billed="…" gain="…" />}
+              >
+                <MonthlyKpis />
+              </Suspense>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-[auto_minmax(0,1fr)] gap-x-6 gap-y-4 items-start">
+              <div>
+                <SectionHeader title="Acceso rápido" />
+                <div className="flex flex-wrap items-start gap-3">
+                  <DashboardActionButton action="purchase" appearance="tile" />
+                  <DashboardActionButton action="manufacturing" appearance="tile" />
+                  <DashboardActionButton action="packaging" appearance="tile" />
+                  <IconTile
+                    href="/precios"
+                    label="Precios"
+                    title="Listas de precios"
+                    icon={<ErpIcon name="lista-precios" className="w-7 h-7" />}
+                  />
+                </div>
+              </div>
+              {/* Cotización dólar: misma implementación que Administración (componente compartido). */}
+              <UsdRateCard currentUsdRate={currentUsdRate} layout="stacked" className="sm:mt-6" />
+            </div>
+
           </div>
 
-          <div className="bg-white rounded-2xl border border-[#D9D9D9] p-4 shadow-xs">
-            <div className="grid grid-cols-2 gap-3.5">
-              
-              {/* Tarjeta 1: VENTAS DEL MES */}
-              <div className="border border-[#D2AB68] rounded-xl p-3.5 text-center bg-white">
-                <div className="text-3xl font-extrabold text-black">11</div>
-                <div className="text-[10px] font-bold text-black uppercase tracking-tight mt-1">
-                  VENTAS DEL MES
-                </div>
-              </div>
-
-              {/* Tarjeta 2: TOTAL FACTURADO */}
-              <div className="border border-[#D2AB68] rounded-xl p-3.5 text-center bg-white">
-                <div className="text-lg sm:text-xl font-extrabold text-black truncate">
-                  $ 6.536.464
-                </div>
-                <div className="text-[10px] font-bold text-black uppercase tracking-tight mt-1">
-                  TOTAL FACTURADO
-                </div>
-              </div>
-
-              {/* Tarjeta 3: MARGEN NETO (Verde Sólido Figma) */}
-              <div className="bg-[#008102] rounded-xl p-3.5 text-center text-white">
-                <div className="text-lg sm:text-xl font-extrabold text-white truncate">
-                  $ 4.234.242
-                </div>
-                <div className="text-[10px] font-bold text-white uppercase tracking-tight mt-1">
-                  MARGEN NETO
-                </div>
-              </div>
-
-              {/* Tarjeta 4: PEDIDOS ABIERTOS (Negro Sólido Figma) */}
-              <div className="bg-black rounded-xl p-3.5 text-center text-white">
-                <div className="text-3xl font-extrabold text-white">{openOrdersCount}</div>
-                <div className="text-[10px] font-bold text-white uppercase tracking-tight mt-1">
-                  PEDIDOS ABIERTOS
-                </div>
-              </div>
-
+          {/* Columna derecha: RESUMEN DE PEDIDOS (informativo: no reserva ni genera movimientos) */}
+          <div className="xl:col-span-7 xl:relative">
+            {/* En desktop el contenido va en absoluto: la altura de la fila la define el bloque izquierdo
+                y el panel la acompaña exactamente (scroll interno si la planificación es más larga). */}
+            <div className="xl:absolute xl:inset-0 xl:flex xl:flex-col">
+              <SectionHeader title="Resumen de pedidos" />
+              <Panel className="xl:flex-1 xl:min-h-0 xl:overflow-y-auto">
+                <PlanningSummary planning={planning} />
+              </Panel>
             </div>
           </div>
         </div>
 
-        {/* 2. ACCESO RAPIDO (2 columnas x 3 filas idénticas a Figma DASHBOARD.png) */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <span className="font-bold text-xs uppercase tracking-wider text-[#D2AB68]">
-              ACCESO RAPIDO
-            </span>
-            <div className="flex-1 h-[2px] bg-[#D2AB68]/60"></div>
-          </div>
-
-          <DashboardQuickAccess
-            suppliers={supplierOptions}
-            baseProducts={baseProductsForFabrication}
-            bulkLots={bulkLotsDTO}
-            packagingProducts={productsForPackaging}
-          />
-        </div>
-
-        {/* 3. ALERTA STOCK MP/COMP & SIMULAR COMPRA con borde rojo según Figma */}
-        <div className="border-2 border-[#DD0000] rounded-2xl bg-white p-4 shadow-xs space-y-3">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-gray-200 pb-2">
-            <div className="bg-[#DD0000] text-white font-bold text-xs uppercase px-3 py-1.5 rounded">
-              ALERTA STOCK MP/COMP
-            </div>
-            <div className="font-bold text-xs uppercase text-black">
-              SIMULAR COMPRA
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-black text-black font-bold uppercase text-left">
-                  <th className="py-2 px-1.5">CODIGO</th>
-                  <th className="py-2 px-1.5">PRODUCTO</th>
-                  <th className="py-2 px-1.5">PROVEEDOR</th>
-                  <th className="py-2 px-1.5 text-right">ACTUAL</th>
-                  <th className="py-2 px-1.5 text-center">CANTIDAD</th>
-                  <th className="py-2 px-1.5 text-right">TOTAL</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {criticalItems.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="py-6 text-center text-gray-500 font-medium">
-                      ✓ Todas las materias primas se encuentran en niveles óptimos de stock.
-                    </td>
-                  </tr>
-                ) : (
-                  criticalItems.slice(0, 5).map((it) => {
-                    const priceNet = it.referencePriceNet?.toNumber() || 0;
-                    const min = it.stockMinimum || new Decimal(0);
-                    const stockDiff = Math.max(0, min.minus(it.balance).toNumber());
-                    const approxTotal = stockDiff * priceNet * 1.21;
-
-                    return (
-                      <tr key={it.id} className="hover:bg-red-50/40">
-                        <td className="py-2 px-1.5 font-mono font-bold text-black">{it.code}</td>
-                        <td className="py-2 px-1.5 font-medium text-black truncate max-w-[100px]">{it.name}</td>
-                        <td className="py-2 px-1.5 text-gray-700">{it.referenceSupplierCode || '-'}</td>
-                        <td className="py-2 px-1.5 text-right font-bold text-[#DD0000]">
-                          {formatKg(it.balance)} kg
-                        </td>
-                        <td className="py-2 px-1.5 text-center">
-                          <span className="px-1.5 py-0.5 border border-gray-300 rounded bg-gray-50 font-mono text-[11px]">
-                            {Math.ceil(stockDiff)}
-                          </span>
-                        </td>
-                        <td className="py-2 px-1.5 text-right font-mono font-bold text-black">
-                          {formatArs(approxTotal)}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="flex justify-between items-center pt-2 border-t border-gray-200 text-xs font-bold text-black px-1">
-            <Link href="/stock" className="text-[#0E50A0] hover:underline">
-              Ir a Stock →
-            </Link>
-            <span>
-              TOTAL: {formatArs(
-                criticalItems.reduce((acc, it) => {
-                  const price = it.referencePriceNet || new Decimal(0);
-                  const min = it.stockMinimum || new Decimal(0);
-                  const diff = min.minus(it.balance);
-                  return acc.plus(diff.gt(0) ? diff.mul(price).mul(1.21) : new Decimal(0));
-                }, new Decimal(0))
-              )}
-            </span>
+        {/* CUENTAS (Figma): fila propia con ancho suficiente para cards 2×2 con importes completos;
+            a la derecha el frame reserva "Reporte de ventas" (no implementado). */}
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+          <div className="xl:col-span-12 w-fit max-w-full">
+            <SectionHeader title="Cuentas" />
+            <DashboardCuentasCard
+              cajaSteffen={patrimonialSummary ? toNumericString(patrimonialSummary.cajaSteffen) : '0'}
+              cajaMercadoLibre={patrimonialSummary ? toNumericString(patrimonialSummary.cajaMercadoLibre) : '0'}
+              deudasClientes={patrimonialSummary ? toNumericString(patrimonialSummary.deudasClientes) : '0'}
+              deudasProveedores={patrimonialSummary ? toNumericString(patrimonialSummary.deudasProveedores) : '0'}
+              neto={patrimonialSummary ? toNumericString(patrimonialSummary.neto) : '0'}
+              error={patrimonialSummary ? null : 'No se pudieron cargar los saldos de cuentas.'}
+              actions={
+                <>
+                  <DashboardActionButton action="supplier-payment" appearance="tile" />
+                  <DashboardActionButton action="customer-payment" appearance="tile" />
+                  <DashboardActionButton action="expense" appearance="tile" />
+                  <DashboardActionButton action="cash-deposit" appearance="tile" />
+                </>
+              }
+            />
           </div>
         </div>
 
+        {/* BAJO STOCK (Figma): MPR/COM + simular compra · Producto Final + simular fabricación */}
+        <div>
+          <SectionHeader title="Bajo stock" variant="alert" />
+          <Suspense
+            fallback={
+              <Panel variant="alert">
+                <BlockLoading label="bajo stock" />
+              </Panel>
+            }
+          >
+            <LowStock
+              products={nextManufacturingProducts}
+              baseProducts={baseProductsForFabrication}
+              urgencyUnavailable={planning === null}
+            />
+          </Suspense>
+        </div>
       </div>
-
-      {/* =========================================================================
-          COLUMNA DERECHA DE FIGMA DASHBOARD.png (7 de 12 columnas)
-          Contiene: RESUMEN DE PEDIDOS -> CUENTAS
-         ========================================================================= */}
-      <div className="lg:col-span-7 space-y-6">
-        
-        {/* 1. RESUMEN DE PEDIDOS */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <span className="font-bold text-xs uppercase tracking-wider text-[#D2AB68]">
-              RESUMEN DE PEDIDOS
-            </span>
-            <div className="flex-1 h-[2px] bg-[#D2AB68]/60"></div>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-[#D9D9D9] p-4 shadow-xs">
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="bg-[#D9D9D9] text-black font-bold uppercase text-left">
-                    <th className="py-2.5 px-3">PRODUCTO</th>
-                    <th className="py-2.5 px-3 text-center">PED01<br /><span className="text-[10px] text-gray-600 font-normal">Salceh, Tarek</span></th>
-                    <th className="py-2.5 px-3 text-center">PED02<br /><span className="text-[10px] text-gray-600 font-normal">Salceh, Tarek</span></th>
-                    <th className="py-2.5 px-3 text-center">TOTAL</th>
-                    <th className="py-2.5 px-3 text-center">STOCK</th>
-                    <th className="py-2.5 px-3 text-center">FALTANTE</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 text-black">
-                  <tr>
-                    <td className="py-2.5 px-3 font-medium">Reparador de puntas 30cc</td>
-                    <td className="py-2.5 px-3 text-center">100</td>
-                    <td className="py-2.5 px-3 text-center">50</td>
-                    <td className="py-2.5 px-3 text-center font-bold">150</td>
-                    <td className="py-2.5 px-3 text-center">50 + <span className="text-[#0E50A0] font-semibold">(100)GR</span></td>
-                    <td className="py-2.5 px-3 text-center text-gray-400">-</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2.5 px-3 font-medium">Shampoo Keratina 350cc</td>
-                    <td className="py-2.5 px-3 text-center">10</td>
-                    <td className="py-2.5 px-3 text-center">0</td>
-                    <td className="py-2.5 px-3 text-center font-bold">10</td>
-                    <td className="py-2.5 px-3 text-center text-[#0E50A0] font-semibold">(10)GR</td>
-                    <td className="py-2.5 px-3 text-center text-gray-400">-</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2.5 px-3 font-medium">Emulsion capilar Triple Accion</td>
-                    <td className="py-2.5 px-3 text-center">100</td>
-                    <td className="py-2.5 px-3 text-center">20</td>
-                    <td className="py-2.5 px-3 text-center font-bold">120</td>
-                    <td className="py-2.5 px-3 text-center">0</td>
-                    <td className="py-2.5 px-3 text-center font-bold text-[#DD0000]">120</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2.5 px-3 font-medium">Shampoo Keratina 1000cc</td>
-                    <td className="py-2.5 px-3 text-center">20</td>
-                    <td className="py-2.5 px-3 text-center">10</td>
-                    <td className="py-2.5 px-3 text-center font-bold">30</td>
-                    <td className="py-2.5 px-3 text-center text-[#0E50A0] font-semibold">(12)GR</td>
-                    <td className="py-2.5 px-3 text-center font-bold text-[#DD0000]">18</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        {/* 2. CUENTAS */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <span className="font-bold text-xs uppercase tracking-wider text-[#D2AB68]">
-              CUENTAS
-            </span>
-            <div className="flex-1 h-[2px] bg-[#D2AB68]/60"></div>
-          </div>
-
-          <DashboardCuentasCard
-            cajaSteffen={toNumericString(patrimonialSummary.cajaSteffen)}
-            cajaMercadoLibre={toNumericString(patrimonialSummary.cajaMercadoLibre)}
-            deudasClientes={toNumericString(patrimonialSummary.deudasClientes)}
-            deudasProveedores={toNumericString(patrimonialSummary.deudasProveedores)}
-            neto={toNumericString(patrimonialSummary.neto)}
-          />
-        </div>
-
-      </div>
-
-    </div>
+    </DashboardActionsProvider>
   );
 }

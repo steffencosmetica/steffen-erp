@@ -50,11 +50,11 @@ export const NewPriceListModal: React.FC<NewPriceListModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="relative w-full max-w-lg bg-white border border-[#D9D9D9] rounded-[4px] shadow-2xl p-6">
+      <div className="relative w-full max-w-lg bg-white border border-steffen-border rounded-[5px] shadow-2xl p-6">
         {/* Encabezado */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#D9D9D9]">
+        <div className="flex items-center justify-between pb-4 border-b border-steffen-border">
           <div className="flex items-center gap-2">
-            <Tag className="w-5 h-5 text-[#0E50A0]" />
+            <Tag className="w-5 h-5 text-steffen-blue" />
             <h2 className="text-lg font-bold tracking-tight text-black uppercase">
               NUEVA LISTA DE PRECIOS
             </h2>
@@ -70,7 +70,7 @@ export const NewPriceListModal: React.FC<NewPriceListModalProps> = ({
         </div>
 
         {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-[2px] text-xs font-semibold text-[#DD0000] flex items-center gap-2">
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-[5px] text-xs font-semibold text-steffen-red flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -88,27 +88,27 @@ export const NewPriceListModal: React.FC<NewPriceListModalProps> = ({
               placeholder="Ej. Distribuidor Mayorista, Salón Interior..."
               disabled={isPending}
               autoFocus
-              className="w-full h-10 px-3 text-xs border border-[#D9D9D9] rounded-[2px] focus:outline-none focus:border-[#0E50A0] text-black"
+              className="w-full h-10 px-3 text-xs border border-steffen-border rounded-[5px] focus:outline-none focus:border-steffen-gold text-black"
             />
           </div>
 
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-[2px] text-xs text-[#0E50A0] leading-relaxed">
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-[5px] text-xs text-steffen-blue leading-relaxed">
             Las listas adicionales se crean activas y con rol adicional por defecto. Podrá definir los precios de venta por producto una vez creada la lista.
           </div>
 
-          <div className="flex justify-end gap-3 pt-3 border-t border-[#D9D9D9]">
+          <div className="flex justify-end gap-3 pt-3 border-t border-steffen-border">
             <button
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="h-[38px] px-4 rounded-[2px] text-xs font-bold uppercase tracking-wider bg-white border border-[#D9D9D9] text-black hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-50"
+              className="h-[29px] px-4 rounded-[5px] text-xs font-bold uppercase tracking-wider bg-white border border-steffen-border text-black hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="h-[38px] px-5 rounded-[2px] text-xs font-bold uppercase tracking-wider bg-[#D2AB68] hover:bg-[#c29b58] text-white border border-[#D2AB68] transition-colors cursor-pointer disabled:opacity-50"
+              className="h-[29px] px-5 rounded-[5px] text-xs font-bold uppercase tracking-wider bg-steffen-gold hover:bg-steffen-gold text-white border border-steffen-gold transition-colors cursor-pointer disabled:opacity-50"
             >
               {isPending ? 'Creando...' : 'Crear Lista'}
             </button>

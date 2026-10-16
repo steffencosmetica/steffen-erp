@@ -1,7 +1,13 @@
 import { BaseSupabaseRepository } from './base.repository';
 import type { AccountType, PatrimonialMovementType } from '@/database/domain-types';
-import { DomainError } from '@/domain/errors';
+import {
+  DomainError,
+  OpeningBalanceAlreadyExistsError,
+  OpeningBalanceLockedError,
+  InvalidOpeningBalanceAccountError,
+} from '@/domain/errors';
 import { Decimal, toNumericString } from '@/domain/decimal';
+import { readExactDecimal } from './exact-numeric';
 
 export interface FinancialAccountRecord {
   id: string;
@@ -95,10 +101,69 @@ export interface PaymentDetailRecord {
   createdAt: string;
 }
 
+export interface CashDepositAtomicRpcResult {
+  operationId: string;
+  cashDepositId: string;
+  movementId: string;
+  code: string;
+  amountArs: Decimal;
+  businessDate: string;
+}
+
+export type OpeningBalancePartyType = 'CUSTOMER' | 'SUPPLIER';
+
+/** Saldo de apertura vigente de una cuenta corriente (BUSINESS_RULES §20.2). */
+export interface OpeningBalanceRecord {
+  id: string;
+  amountArs: Decimal;
+  businessDate: string;
+  observation: string | null;
+  movementCode: string;
+}
+
+export interface OpeningBalanceStateRecord {
+  accountId: string | null;
+  accountType: AccountType | null;
+  currentBalance: Decimal | null;
+  opening: OpeningBalanceRecord | null;
+  /** Actividad de la cuenta distinta de la apertura (asientos, pagos, compras, RTO). */
+  hasOtherActivity: boolean;
+}
+
+export interface OpeningBalanceRpcResult {
+  openingBalanceId: string;
+  operationId: string;
+  movementId: string;
+  code: string;
+  financialAccountId: string;
+  amountArs: Decimal;
+  businessDate: string;
+}
+
+export interface EditOpeningBalanceRpcResult {
+  openingBalanceId: string;
+  operationId: string;
+  movementId: string;
+  code: string;
+  financialAccountId: string;
+  oldAmountArs: Decimal;
+  newAmountArs: Decimal;
+  deltaArs: Decimal;
+  businessDate: string;
+}
+
+export interface DeleteOpeningBalanceRpcResult {
+  openingBalanceId: string;
+  operationId: string;
+  code: string;
+  financialAccountId: string;
+  amountArs: Decimal;
+}
+
 export interface AccountMovementRecord {
   id: string;
   date: string;
-  type: 'COMPRA' | 'VENTA' | 'PAGO';
+  type: 'COMPRA' | 'VENTA' | 'PAGO' | 'APERTURA';
   documentCode: string;
   amountArs: Decimal;
   isPayment: boolean;
@@ -154,11 +219,70 @@ export interface IPatrimonyRepository {
   editPaymentAtomic(input: { paymentId: string; newAmountArs: Decimal; newBusinessDate?: string }): Promise<EditPaymentAtomicRpcResult>;
   registerWithdrawalAtomic(input: { amountArs: Decimal; description: string; businessDate: string }): Promise<WithdrawalAtomicRpcResult>;
   registerOperatingExpenseAtomic(input: { expenseType: string; description?: string; amountArs: Decimal; businessDate: string }): Promise<OperatingExpenseAtomicRpcResult>;
+  registerCashDepositAtomic(input: { amountArs: Decimal; description: string; businessDate: string }): Promise<CashDepositAtomicRpcResult>;
+  getOpeningBalanceState(partyType: OpeningBalancePartyType, partyId: string): Promise<OpeningBalanceStateRecord>;
+  registerOpeningBalanceAtomic(input: {
+    financialAccountId: string;
+    amountArs: Decimal;
+    businessDate: string;
+    observation?: string;
+  }): Promise<OpeningBalanceRpcResult>;
+  editOpeningBalanceAtomic(input: {
+    openingBalanceId: string;
+    newAmountArs: Decimal;
+    newBusinessDate: string;
+    observation?: string;
+  }): Promise<EditOpeningBalanceRpcResult>;
+  deleteOpeningBalanceAtomic(openingBalanceId: string): Promise<DeleteOpeningBalanceRpcResult>;
   getPaymentById(paymentId: string): Promise<PaymentDetailRecord | null>;
   listCustomerAccountMovements(customerId: string): Promise<AccountMovementRecord[]>;
   listSupplierAccountMovements(supplierId: string): Promise<AccountMovementRecord[]>;
   listSupplierDebtsWithActivity(): Promise<AdminSupplierDebtRecord[]>;
   getCustomerLastActivityMap(): Promise<Map<string, CustomerLastActivityRecord>>;
+}
+
+/**
+ * RPCs de Fase 19.1 (saldo de apertura / ingreso de caja): el resultado JSONB se
+ * valida campo por campo y los importes llegan como NUMERIC::text exacto.
+ */
+type RpcError = { message: string; code?: string };
+type RpcCaller = (
+  fn: string,
+  args: Record<string, unknown>
+) => PromiseLike<{ data: unknown; error: RpcError | null }>;
+
+function asRecord(value: unknown, fn: string): Record<string, unknown> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new DomainError(`${fn}: respuesta inesperada de la base.`);
+  }
+  return value as Record<string, unknown>;
+}
+
+function readText(row: Record<string, unknown>, field: string, fn: string): string {
+  const value = row[field];
+  if (typeof value !== 'string' || value === '') {
+    throw new DomainError(`${fn}.${field}: se esperaba texto.`);
+  }
+  return value;
+}
+
+function readOptionalText(row: Record<string, unknown>, field: string): string | null {
+  const value = row[field];
+  return typeof value === 'string' && value !== '' ? value : null;
+}
+
+/** SQLSTATE propios de la migración 20261002000034 → errores de dominio. */
+function toOpeningBalanceError(error: RpcError, context: string): DomainError {
+  switch (error.code) {
+    case 'SA001':
+      return new OpeningBalanceAlreadyExistsError(error.message);
+    case 'SA002':
+      return new OpeningBalanceLockedError(error.message);
+    case 'SA003':
+      return new InvalidOpeningBalanceAccountError(error.message);
+    default:
+      return new DomainError(`${context}: ${error.message}`);
+  }
 }
 
 export function formatPatrimonialVariationFromEntries(
@@ -313,52 +437,73 @@ export class PatrimonyRepository extends BaseSupabaseRepository implements IPatr
   }
 
   async listMovements(filter: MovementsFilter = {}): Promise<PatrimonialMovementFullRecord[]> {
-    let query = this.client
-      .from('patrimonial_movements')
-      .select(`
-        id,
-        code,
-        operation_id,
-        movement_type,
-        description,
-        amount_ars,
-        created_at,
-        business_operations(id, business_date),
-        financial_entries(
+    // Con rango de fechas se usa !inner: el filtro sobre business_operations.business_date
+    // debe excluir los MOV fuera del período (sin !inner PostgREST solo filtra el embed).
+    const hasDateRange = Boolean(filter.startDate || filter.endDate);
+    const buildQuery = () => {
+      let query = this.client
+        .from('patrimonial_movements')
+        .select(`
           id,
-          delta_ars,
-          financial_accounts(id, account_type, name)
-        )
-      `)
-      .order('created_at', { ascending: false });
+          code,
+          operation_id,
+          movement_type,
+          description,
+          amount_ars,
+          created_at,
+          ${hasDateRange ? 'business_operations!inner(id, business_date)' : 'business_operations(id, business_date)'},
+          financial_entries(
+            id,
+            delta_ars,
+            financial_accounts(id, account_type, name)
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false });
 
-    if (filter.movementType && filter.movementType !== 'TODOS') {
-      query = query.eq('movement_type', filter.movementType);
+      if (filter.movementType && filter.movementType !== 'TODOS') {
+        query = query.eq('movement_type', filter.movementType);
+      }
+
+      if (filter.startDate) {
+        query = query.gte('business_operations.business_date', filter.startDate);
+      }
+
+      if (filter.endDate) {
+        query = query.lte('business_operations.business_date', filter.endDate);
+      }
+      return query;
+    };
+
+    let data: unknown[] = [];
+    if (filter.limit || filter.offset) {
+      let query = buildQuery();
+      if (filter.limit) {
+        query = query.limit(filter.limit);
+      }
+      if (filter.offset) {
+        query = query.range(filter.offset, filter.offset + (filter.limit || 50) - 1);
+      }
+      const { data: page, error } = await query;
+      if (error) {
+        throw new DomainError(`Error obteniendo movimientos patrimoniales: ${error.message}`);
+      }
+      data = page || [];
+    } else {
+      // Sin límite explícito: se pagina hasta agotar el rango (PostgREST corta cada respuesta
+      // en su máximo de filas), así un período nunca queda truncado en silencio.
+      const PAGE_SIZE = 1000;
+      for (let from = 0; ; from += PAGE_SIZE) {
+        const { data: page, error } = await buildQuery().range(from, from + PAGE_SIZE - 1);
+        if (error) {
+          throw new DomainError(`Error obteniendo movimientos patrimoniales: ${error.message}`);
+        }
+        data = data.concat(page || []);
+        if (!page || page.length < PAGE_SIZE) break;
+      }
     }
 
-    if (filter.startDate) {
-      query = query.gte('business_operations.business_date', filter.startDate);
-    }
-
-    if (filter.endDate) {
-      query = query.lte('business_operations.business_date', filter.endDate);
-    }
-
-    if (filter.limit) {
-      query = query.limit(filter.limit);
-    }
-
-    if (filter.offset) {
-      query = query.range(filter.offset, filter.offset + (filter.limit || 50) - 1);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      throw new DomainError(`Error obteniendo movimientos patrimoniales: ${error.message}`);
-    }
-
-    let records: PatrimonialMovementFullRecord[] = (data || []).map((row: any) => {
+    let records: PatrimonialMovementFullRecord[] = data.map((row: any) => {
       const bDate = row.business_operations?.business_date || (row.created_at ? row.created_at.split('T')[0] : '');
       const variation = formatPatrimonialVariationFromEntries(row.financial_entries || []);
 
@@ -555,6 +700,166 @@ export class PatrimonyRepository extends BaseSupabaseRepository implements IPatr
     };
   }
 
+  private get rpcCall(): RpcCaller {
+    return this.client.rpc.bind(this.client) as unknown as RpcCaller;
+  }
+
+  async registerCashDepositAtomic(input: {
+    amountArs: Decimal;
+    description: string;
+    businessDate: string;
+  }): Promise<CashDepositAtomicRpcResult> {
+    const fn = 'register_cash_deposit_atomic';
+    const { data, error } = await this.rpcCall(fn, {
+      p_amount_ars: toNumericString(input.amountArs),
+      p_description: input.description,
+      p_business_date: input.businessDate,
+    });
+
+    if (error) {
+      throw new DomainError(`Error registrando ingreso de caja: ${error.message}`);
+    }
+
+    const res = asRecord(data, fn);
+    return {
+      operationId: readText(res, 'operation_id', fn),
+      cashDepositId: readText(res, 'cash_deposit_id', fn),
+      movementId: readText(res, 'movement_id', fn),
+      code: readText(res, 'code', fn),
+      amountArs: readExactDecimal(res.amount_ars, `${fn}.amount_ars`),
+      businessDate: readText(res, 'business_date', fn),
+    };
+  }
+
+  async getOpeningBalanceState(partyType: OpeningBalancePartyType, partyId: string): Promise<OpeningBalanceStateRecord> {
+    const fn = 'get_opening_balance_state';
+    const { data, error } = await this.rpcCall(fn, { p_party_type: partyType, p_party_id: partyId });
+
+    if (error) {
+      throw toOpeningBalanceError(error, 'Error consultando saldo de apertura');
+    }
+
+    const res = asRecord(data, fn);
+    const accountId = readOptionalText(res, 'account_id');
+    if (!accountId) {
+      return { accountId: null, accountType: null, currentBalance: null, opening: null, hasOtherActivity: false };
+    }
+
+    const openingId = readOptionalText(res, 'opening_balance_id');
+    return {
+      accountId,
+      accountType: readText(res, 'account_type', fn) as AccountType,
+      currentBalance: readExactDecimal(res.current_balance, `${fn}.current_balance`),
+      opening: openingId
+        ? {
+            id: openingId,
+            amountArs: readExactDecimal(res.amount_ars, `${fn}.amount_ars`),
+            businessDate: readText(res, 'business_date', fn),
+            observation: readOptionalText(res, 'observation'),
+            movementCode: readOptionalText(res, 'movement_code') ?? '',
+          }
+        : null,
+      hasOtherActivity: res.has_other_activity === true,
+    };
+  }
+
+  async registerOpeningBalanceAtomic(input: {
+    financialAccountId: string;
+    amountArs: Decimal;
+    businessDate: string;
+    observation?: string;
+  }): Promise<OpeningBalanceRpcResult> {
+    const fn = 'register_opening_balance_atomic';
+    const { data, error } = await this.rpcCall(fn, {
+      p_financial_account_id: input.financialAccountId,
+      p_amount_ars: toNumericString(input.amountArs),
+      p_business_date: input.businessDate,
+      p_observation: input.observation ?? null,
+    });
+
+    if (error) {
+      throw toOpeningBalanceError(error, 'Error registrando saldo de apertura');
+    }
+
+    const res = asRecord(data, fn);
+    return {
+      openingBalanceId: readText(res, 'opening_balance_id', fn),
+      operationId: readText(res, 'operation_id', fn),
+      movementId: readText(res, 'movement_id', fn),
+      code: readText(res, 'code', fn),
+      financialAccountId: readText(res, 'financial_account_id', fn),
+      amountArs: readExactDecimal(res.amount_ars, `${fn}.amount_ars`),
+      businessDate: readText(res, 'business_date', fn),
+    };
+  }
+
+  async editOpeningBalanceAtomic(input: {
+    openingBalanceId: string;
+    newAmountArs: Decimal;
+    newBusinessDate: string;
+    observation?: string;
+  }): Promise<EditOpeningBalanceRpcResult> {
+    const fn = 'edit_opening_balance_atomic';
+    const { data, error } = await this.rpcCall(fn, {
+      p_opening_balance_id: input.openingBalanceId,
+      p_new_amount_ars: toNumericString(input.newAmountArs),
+      p_new_business_date: input.newBusinessDate,
+      p_observation: input.observation ?? null,
+    });
+
+    if (error) {
+      throw toOpeningBalanceError(error, 'Error editando saldo de apertura');
+    }
+
+    const res = asRecord(data, fn);
+    return {
+      openingBalanceId: readText(res, 'opening_balance_id', fn),
+      operationId: readText(res, 'operation_id', fn),
+      movementId: readText(res, 'movement_id', fn),
+      code: readText(res, 'code', fn),
+      financialAccountId: readText(res, 'financial_account_id', fn),
+      oldAmountArs: readExactDecimal(res.old_amount_ars, `${fn}.old_amount_ars`),
+      newAmountArs: readExactDecimal(res.new_amount_ars, `${fn}.new_amount_ars`),
+      deltaArs: readExactDecimal(res.delta_ars, `${fn}.delta_ars`),
+      businessDate: readText(res, 'business_date', fn),
+    };
+  }
+
+  async deleteOpeningBalanceAtomic(openingBalanceId: string): Promise<DeleteOpeningBalanceRpcResult> {
+    const fn = 'delete_opening_balance_atomic';
+    const { data, error } = await this.rpcCall(fn, { p_opening_balance_id: openingBalanceId });
+
+    if (error) {
+      throw toOpeningBalanceError(error, 'Error eliminando saldo de apertura');
+    }
+
+    const res = asRecord(data, fn);
+    return {
+      openingBalanceId: readText(res, 'opening_balance_id', fn),
+      operationId: readText(res, 'operation_id', fn),
+      code: readText(res, 'code', fn),
+      financialAccountId: readText(res, 'financial_account_id', fn),
+      amountArs: readExactDecimal(res.amount_ars, `${fn}.amount_ars`),
+    };
+  }
+
+  /** Fila APERTURA del estado de cuenta (si la cuenta tiene saldo de apertura). */
+  private async openingBalanceMovement(
+    partyType: OpeningBalancePartyType,
+    partyId: string
+  ): Promise<AccountMovementRecord | null> {
+    const state = await this.getOpeningBalanceState(partyType, partyId);
+    if (!state.opening) return null;
+    return {
+      id: state.opening.id,
+      date: state.opening.businessDate,
+      type: 'APERTURA',
+      documentCode: state.opening.movementCode,
+      amountArs: state.opening.amountArs,
+      isPayment: false,
+    };
+  }
+
   async getPaymentById(paymentId: string): Promise<PaymentDetailRecord | null> {
     const { data, error } = await this.client
       .from('payments')
@@ -710,6 +1015,10 @@ export class PatrimonyRepository extends BaseSupabaseRepository implements IPatr
       });
     }
 
+    // 3. Saldo de apertura (deuda previa al inicio operativo; no es venta)
+    const opening = await this.openingBalanceMovement('CUSTOMER', customerId);
+    if (opening) movements.push(opening);
+
     movements.sort((a, b) => b.date.localeCompare(a.date));
     return movements;
   }
@@ -794,6 +1103,10 @@ export class PatrimonyRepository extends BaseSupabaseRepository implements IPatr
         totalNetSourceCurrency: c.total_net_source_currency != null ? String(c.total_net_source_currency) : undefined,
       });
     }
+
+    // 3. Saldo de apertura (deuda previa al inicio operativo; no es compra)
+    const opening = await this.openingBalanceMovement('SUPPLIER', supplierId);
+    if (opening) movements.push(opening);
 
     movements.sort((a, b) => b.date.localeCompare(a.date));
     return movements;

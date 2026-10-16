@@ -36,19 +36,19 @@ export const ManufactureModal: React.FC<{ isOpen: boolean; onClose: () => void }
   return (
     <Modal title="Registrar Fabricación de Granel" isOpen={isOpen} onClose={onClose}>
       <div className="space-y-4">
-        {error && <div className="p-3 bg-red-100 text-[#DD0000] rounded text-sm font-semibold">{error}</div>}
+        {error && <div className="p-3 bg-red-100 text-steffen-red rounded text-sm font-semibold">{error}</div>}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField label="Fecha de Fabricación">
             <input
               type="date"
-              className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full"
+              className="h-[30px] px-3 border border-steffen-border rounded w-full"
               value={businessDate}
               onChange={(e) => setBusinessDate(e.target.value)}
             />
           </FormField>
           <FormField label="Producto Base">
             <select
-              className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full bg-white"
+              className="h-[30px] px-3 border border-steffen-border rounded w-full bg-white"
               value={baseProductId}
               onChange={(e) => setBaseProductId(e.target.value)}
             >
@@ -66,15 +66,15 @@ export const ManufactureModal: React.FC<{ isOpen: boolean; onClose: () => void }
             type="number"
             step="0.001"
             min="0.001"
-            className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full"
+            className="h-[30px] px-3 border border-steffen-border rounded w-full"
             value={kgFabricated}
             onChange={(e) => setKgFabricated(parseFloat(e.target.value) || 0)}
           />
         </FormField>
 
         {selectedFormula && (
-          <div className="p-3 bg-gray-50 border border-[#D9D9D9] rounded text-xs space-y-2">
-            <div className="font-bold text-[#000000] flex justify-between">
+          <div className="p-3 bg-gray-50 border border-steffen-border rounded text-xs space-y-2">
+            <div className="font-bold text-steffen-surface flex justify-between">
               <span>Proporción teórica según fórmula:</span>
               <span>Costo estimado por kg: $ {selectedFormula.costPerKgArs.toFixed(2)}</span>
             </div>
@@ -84,7 +84,7 @@ export const ManufactureModal: React.FC<{ isOpen: boolean; onClose: () => void }
                 const currentStock = db.getState().stockBalances[it.rawMaterialId]?.quantity || 0;
                 const isShort = currentStock < needed;
                 return (
-                  <div key={it.rawMaterialId} className={`flex justify-between ${isShort ? 'text-[#DD0000] font-bold' : ''}`}>
+                  <div key={it.rawMaterialId} className={`flex justify-between ${isShort ? 'text-steffen-red font-bold' : ''}`}>
                     <span>
                       {it.rawMaterialName}: {needed.toFixed(3)} kg
                     </span>
@@ -99,14 +99,14 @@ export const ManufactureModal: React.FC<{ isOpen: boolean; onClose: () => void }
         <FormField label="Observaciones">
           <input
             type="text"
-            className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full"
+            className="h-[30px] px-3 border border-steffen-border rounded w-full"
             placeholder="Ej: Lote aprobado por control de calidad"
             value={observations}
             onChange={(e) => setObservations(e.target.value)}
           />
         </FormField>
 
-        <div className="flex justify-end gap-3 pt-3 border-t border-[#D9D9D9]">
+        <div className="flex justify-end gap-3 pt-3 border-t border-steffen-border">
           <Button variant="secundario" onClick={onClose}>
             Cancelar
           </Button>
@@ -161,12 +161,12 @@ export const PackagingModal: React.FC<{ isOpen: boolean; onClose: () => void }> 
   return (
     <Modal title="Registrar Envasado de Producto Final" isOpen={isOpen} onClose={onClose}>
       <div className="space-y-4">
-        {error && <div className="p-3 bg-red-100 text-[#DD0000] rounded text-sm font-semibold">{error}</div>}
+        {error && <div className="p-3 bg-red-100 text-steffen-red rounded text-sm font-semibold">{error}</div>}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField label="Lote de Granel Abierto">
             <select
-              className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full bg-white"
+              className="h-[30px] px-3 border border-steffen-border rounded w-full bg-white"
               value={selectedLotId}
               onChange={(e) => {
                 setSelectedLotId(e.target.value);
@@ -196,7 +196,7 @@ export const PackagingModal: React.FC<{ isOpen: boolean; onClose: () => void }> 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField label="Producto Final a Envasar">
             <select
-              className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full bg-white"
+              className="h-[30px] px-3 border border-steffen-border rounded w-full bg-white"
               value={productId}
               onChange={(e) => setProductId(e.target.value)}
             >
@@ -216,17 +216,17 @@ export const PackagingModal: React.FC<{ isOpen: boolean; onClose: () => void }> 
               type="number"
               min="1"
               step="1"
-              className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full"
+              className="h-[30px] px-3 border border-steffen-border rounded w-full"
               value={units}
               onChange={(e) => setUnits(parseInt(e.target.value, 10) || 0)}
             />
           </FormField>
         </div>
 
-        <div className="p-3 bg-gray-50 border border-[#D9D9D9] rounded text-xs space-y-1">
+        <div className="p-3 bg-gray-50 border border-steffen-border rounded text-xs space-y-1">
           <div className="flex justify-between font-semibold">
             <span>Granel necesario ({units} un × {selectedProduct?.weight_kg || 0} kg):</span>
-            <span className={selectedLot && kgNeeded > selectedLot.kg_available ? 'text-[#DD0000] font-bold' : ''}>
+            <span className={selectedLot && kgNeeded > selectedLot.kg_available ? 'text-steffen-red font-bold' : ''}>
               {kgNeeded.toFixed(3)} kg
             </span>
           </div>
@@ -239,7 +239,7 @@ export const PackagingModal: React.FC<{ isOpen: boolean; onClose: () => void }> 
                   const needed = pc.quantity_per_unit * units;
                   const available = state.stockBalances[pc.component_id]?.quantity || 0;
                   return (
-                    <div key={pc.component_id} className={available < needed ? 'text-[#DD0000] font-bold' : ''}>
+                    <div key={pc.component_id} className={available < needed ? 'text-steffen-red font-bold' : ''}>
                       • {compItem?.name}: {needed} un (disp: {available} un)
                     </div>
                   );
@@ -260,7 +260,7 @@ export const PackagingModal: React.FC<{ isOpen: boolean; onClose: () => void }> 
           </label>
         </div>
 
-        <div className="flex justify-end gap-3 pt-3 border-t border-[#D9D9D9]">
+        <div className="flex justify-end gap-3 pt-3 border-t border-steffen-border">
           <Button variant="secundario" onClick={onClose}>
             Cancelar
           </Button>
@@ -337,12 +337,12 @@ export const PurchaseModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
   return (
     <Modal title="Registrar Compra a Proveedor" isOpen={isOpen} onClose={onClose} maxWidth="max-w-4xl">
       <div className="space-y-4">
-        {error && <div className="p-3 bg-red-100 text-[#DD0000] rounded text-sm font-semibold">{error}</div>}
+        {error && <div className="p-3 bg-red-100 text-steffen-red rounded text-sm font-semibold">{error}</div>}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField label="Proveedor">
             <select
-              className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full bg-white"
+              className="h-[30px] px-3 border border-steffen-border rounded w-full bg-white"
               value={supplierId}
               onChange={(e) => setSupplierId(e.target.value)}
             >
@@ -359,7 +359,7 @@ export const PurchaseModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
           <FormField label="Fecha de Compra">
             <input
               type="date"
-              className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full"
+              className="h-[30px] px-3 border border-steffen-border rounded w-full"
               value={businessDate}
               onChange={(e) => setBusinessDate(e.target.value)}
             />
@@ -386,8 +386,8 @@ export const PurchaseModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
         {/* Lines */}
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <h3 className="text-sm font-bold uppercase text-[#000]">Insumos de la compra</h3>
-            <button onClick={addLine} className="text-xs font-bold text-[#B99D22] hover:underline cursor-pointer">
+            <h3 className="text-sm font-bold uppercase text-steffen-surface">Insumos de la compra</h3>
+            <button onClick={addLine} className="text-xs font-bold text-steffen-gold hover:underline cursor-pointer">
               + Agregar Línea
             </button>
           </div>
@@ -398,9 +398,9 @@ export const PurchaseModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
               const unitGross = l.unitPriceNetSource * effectiveFx * 1.21;
               const lineTotal = l.quantity * unitGross;
               return (
-                <div key={idx} className="flex gap-2 items-center p-2 bg-gray-50 border border-[#D9D9D9] rounded">
+                <div key={idx} className="flex gap-2 items-center p-2 bg-gray-50 border border-steffen-border rounded">
                   <select
-                    className="h-9 px-2 border border-[#D9D9D9] rounded flex-1 bg-white text-xs"
+                    className="h-9 px-2 border border-steffen-border rounded flex-1 bg-white text-xs"
                     value={l.stockItemId}
                     onChange={(e) => updateLine(idx, 'stockItemId', e.target.value)}
                   >
@@ -415,7 +415,7 @@ export const PurchaseModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                     <input
                       type="number"
                       step={item?.unit_type === 'KG' ? '0.001' : '1'}
-                      className="h-9 px-2 border border-[#D9D9D9] rounded w-full text-xs"
+                      className="h-9 px-2 border border-steffen-border rounded w-full text-xs"
                       placeholder="Cantidad"
                       value={l.quantity}
                       onChange={(e) => updateLine(idx, 'quantity', parseFloat(e.target.value) || 0)}
@@ -426,7 +426,7 @@ export const PurchaseModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                     <input
                       type="number"
                       step="0.01"
-                      className="h-9 px-2 border border-[#D9D9D9] rounded w-full text-xs"
+                      className="h-9 px-2 border border-steffen-border rounded w-full text-xs"
                       placeholder={`P. Neto (${supplier?.currency_code})`}
                       value={l.unitPriceNetSource}
                       onChange={(e) => updateLine(idx, 'unitPriceNetSource', parseFloat(e.target.value) || 0)}
@@ -451,10 +451,10 @@ export const PurchaseModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
         {/* Totals */}
         <div className="p-3 bg-gray-100 rounded flex justify-between items-center text-sm font-bold">
           <span>Total Neto: {totalNetSource.toFixed(2)} {supplier?.currency_code}</span>
-          <span className="text-lg text-[#000000]">Total c/IVA (ARS): $ {Math.round(totalGrossArs).toLocaleString('es-AR')}</span>
+          <span className="text-lg text-steffen-surface">Total c/IVA (ARS): $ {Math.round(totalGrossArs).toLocaleString('es-AR')}</span>
         </div>
 
-        <div className="flex justify-end gap-3 pt-3 border-t border-[#D9D9D9]">
+        <div className="flex justify-end gap-3 pt-3 border-t border-steffen-border">
           <Button variant="secundario" onClick={onClose}>
             Cancelar
           </Button>
@@ -583,7 +583,7 @@ export const NewOrderModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
   return (
     <Modal title="Crear Nuevo Pedido Abierto" isOpen={isOpen} onClose={onClose} maxWidth="max-w-2xl">
       <div className="space-y-4">
-        {error && <div className="p-3 bg-red-100 text-[#DD0000] rounded text-sm font-semibold">{error}</div>}
+        {error && <div className="p-3 bg-red-100 text-steffen-red rounded text-sm font-semibold">{error}</div>}
 
         <FormField label="Canal / Origen">
           <div className="grid grid-cols-3 gap-2">
@@ -597,7 +597,7 @@ export const NewOrderModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                 type="button"
                 onClick={() => setCustomerSource(c.id as any)}
                 className={`p-2 text-xs font-bold rounded border transition-colors ${
-                  customerSource === c.id ? 'bg-[#B99D22] text-white border-[#B99D22]' : 'bg-gray-50 border-[#D9D9D9]'
+                  customerSource === c.id ? 'bg-steffen-gold text-white border-steffen-gold' : 'bg-gray-50 border-steffen-border'
                 }`}
               >
                 {c.label}
@@ -609,7 +609,7 @@ export const NewOrderModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
         {customerSource === 'REGISTERED_CUSTOMER' ? (
           <FormField label="Cliente Registrado">
             <select
-              className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full bg-white"
+              className="h-[30px] px-3 border border-steffen-border rounded w-full bg-white"
               value={customerId}
               onChange={(e) => setCustomerId(e.target.value)}
             >
@@ -625,7 +625,7 @@ export const NewOrderModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             <FormField label="Nombre / Referencia">
               <input
                 type="text"
-                className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full"
+                className="h-[30px] px-3 border border-steffen-border rounded w-full"
                 placeholder={customerSource === 'MERCADO_LIBRE' ? 'Usuario ML #ID' : 'Nombre cliente'}
                 value={recipientName}
                 onChange={(e) => setRecipientName(e.target.value)}
@@ -634,7 +634,7 @@ export const NewOrderModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             <FormField label="Dirección / Destino">
               <input
                 type="text"
-                className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full"
+                className="h-[30px] px-3 border border-steffen-border rounded w-full"
                 placeholder="Domicilio de entrega"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
@@ -646,7 +646,7 @@ export const NewOrderModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
         <div className="space-y-2">
           <div className="flex justify-between items-center">
             <h3 className="text-xs font-bold uppercase">Productos Solicitados</h3>
-            <button onClick={addLine} className="text-xs font-bold text-[#B99D22] hover:underline">
+            <button onClick={addLine} className="text-xs font-bold text-steffen-gold hover:underline">
               + Agregar Producto
             </button>
           </div>
@@ -654,7 +654,7 @@ export const NewOrderModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
           {lines.map((l, idx) => (
             <div key={idx} className="flex gap-2 items-center">
               <select
-                className="h-9 px-2 border border-[#D9D9D9] rounded flex-1 bg-white text-xs"
+                className="h-9 px-2 border border-steffen-border rounded flex-1 bg-white text-xs"
                 value={l.productId}
                 onChange={(e) => {
                   const copy = [...lines];
@@ -676,7 +676,7 @@ export const NewOrderModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                 type="number"
                 min="1"
                 step="1"
-                className="w-24 h-9 px-2 border border-[#D9D9D9] rounded text-xs"
+                className="w-24 h-9 px-2 border border-steffen-border rounded text-xs"
                 value={l.requestedQuantity}
                 onChange={(e) => {
                   const copy = [...lines];
@@ -697,7 +697,7 @@ export const NewOrderModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
           ))}
         </div>
 
-        <div className="flex justify-end gap-3 pt-3 border-t border-[#D9D9D9]">
+        <div className="flex justify-end gap-3 pt-3 border-t border-steffen-border">
           <Button variant="secundario" onClick={onClose}>
             Cancelar
           </Button>
@@ -750,7 +750,7 @@ export const CompleteRtmModal: React.FC<{
   return (
     <Modal title={`Completar RTM Obligatorio — ${rem.code}`} isOpen={isOpen} onClose={onClose}>
       <div className="space-y-4">
-        {error && <div className="p-3 bg-red-100 text-[#DD0000] rounded text-sm font-semibold">{error}</div>}
+        {error && <div className="p-3 bg-red-100 text-steffen-red rounded text-sm font-semibold">{error}</div>}
 
         <div className="p-3 bg-amber-50 border border-amber-300 rounded text-xs text-amber-900">
           <strong>Acción obligatoria:</strong> Toda venta confirmada requiere completar su Remito Margen (RTM) congelando
@@ -766,7 +766,7 @@ export const CompleteRtmModal: React.FC<{
           <input
             type="number"
             min="0"
-            className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full"
+            className="h-[30px] px-3 border border-steffen-border rounded w-full"
             placeholder="0 si el flete corre por cuenta del cliente"
             value={transportCost}
             onChange={(e) => setTransportCost(parseFloat(e.target.value) || 0)}
@@ -774,12 +774,12 @@ export const CompleteRtmModal: React.FC<{
           <span className="text-xs text-gray-500">Si es mayor que 0, descontará automáticamente de Caja Steffen.</span>
         </FormField>
 
-        <div className="p-4 bg-green-50 border border-[#008102] rounded flex justify-between items-center">
-          <span className="font-bold text-[#008102] text-sm">GANANCIA NETA CALCULADA:</span>
-          <span className="font-bold text-xl text-[#008102]">$ {Math.round(estimatedGain).toLocaleString('es-AR')}</span>
+        <div className="p-4 bg-green-50 border border-steffen-green rounded flex justify-between items-center">
+          <span className="font-bold text-steffen-green text-sm">GANANCIA NETA CALCULADA:</span>
+          <span className="font-bold text-xl text-steffen-green">$ {Math.round(estimatedGain).toLocaleString('es-AR')}</span>
         </div>
 
-        <div className="flex justify-end gap-3 pt-3 border-t border-[#D9D9D9]">
+        <div className="flex justify-end gap-3 pt-3 border-t border-steffen-border">
           <Button variant="verde" onClick={handleComplete}>
             Completar RTM y Finalizar Venta
           </Button>

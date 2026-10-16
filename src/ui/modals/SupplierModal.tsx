@@ -108,7 +108,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-md text-xs font-semibold text-[#DD0000]">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-[5px] text-xs font-semibold text-steffen-red">
             {error}
           </div>
         )}
@@ -120,7 +120,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <label className="font-semibold text-black w-32">Codigo</label>
-              <div className="flex-1 h-9 px-3 flex items-center border border-dashed border-gray-300 rounded-md text-gray-500 bg-gray-50 font-mono">
+              <div className="flex-1 h-9 px-3 flex items-center border border-dashed border-gray-300 rounded-[5px] text-gray-500 bg-gray-50">
                 {isEdit ? supplier?.code : 'Automatico'}
               </div>
             </div>
@@ -133,14 +133,14 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                 placeholder="Nombre o empresa"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="flex-1 h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                className="flex-1 h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
               />
             </div>
 
             <div className="flex items-center justify-between">
               <label className="font-semibold text-black w-32">Moneda</label>
               {isEdit ? (
-                <div className="flex-1 h-9 px-3 flex items-center justify-between border border-gray-300 rounded-md bg-gray-100 text-gray-700">
+                <div className="flex-1 h-9 px-3 flex items-center justify-between border border-gray-300 rounded-[5px] bg-gray-100 text-gray-700">
                   <span className="font-bold">{currencyCode}</span>
                   <div className="flex items-center gap-1 text-[11px] text-gray-500">
                     <Lock className="w-3 h-3" />
@@ -151,7 +151,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                 <select
                   value={currencyCode}
                   onChange={(e) => setCurrencyCode(e.target.value as 'ARS' | 'USD')}
-                  className="flex-1 h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0] bg-white font-semibold"
+                  className="flex-1 h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold bg-white font-semibold"
                 >
                   <option value="ARS">ARS — Pesos Argentinos</option>
                   <option value="USD">USD — Dólares Estadounidenses</option>
@@ -169,7 +169,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                 placeholder="Nombre del ejecutivo comercial"
                 value={salesperson}
                 onChange={(e) => setSalesperson(e.target.value)}
-                className="flex-1 h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                className="flex-1 h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
               />
             </div>
 
@@ -180,7 +180,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                 placeholder="Teléfono o WhatsApp comercial"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="flex-1 h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                className="flex-1 h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
               />
             </div>
 
@@ -190,7 +190,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                 <select
                   value={active ? 'active' : 'inactive'}
                   onChange={(e) => setActive(e.target.value === 'active')}
-                  className="flex-1 h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0] bg-white"
+                  className="flex-1 h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold bg-white"
                 >
                   <option value="active">Activo</option>
                   <option value="inactive">Inactivo</option>

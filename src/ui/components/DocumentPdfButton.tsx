@@ -82,8 +82,8 @@ export const DocumentPdfButton: React.FC<DocumentPdfButtonProps> = ({
 
   const isFailed = knownStatus === 'FAILED';
   const colorClass = isFailed
-    ? 'text-[#DD0000] hover:text-[#a30000]'
-    : 'text-gray-600 hover:text-[#0E50A0]';
+    ? 'text-steffen-red hover:text-steffen-red-hover'
+    : 'text-gray-600 hover:text-steffen-blue';
 
   return (
     <span className="inline-flex items-center gap-1">
@@ -108,7 +108,7 @@ export const DocumentPdfButton: React.FC<DocumentPdfButtonProps> = ({
           <FileText className={size} />
         )}
       </button>
-      {error ? <span className="text-[9px] text-[#DD0000] max-w-[140px] leading-tight">{error}</span> : null}
+      {error ? <span className="text-[10px] text-steffen-red max-w-[105px] leading-tight">{error}</span> : null}
     </span>
   );
 };

@@ -407,15 +407,15 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
-      <div className="bg-white border border-[#D9D9D9] rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
+      <div className="bg-white border border-steffen-border rounded-[10px] w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
         
         {/* Cabecera del modal */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#D9D9D9] bg-white">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-steffen-border bg-white">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-bold text-black uppercase tracking-wider">
               {isEditMode ? `Editar Compra ${purchaseToEdit?.code}` : 'Compra'}
             </h2>
-            <span className="text-xs px-2.5 py-1 rounded bg-[#0E50A0]/10 text-[#0E50A0] font-bold">
+            <span className="text-xs px-2.5 py-1 rounded bg-steffen-blue/10 text-steffen-blue font-bold">
               {isEditMode ? 'MODIFICACIÓN ATÓMICA' : 'REGISTRO DE INSUMOS'}
             </span>
           </div>
@@ -434,7 +434,7 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
           
           {/* Mensaje de error si existe */}
           {errorMsg && (
-            <div className="p-3.5 bg-red-50 border border-red-200 rounded-lg text-xs font-semibold text-[#DD0000] flex items-center gap-2">
+            <div className="p-3.5 bg-red-50 border border-red-200 rounded-[5px] text-xs font-semibold text-steffen-red flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>
@@ -450,7 +450,7 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
                 value={selectedSupplierId}
                 onChange={(e) => setSelectedSupplierId(e.target.value)}
                 disabled={isEditMode || isPending}
-                className="w-full h-9 px-3 border border-[#D9D9D9] rounded-[2px] bg-white text-xs font-medium focus:outline-none focus:border-[#0E50A0] disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className="w-full h-9 px-3 border border-steffen-border rounded-[5px] bg-white text-xs font-medium focus:outline-none focus:border-steffen-gold disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
                 <option value="">Seleccione un proveedor...</option>
                 {suppliers.map((s) => (
@@ -469,7 +469,7 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
                 type="text"
                 readOnly
                 value={purchaseToEdit ? purchaseToEdit.code : '(Automático CMPxxxx)'}
-                className="w-full h-9 px-3 border border-[#D9D9D9] rounded-[2px] bg-gray-50 text-xs font-mono text-gray-600 cursor-not-allowed"
+                className="w-full h-9 px-3 border border-steffen-border rounded-[5px] bg-gray-50 text-xs text-gray-600 cursor-not-allowed"
               />
             </div>
 
@@ -482,16 +482,16 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
                 value={businessDate}
                 onChange={(e) => setBusinessDate(e.target.value)}
                 disabled={isPending}
-                className="w-full h-9 px-3 border border-[#D9D9D9] rounded-[2px] bg-white text-xs focus:outline-none focus:border-[#0E50A0]"
+                className="w-full h-9 px-3 border border-steffen-border rounded-[5px] bg-white text-xs focus:outline-none focus:border-steffen-gold"
               />
             </div>
           </div>
 
           {/* Fila 2 (si aplica USD): Cotización de la compra */}
           {isUsd && (
-            <div className="p-3.5 bg-blue-50/70 border border-[#0E50A0]/20 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="p-3.5 bg-blue-50/70 border border-steffen-blue/20 rounded-[10px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div>
-                <div className="text-xs font-bold text-[#0E50A0]">
+                <div className="text-xs font-bold text-steffen-blue">
                   Proveedor opera en Dólares Estadounidenses (USD)
                 </div>
                 <div className="text-[11px] text-gray-600">
@@ -508,7 +508,7 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
                   value={exchangeRate}
                   onChange={(e) => setExchangeRate(e.target.value)}
                   disabled={isPending}
-                  className="w-32 h-8 px-2.5 border border-[#D9D9D9] rounded-[2px] bg-white text-xs font-bold text-right focus:outline-none focus:border-[#0E50A0]"
+                  className="w-32 h-8 px-2.5 border border-steffen-border rounded-[5px] bg-white text-xs font-bold text-right focus:outline-none focus:border-steffen-gold"
                 />
               </div>
             </div>
@@ -516,7 +516,7 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
 
           {/* Modo edición: Selector de modalidad de pago */}
           {isEditMode && (
-            <div className="p-3 bg-gray-50 border border-[#D9D9D9] rounded-xl flex items-center justify-between">
+            <div className="p-3 bg-gray-50 border border-steffen-border rounded-[10px] flex items-center justify-between">
               <span className="font-bold text-xs text-black">Modalidad financiera actual:</span>
               <div className="flex items-center gap-4">
                 <label className="flex items-center gap-2 cursor-pointer font-semibold text-xs">
@@ -559,7 +559,7 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
                     setIsAltaRapidaOpen(true);
                   }}
                   disabled={isPending || !selectedSupplierId}
-                  className="px-3 py-1.5 bg-white border border-[#0E50A0] text-[#0E50A0] hover:bg-blue-50 rounded-[2px] font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-3 py-1.5 bg-white border border-steffen-blue text-steffen-blue hover:bg-blue-50 rounded-[5px] font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
                   title="Alta rápida de Materia Prima o Componente con stock inicial 0"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
@@ -569,7 +569,7 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
                   type="button"
                   onClick={handleAddLine}
                   disabled={isPending || loadingCatalog || catalogItems.length === 0}
-                  className="px-3 py-1.5 bg-[#0E50A0] text-white rounded-[2px] font-bold text-xs flex items-center gap-1.5 hover:bg-[#0c4386] transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-3 py-1.5 bg-steffen-blue text-white rounded-[5px] font-bold text-xs flex items-center gap-1.5 hover:bg-steffen-blue-hover transition-colors cursor-pointer disabled:opacity-50"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   Agregar Ítem
@@ -579,18 +579,18 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
 
             {loadingCatalog ? (
               <div className="py-8 flex items-center justify-center gap-2 text-gray-500">
-                <Loader2 className="w-4 h-4 animate-spin text-[#0E50A0]" />
+                <Loader2 className="w-4 h-4 animate-spin text-steffen-blue" />
                 <span>Cargando catálogo del proveedor...</span>
               </div>
             ) : lines.length === 0 ? (
-              <div className="py-8 text-center text-gray-400 border border-dashed border-[#D9D9D9] rounded-xl">
+              <div className="py-8 text-center text-gray-400 border border-dashed border-steffen-border rounded-[10px]">
                 Haga clic en &quot;Agregar Ítem&quot; para registrar insumos adquiridos.
               </div>
             ) : (
-              <div className="overflow-x-auto border border-[#D9D9D9] rounded-xl">
+              <div className="overflow-x-auto border border-steffen-border rounded-[10px]">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="bg-[#D9D9D9] text-black font-bold uppercase text-left">
+                    <tr className="bg-steffen-gray text-black font-bold uppercase text-left">
                       <th className="py-2.5 px-3">INSUMO</th>
                       <th className="py-2.5 px-3 w-28">CANTIDAD</th>
                       <th className="py-2.5 px-3 w-20 text-center">MONEDA</th>
@@ -600,7 +600,7 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
                       <th className="py-2.5 px-2 w-10 text-center"></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#E5E5E5] bg-white">
+                  <tbody className="divide-y divide-steffen-gray bg-white">
                     {calculatedLines.map((line, idx) => (
                       <tr key={idx} className="hover:bg-gray-50/50">
                         {/* Insumo selector */}
@@ -609,10 +609,10 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
                             value={line.stockItemId}
                             onChange={(e) => handleLineChange(idx, 'stockItemId', e.target.value)}
                             disabled={isPending}
-                            className="w-full h-8 px-2 border border-[#D9D9D9] rounded-[2px] bg-white text-xs focus:outline-none focus:border-[#0E50A0]"
+                            className="w-full h-8 px-2 border border-steffen-border rounded-[5px] bg-white text-xs focus:outline-none focus:border-steffen-gold"
                           >
                             <option value="">Seleccione insumo...</option>
-                            <option value="__NEW__" className="text-[#0E50A0] font-bold">
+                            <option value="__NEW__" className="text-steffen-blue font-bold">
                               + Crear nuevo insumo (Alta rápida)...
                             </option>
                             {associatedItems.length > 0 && (
@@ -647,7 +647,7 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
                               value={line.quantity}
                               onChange={(e) => handleLineChange(idx, 'quantity', e.target.value)}
                               disabled={isPending}
-                              className="w-full h-8 pl-2 pr-7 border border-[#D9D9D9] rounded-[2px] bg-white text-xs text-right focus:outline-none focus:border-[#0E50A0]"
+                              className="w-full h-8 pl-2 pr-7 border border-steffen-border rounded-[5px] bg-white text-xs text-right focus:outline-none focus:border-steffen-gold"
                             />
                             <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 font-bold pointer-events-none">
                               {line.unitType}
@@ -679,18 +679,18 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
                               value={line.unitPriceNetSource}
                               onChange={(e) => handleLineChange(idx, 'unitPriceNetSource', e.target.value)}
                               disabled={isPending}
-                              className="w-full h-8 pl-9 pr-2 border border-[#D9D9D9] rounded-[2px] bg-white text-xs text-right focus:outline-none focus:border-[#0E50A0]"
+                              className="w-full h-8 pl-9 pr-2 border border-steffen-border rounded-[5px] bg-white text-xs text-right focus:outline-none focus:border-steffen-gold"
                             />
                           </div>
                         </td>
 
                         {/* Precio unitario bruto con IVA en ARS (calculado) */}
-                        <td className="py-2 px-3 text-right font-mono text-gray-700">
+                        <td className="py-2 px-3 text-right text-gray-700">
                           $ {line.unitGrossArs.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
 
                         {/* Total renglón en ARS */}
-                        <td className="py-2 px-3 text-right font-bold font-mono text-black">
+                        <td className="py-2 px-3 text-right font-bold text-black">
                           $ {line.lineTotalGross.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
 
@@ -701,7 +701,7 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
                             onClick={() => handleRemoveLine(idx)}
                             disabled={isPending}
                             title="Eliminar ítem"
-                            className="p-1 text-gray-400 hover:text-[#DD0000] transition-colors cursor-pointer"
+                            className="p-1 text-gray-400 hover:text-steffen-red transition-colors cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -715,7 +715,7 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
           </div>
 
           {/* Resumen de totales */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-gray-50 border border-[#D9D9D9] rounded-xl text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-gray-50 border border-steffen-border rounded-[10px] text-center">
             <div>
               <div className="text-[10px] font-bold text-gray-500 uppercase">
                 Subtotal Neto ({supplierCurrency})
@@ -734,11 +734,11 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
               </div>
             </div>
 
-            <div className="bg-[#0E50A0]/10 rounded-lg p-2 border border-[#0E50A0]/20">
-              <div className="text-[10px] font-bold text-[#0E50A0] uppercase">
+            <div className="bg-steffen-blue/10 rounded-[5px] p-2 border border-steffen-blue/20">
+              <div className="text-[10px] font-bold text-steffen-blue uppercase">
                 TOTAL BRUTO (ARS)
               </div>
-              <div className="text-lg font-extrabold text-[#0E50A0] mt-0.5">
+              <div className="text-lg font-extrabold text-steffen-blue mt-0.5">
                 $ {totalGrossArs.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
@@ -755,19 +755,19 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
               onChange={(e) => setObservations(e.target.value)}
               disabled={isPending}
               placeholder="Número de factura, detalles del transporte o notas del remito..."
-              className="w-full p-2.5 border border-[#D9D9D9] rounded-[2px] bg-white text-xs focus:outline-none focus:border-[#0E50A0]"
+              className="w-full p-2.5 border border-steffen-border rounded-[5px] bg-white text-xs focus:outline-none focus:border-steffen-gold"
             />
           </div>
 
         </div>
 
         {/* Pie de modal con botones de acción */}
-        <div className="px-6 py-4 border-t border-[#D9D9D9] bg-gray-50 flex items-center justify-between">
+        <div className="px-6 py-4 border-t border-steffen-border bg-gray-50 flex items-center justify-between">
           <button
             type="button"
             onClick={onClose}
             disabled={isPending}
-            className="px-4 py-2 border border-[#DD0000] text-[#DD0000] hover:bg-red-50 rounded-[2px] font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer disabled:opacity-50"
+            className="px-4 py-2 border border-steffen-red text-steffen-red hover:bg-red-50 rounded-[5px] font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer disabled:opacity-50"
           >
             Cancelar
           </button>
@@ -778,7 +778,7 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
                 type="button"
                 onClick={() => handleSubmit(paymentMode)}
                 disabled={isPending || lines.length === 0}
-                className="px-5 py-2.5 bg-[#0E50A0] hover:bg-[#0c4386] text-white rounded-[2px] font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-colors cursor-pointer shadow-sm disabled:opacity-50"
+                className="px-5 py-2.5 bg-steffen-blue hover:bg-steffen-blue-hover text-white rounded-[5px] font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-colors cursor-pointer shadow-sm disabled:opacity-50"
               >
                 {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Guardar Cambios
@@ -789,7 +789,7 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
                   type="button"
                   onClick={() => handleSubmit('DEBT')}
                   disabled={isPending || lines.length === 0}
-                  className="px-5 py-2.5 bg-[#0E50A0] hover:bg-[#0c4386] text-white rounded-[2px] font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-colors cursor-pointer shadow-sm disabled:opacity-50"
+                  className="px-5 py-2.5 bg-steffen-blue hover:bg-steffen-blue-hover text-white rounded-[5px] font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-colors cursor-pointer shadow-sm disabled:opacity-50"
                 >
                   {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   Registrar Deuda Proveedor
@@ -799,7 +799,7 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
                   type="button"
                   onClick={() => handleSubmit('PAID')}
                   disabled={isPending || lines.length === 0}
-                  className="px-5 py-2.5 bg-[#0E50A0] hover:bg-[#0c4386] text-white rounded-[2px] font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-colors cursor-pointer shadow-sm disabled:opacity-50"
+                  className="px-5 py-2.5 bg-steffen-blue hover:bg-steffen-blue-hover text-white rounded-[5px] font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-colors cursor-pointer shadow-sm disabled:opacity-50"
                 >
                   {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   Registrar Compra (Paga)

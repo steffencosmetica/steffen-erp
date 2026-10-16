@@ -304,6 +304,10 @@ export class DocumentRepository extends BaseSupabaseRepository implements IDocum
     if (!isRendererType(row.renderer_type)) {
       throw new DomainError(`Renderer desconocido "${row.renderer_type}" (${row.id}).`);
     }
+    // payload_snapshot es JSONB NOT NULL; los tipos generados lo exponen como Json (admite null).
+    if (row.payload_snapshot === null) {
+      throw new DomainError(`Documento ${row.id} sin payload_snapshot.`);
+    }
     return {
       id: row.id,
       documentType: row.document_type,

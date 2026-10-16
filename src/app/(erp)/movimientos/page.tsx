@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getAuthenticatedUser, isUserAuthorized } from '@/auth/guard';
-import { getPatrimonyService } from '@/services/composition';
+import { getPatrimonyService, getReportService } from '@/services/composition';
+import { addDaysToBusinessDate } from '@/domain/business-period';
 import { MovimientosView } from '@/ui/views/MovimientosView';
 import type { PatrimonialMovementDTO } from '@/actions/patrimony.dto';
 import { toNumericString } from '@/domain/decimal';
@@ -18,15 +19,16 @@ export default async function MovimientosPage() {
     redirect('/login');
   }
 
-  const now = new Date();
-  const ninetyDaysAgo = new Date();
-  ninetyDaysAgo.setDate(now.getDate() - 90);
-
-  const defaultEndDate = now.toISOString().split('T')[0];
-  const defaultStartDate = ninetyDaysAgo.toISOString().split('T')[0];
+  // Últimos 90 días desde la fecha comercial de la base (no la hora del servidor).
+  const { businessDate } = await getReportService().getCurrentBusinessPeriod();
+  const defaultEndDate = businessDate;
+  const defaultStartDate = addDaysToBusinessDate(businessDate, -90);
 
   const patrimonyService = getPatrimonyService();
-  const movements = await patrimonyService.listMovements({ limit: 500 }).catch(() => []);
+  // Rango de 90 días filtrado en el servidor por business_date (sin límite previo al filtro).
+  const movements = await patrimonyService
+    .listMovements({ startDate: defaultStartDate, endDate: defaultEndDate })
+    .catch(() => []);
 
   const movementsDTO: PatrimonialMovementDTO[] = movements.map((m) => ({
     id: m.id,

@@ -157,10 +157,10 @@ export const PriceListsView: React.FC<PriceListsViewProps> = ({
     visibleWithPrice.length > 0 && visibleWithPrice.every((p) => selectedProductIds.has(p.productId));
 
   return (
-    <div className="max-w-[1600px] mx-auto pb-16">
+    <div className=" pb-16">
       {/* Mensaje de error general si ocurre */}
       {actionError && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-[2px] text-xs font-semibold text-[#DD0000] flex justify-between items-center">
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-[5px] text-xs font-semibold text-steffen-red flex justify-between items-center">
           <span>{actionError}</span>
           <button
             onClick={() => setActionError(null)}
@@ -176,17 +176,17 @@ export const PriceListsView: React.FC<PriceListsViewProps> = ({
         <div>
           <Link
             href="/"
-            className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-black font-semibold mb-1 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-steffen-blue hover:text-steffen-blue-hover font-semibold mb-1 transition-colors"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             <span>Volver al Dashboard</span>
           </Link>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight text-black uppercase">
+            <h1 className="text-lg tracking-tight text-steffen-surface uppercase">
               LISTAS DE PRECIOS
             </h1>
             {currentList && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-[#D2AB68]/15 text-[#D2AB68] border border-[#D2AB68]/30">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-steffen-gold/15 text-steffen-gold border border-steffen-gold/30">
                 {currentList.name}
               </span>
             )}
@@ -197,7 +197,7 @@ export const PriceListsView: React.FC<PriceListsViewProps> = ({
           <button
             type="button"
             onClick={() => setIsNewListModalOpen(true)}
-            className="h-[38px] px-4 rounded-[2px] text-xs font-bold uppercase tracking-wider bg-[#D2AB68] hover:bg-[#c29b58] text-white border border-[#D2AB68] inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="h-[29px] px-4 rounded-[5px] text-xs font-bold uppercase tracking-wider bg-steffen-gold hover:bg-steffen-gold text-white border border-steffen-gold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Nueva Lista</span>
@@ -206,7 +206,7 @@ export const PriceListsView: React.FC<PriceListsViewProps> = ({
       </div>
 
       {/* Selector de Listas de Precios (Tabs / Pills) */}
-      <div className="bg-white border border-[#D9D9D9] rounded-[5px] p-4 mb-6">
+      <div className="bg-white border border-steffen-border rounded-[10px] p-4 mb-6">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           {/* Pills de Listas */}
           <div className="flex items-center gap-2 flex-wrap">
@@ -221,13 +221,13 @@ export const PriceListsView: React.FC<PriceListsViewProps> = ({
                   type="button"
                   onClick={() => handleSelectList(list.id)}
                   disabled={isPending}
-                  className={`h-[36px] px-3.5 rounded-[4px] text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer border ${
+                  className={`h-[27px] px-3.5 rounded-[5px] text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer border ${
                     isSelected
-                      ? 'bg-black text-white border-black'
-                      : 'bg-gray-50 text-gray-700 border-[#D9D9D9] hover:bg-gray-100 hover:text-black'
+                      ? 'ui-degrade border-steffen-gold text-steffen-surface'
+                      : 'bg-gray-50 text-gray-700 border-steffen-border hover:bg-gray-100 hover:text-black'
                   } ${!list.active ? 'opacity-60 line-through' : ''}`}
                 >
-                  <Tag className={`w-3.5 h-3.5 ${isSelected ? 'text-[#D2AB68]' : 'text-gray-400'}`} />
+                  <Tag className={`w-3.5 h-3.5 ${isSelected ? 'text-steffen-gold' : 'text-gray-400'}`} />
                   <span>{list.name}</span>
                   {list.isSystem && (
                     <span
@@ -259,7 +259,7 @@ export const PriceListsView: React.FC<PriceListsViewProps> = ({
               <button
                 type="button"
                 onClick={() => setIsEditListModalOpen(true)}
-                className="h-[36px] px-3 rounded-[2px] text-xs font-bold uppercase tracking-wider bg-white border border-[#D9D9D9] text-gray-700 hover:bg-gray-100 hover:text-black inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="h-[27px] px-3 rounded-[5px] text-xs font-bold uppercase tracking-wider bg-white border border-steffen-border text-gray-700 hover:bg-gray-100 hover:text-black inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                 title="Renombrar o cambiar estado de la lista"
               >
                 <Edit3 className="w-3.5 h-3.5 text-gray-500" />
@@ -270,7 +270,7 @@ export const PriceListsView: React.FC<PriceListsViewProps> = ({
                 type="button"
                 onClick={handleOpenGlobalIncrease}
                 disabled={activeProductsWithPrice.length === 0}
-                className="h-[36px] px-3.5 rounded-[2px] text-xs font-bold uppercase tracking-wider bg-[#0E50A0] hover:bg-[#0c4386] text-white border border-[#0E50A0] inline-flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="h-[27px] px-3.5 rounded-[5px] text-xs font-bold uppercase tracking-wider bg-steffen-blue hover:bg-steffen-blue-hover text-white border border-steffen-blue inline-flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Aumentar todos los productos con precio activo en esta lista"
               >
                 <TrendingUp className="w-3.5 h-3.5" />
@@ -281,7 +281,7 @@ export const PriceListsView: React.FC<PriceListsViewProps> = ({
                 type="button"
                 onClick={handleOpenSelectiveIncrease}
                 disabled={selectedProductIds.size === 0}
-                className="h-[36px] px-3.5 rounded-[2px] text-xs font-bold uppercase tracking-wider bg-white border border-[#0E50A0] text-[#0E50A0] hover:bg-blue-50 inline-flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-40 disabled:border-gray-300 disabled:text-gray-400 disabled:cursor-not-allowed"
+                className="h-[27px] px-3.5 rounded-[5px] text-xs font-bold uppercase tracking-wider bg-white border border-steffen-blue text-steffen-blue hover:bg-blue-50 inline-flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-40 disabled:border-gray-300 disabled:text-gray-400 disabled:cursor-not-allowed"
                 title="Aumentar solo los productos seleccionados"
               >
                 <CheckSquare className="w-3.5 h-3.5" />
@@ -293,7 +293,7 @@ export const PriceListsView: React.FC<PriceListsViewProps> = ({
       </div>
 
       {/* Contenedor Interior de Tabla según DESIGN.md Section 28 */}
-      <div className="rounded-[5px] border border-[#D9D9D9] bg-white p-5">
+      <div className="rounded-[10px] border border-steffen-border bg-white p-5">
         {/* Encabezado de Tabla: Título, Filtros y Buscador */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-black pb-3 mb-4">
           <div className="flex items-center gap-2">
@@ -325,7 +325,7 @@ export const PriceListsView: React.FC<PriceListsViewProps> = ({
                 type="checkbox"
                 checked={showInactive}
                 onChange={(e) => setShowInactive(e.target.checked)}
-                className="rounded border-gray-300 text-[#0E50A0] focus:ring-[#0E50A0] h-3.5 w-3.5 cursor-pointer"
+                className="rounded border-gray-300 text-steffen-blue focus:ring-steffen-gold h-3.5 w-3.5 cursor-pointer"
               />
               <span>Ver inactivos</span>
             </label>
@@ -337,7 +337,7 @@ export const PriceListsView: React.FC<PriceListsViewProps> = ({
                 placeholder="Buscar por código o nombre..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-8 pl-3 pr-8 text-xs border border-[#D9D9D9] rounded-lg w-52 sm:w-64 focus:outline-none focus:border-[#0E50A0] placeholder-gray-400 text-black"
+                className="h-8 pl-3 pr-8 text-xs border border-steffen-border rounded-[5px] w-52 sm:w-64 focus:outline-none focus:border-steffen-gold placeholder-gray-400 text-black"
               />
               <Search className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
@@ -353,7 +353,7 @@ export const PriceListsView: React.FC<PriceListsViewProps> = ({
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="bg-[#D9D9D9] text-black font-bold uppercase text-[11px]">
+                <tr className="bg-steffen-gray text-black font-bold uppercase text-[11px]">
                   <th className="py-2.5 px-3 w-10 text-center">
                     <button
                       type="button"
@@ -362,7 +362,7 @@ export const PriceListsView: React.FC<PriceListsViewProps> = ({
                       className="cursor-pointer text-gray-600 hover:text-black flex items-center justify-center mx-auto"
                     >
                       {isAllVisibleSelected ? (
-                        <CheckSquare className="w-4 h-4 text-[#0E50A0]" />
+                        <CheckSquare className="w-4 h-4 text-steffen-blue" />
                       ) : (
                         <Square className="w-4 h-4" />
                       )}
@@ -377,7 +377,7 @@ export const PriceListsView: React.FC<PriceListsViewProps> = ({
                   <th className="py-2.5 px-3 text-center">ACCIONES</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E5E5E5]">
+              <tbody className="divide-y divide-steffen-gray">
                 {filteredProducts.map((p) => {
                   const isSelected = selectedProductIds.has(p.productId);
                   const canSelect = p.productActive && p.hasPrice;
@@ -401,7 +401,7 @@ export const PriceListsView: React.FC<PriceListsViewProps> = ({
                           disabled={!canSelect}
                           onChange={() => handleToggleSelectProduct(p.productId)}
                           title={!canSelect ? 'Requiere producto activo con precio asignado' : 'Seleccionar para aumento'}
-                          className="rounded border-gray-300 text-[#0E50A0] focus:ring-[#0E50A0] h-4 w-4 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                          className="rounded border-gray-300 text-steffen-blue focus:ring-steffen-gold h-4 w-4 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                         />
                       </td>
 
@@ -441,7 +441,7 @@ export const PriceListsView: React.FC<PriceListsViewProps> = ({
                       {/* Estado */}
                       <td className="py-2.5 px-3 text-center whitespace-nowrap">
                         {p.productActive ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-green-100 text-[#008102] border border-green-300">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-green-100 text-steffen-green border border-green-300">
                             Activo
                           </span>
                         ) : (
@@ -457,7 +457,7 @@ export const PriceListsView: React.FC<PriceListsViewProps> = ({
                           <button
                             type="button"
                             onClick={() => setEditingProduct(p)}
-                            className="p-1 rounded text-gray-500 hover:text-[#0E50A0] hover:bg-blue-50 transition-colors cursor-pointer"
+                            className="p-1 rounded text-gray-500 hover:text-steffen-blue hover:bg-blue-50 transition-colors cursor-pointer"
                             title="Editar Precio"
                           >
                             <DollarSign className="w-4 h-4" />

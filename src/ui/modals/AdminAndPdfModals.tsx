@@ -63,7 +63,7 @@ export const PaymentModal: React.FC<{
   return (
     <Modal title={isCustomer ? 'Registrar Cobro / Pago de Cliente' : 'Registrar Pago a Proveedor'} isOpen={isOpen} onClose={onClose}>
       <div className="space-y-4">
-        {error && <div className="p-3 bg-red-100 text-[#DD0000] rounded text-sm font-semibold">{error}</div>}
+        {error && <div className="p-3 bg-red-100 text-steffen-red rounded text-sm font-semibold">{error}</div>}
 
         {entities.length === 0 ? (
           <div className="p-4 text-center text-gray-500 font-medium">
@@ -73,7 +73,7 @@ export const PaymentModal: React.FC<{
           <>
             <FormField label={isCustomer ? 'Cliente' : 'Proveedor'}>
               <select
-                className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full bg-white"
+                className="h-[30px] px-3 border border-steffen-border rounded w-full bg-white"
                 value={entityId}
                 onChange={(e) => setEntityId(e.target.value)}
               >
@@ -101,7 +101,7 @@ export const PaymentModal: React.FC<{
                 <input
                   type="number"
                   min="1"
-                  className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full text-base font-bold"
+                  className="h-[30px] px-3 border border-steffen-border rounded w-full text-base font-bold"
                   value={amount || ''}
                   onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
                   placeholder="0"
@@ -111,14 +111,14 @@ export const PaymentModal: React.FC<{
               <FormField label="Fecha">
                 <input
                   type="date"
-                  className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full"
+                  className="h-[30px] px-3 border border-steffen-border rounded w-full"
                   value={businessDate}
                   onChange={(e) => setBusinessDate(e.target.value)}
                 />
               </FormField>
             </div>
 
-            <div className="flex justify-end gap-3 pt-3 border-t border-[#D9D9D9]">
+            <div className="flex justify-end gap-3 pt-3 border-t border-steffen-border">
               <Button variant="secundario" onClick={onClose}>
                 Cancelar
               </Button>
@@ -159,12 +159,12 @@ export const ExpenseModal: React.FC<{ isOpen: boolean; onClose: () => void }> = 
   return (
     <Modal title="Registrar Gasto Operativo" isOpen={isOpen} onClose={onClose}>
       <div className="space-y-4">
-        {error && <div className="p-3 bg-red-100 text-[#DD0000] rounded text-sm font-semibold">{error}</div>}
+        {error && <div className="p-3 bg-red-100 text-steffen-red rounded text-sm font-semibold">{error}</div>}
 
         <div className="grid grid-cols-2 gap-4">
           <FormField label="Tipo de Gasto">
             <select
-              className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full bg-white"
+              className="h-[30px] px-3 border border-steffen-border rounded w-full bg-white"
               value={expenseType}
               onChange={(e) => setExpenseType(e.target.value as any)}
             >
@@ -178,7 +178,7 @@ export const ExpenseModal: React.FC<{ isOpen: boolean; onClose: () => void }> = 
           <FormField label="Fecha">
             <input
               type="date"
-              className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full"
+              className="h-[30px] px-3 border border-steffen-border rounded w-full"
               value={businessDate}
               onChange={(e) => setBusinessDate(e.target.value)}
             />
@@ -188,7 +188,7 @@ export const ExpenseModal: React.FC<{ isOpen: boolean; onClose: () => void }> = 
         <FormField label={expenseType === 'OTRO' ? 'Descripción (Obligatoria)' : 'Descripción (Opcional)'}>
           <input
             type="text"
-            className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full"
+            className="h-[30px] px-3 border border-steffen-border rounded w-full"
             placeholder="Detalle del gasto"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -199,14 +199,14 @@ export const ExpenseModal: React.FC<{ isOpen: boolean; onClose: () => void }> = 
           <input
             type="number"
             min="1"
-            className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full font-bold"
+            className="h-[30px] px-3 border border-steffen-border rounded w-full font-bold"
             value={amount || ''}
             onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
           />
           <span className="text-xs text-gray-500">Descuenta de Caja Steffen.</span>
         </FormField>
 
-        <div className="flex justify-end gap-3 pt-3 border-t border-[#D9D9D9]">
+        <div className="flex justify-end gap-3 pt-3 border-t border-steffen-border">
           <Button variant="secundario" onClick={onClose}>
             Cancelar
           </Button>
@@ -243,12 +243,12 @@ export const WithdrawalModal: React.FC<{ isOpen: boolean; onClose: () => void }>
   return (
     <Modal title="Registrar Retiro de Caja Steffen" isOpen={isOpen} onClose={onClose}>
       <div className="space-y-4">
-        {error && <div className="p-3 bg-red-100 text-[#DD0000] rounded text-sm font-semibold">{error}</div>}
+        {error && <div className="p-3 bg-red-100 text-steffen-red rounded text-sm font-semibold">{error}</div>}
 
         <FormField label="Motivo / Descripción del Retiro">
           <input
             type="text"
-            className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full"
+            className="h-[30px] px-3 border border-steffen-border rounded w-full"
             placeholder="Ej: Retiro socios"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -260,7 +260,7 @@ export const WithdrawalModal: React.FC<{ isOpen: boolean; onClose: () => void }>
             <input
               type="number"
               min="1"
-              className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full font-bold"
+              className="h-[30px] px-3 border border-steffen-border rounded w-full font-bold"
               value={amount || ''}
               onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
             />
@@ -269,14 +269,14 @@ export const WithdrawalModal: React.FC<{ isOpen: boolean; onClose: () => void }>
           <FormField label="Fecha">
             <input
               type="date"
-              className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full"
+              className="h-[30px] px-3 border border-steffen-border rounded w-full"
               value={businessDate}
               onChange={(e) => setBusinessDate(e.target.value)}
             />
           </FormField>
         </div>
 
-        <div className="flex justify-end gap-3 pt-3 border-t border-[#D9D9D9]">
+        <div className="flex justify-end gap-3 pt-3 border-t border-steffen-border">
           <Button variant="secundario" onClick={onClose}>
             Cancelar
           </Button>
@@ -319,7 +319,7 @@ export const SettlementModal: React.FC<{ isOpen: boolean; onClose: () => void }>
   return (
     <Modal title="Liquidar Fondos de Mercado Libre" isOpen={isOpen} onClose={onClose}>
       <div className="space-y-4">
-        {error && <div className="p-3 bg-red-100 text-[#DD0000] rounded text-sm font-semibold">{error}</div>}
+        {error && <div className="p-3 bg-red-100 text-steffen-red rounded text-sm font-semibold">{error}</div>}
 
         <ReadOnlyField
           label="Saldo Disponible en Caja Mercado Libre"
@@ -332,7 +332,7 @@ export const SettlementModal: React.FC<{ isOpen: boolean; onClose: () => void }>
             <input
               type="number"
               max={maxAvailable}
-              className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full font-bold"
+              className="h-[30px] px-3 border border-steffen-border rounded w-full font-bold"
               value={grossAmount || ''}
               onChange={(e) => setGrossAmount(parseFloat(e.target.value) || 0)}
             />
@@ -342,19 +342,19 @@ export const SettlementModal: React.FC<{ isOpen: boolean; onClose: () => void }>
             <input
               type="number"
               max={grossAmount}
-              className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full font-bold"
+              className="h-[30px] px-3 border border-steffen-border rounded w-full font-bold"
               value={netAmount || ''}
               onChange={(e) => setNetAmount(parseFloat(e.target.value) || 0)}
             />
           </FormField>
         </div>
 
-        <div className="p-3 bg-gray-50 border border-[#D9D9D9] rounded flex justify-between items-center text-sm">
+        <div className="p-3 bg-gray-50 border border-steffen-border rounded flex justify-between items-center text-sm">
           <span>Comisión retenida (Gasto Operativo ML):</span>
-          <span className="font-bold text-[#DD0000]">$ {Math.round(commission).toLocaleString('es-AR')}</span>
+          <span className="font-bold text-steffen-red">$ {Math.round(commission).toLocaleString('es-AR')}</span>
         </div>
 
-        <div className="flex justify-end gap-3 pt-3 border-t border-[#D9D9D9]">
+        <div className="flex justify-end gap-3 pt-3 border-t border-steffen-border">
           <Button variant="secundario" onClick={onClose}>
             Cancelar
           </Button>
@@ -432,11 +432,11 @@ export const StockAdjustmentModal: React.FC<{ isOpen: boolean; onClose: () => vo
   return (
     <Modal title="Ajuste Manual de Stock" isOpen={isOpen} onClose={onClose}>
       <div className="space-y-4">
-        {error && <div className="p-3 bg-red-100 text-[#DD0000] rounded text-sm font-semibold">{error}</div>}
+        {error && <div className="p-3 bg-red-100 text-steffen-red rounded text-sm font-semibold">{error}</div>}
 
         <FormField label="Ítem a Ajustar">
           <select
-            className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full bg-white"
+            className="h-[30px] px-3 border border-steffen-border rounded w-full bg-white"
             value={stockItemId}
             onChange={(e) => setStockItemId(e.target.value)}
           >
@@ -458,7 +458,7 @@ export const StockAdjustmentModal: React.FC<{ isOpen: boolean; onClose: () => vo
             <input
               type="number"
               step={selectedItem?.unit_type === 'KG' ? '0.001' : '1'}
-              className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full font-bold"
+              className="h-[30px] px-3 border border-steffen-border rounded w-full font-bold"
               placeholder="+5 o -3"
               value={delta || ''}
               onChange={(e) => setDelta(parseFloat(e.target.value) || 0)}
@@ -469,14 +469,14 @@ export const StockAdjustmentModal: React.FC<{ isOpen: boolean; onClose: () => vo
         <FormField label="Motivo / Observación">
           <input
             type="text"
-            className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full"
+            className="h-[30px] px-3 border border-steffen-border rounded w-full"
             placeholder="Ej: Conteo físico fin de mes"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
           />
         </FormField>
 
-        <div className="flex justify-end gap-3 pt-3 border-t border-[#D9D9D9]">
+        <div className="flex justify-end gap-3 pt-3 border-t border-steffen-border">
           <Button variant="secundario" onClick={onClose}>
             Cancelar
           </Button>
@@ -515,7 +515,7 @@ export const PdfViewerModal: React.FC<{
   return (
     <Modal title={`Documento Oficial — ${docType}`} isOpen={isOpen} onClose={onClose} maxWidth="max-w-4xl">
       <div className="space-y-4">
-        <div className="flex justify-between items-center bg-[#FBFBFB] p-2 border border-[#D9D9D9] rounded">
+        <div className="flex justify-between items-center bg-steffen-bg p-2 border border-steffen-border rounded">
           <span className="text-xs text-gray-600">
             Vista previa del documento generado conforme a la especificación de <strong>docs/PDFS.md</strong>.
           </span>
@@ -525,11 +525,11 @@ export const PdfViewerModal: React.FC<{
           </Button>
         </div>
 
-        <div className="border border-[#D9D9D9] rounded p-2 bg-white shadow-inner max-h-[65vh] overflow-y-auto">
+        <div className="border border-steffen-border rounded p-2 bg-white shadow-inner max-h-[65vh] overflow-y-auto">
           <iframe
             srcDoc={htmlContent}
             title="Vista previa PDF"
-            className="w-full min-h-[500px] border-none"
+            className="w-full min-h-[375px] border-none"
           />
         </div>
 

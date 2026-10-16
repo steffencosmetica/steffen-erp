@@ -5,7 +5,7 @@ import { getAuthenticatedUser, isUserAuthorized } from '@/auth/guard';
 import { logoutAction } from '@/actions/auth.actions';
 import { LogOut } from 'lucide-react';
 import { SteffenLogoIcon } from '@/ui/components/SteffenLogo';
-import { ErpNavDesktop, ErpNavMobile } from '@/ui/components/ErpNavigation';
+import { ErpSidebarNav, ErpNavMobile, ErpPageHeader } from '@/ui/components/ErpNavigation';
 
 export default async function ErpLayout({
   children,
@@ -19,53 +19,43 @@ export default async function ErpLayout({
   }
 
   return (
-    <div className="min-h-screen bg-white text-black flex flex-col font-sans antialiased">
-      {/* Header Superior del ERP idéntico a Figma */}
-      <header className="bg-white sticky top-0 z-40">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            
-            {/* Logo Steffen en dorado */}
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center transition-opacity hover:opacity-90" title="Steffen ERP">
-                <SteffenLogoIcon className="w-8 h-8 text-[#D2AB68]" />
-              </Link>
-            </div>
+    <div className="min-h-screen bg-steffen-page text-steffen-surface flex font-sans antialiased">
+      {/* Desktop (>= 1280): barra lateral con logo, módulos, accesos y logout separado (DESIGN.md §9.0) */}
+      <aside className="hidden xl:flex sticky top-0 h-screen w-[78px] shrink-0 bg-steffen-bg flex-col items-center py-6 overflow-y-auto">
+        <Link href="/" className="mb-8 transition-opacity hover:opacity-90" title="Steffen ERP">
+          <SteffenLogoIcon className="w-9 h-12" />
+        </Link>
 
-            {/* Navegación Principal Horizontal con barras inferiores exactas a Figma */}
-            <div className="flex-1 flex justify-center px-6">
-              <ErpNavDesktop />
-            </div>
+        <ErpSidebarNav />
 
-            {/* Acción de Logout según icono Figma */}
-            <div className="flex items-center">
-              <form action={logoutAction}>
-                <button
-                  type="submit"
-                  title="Cerrar sesión"
-                  className="p-1.5 text-black hover:text-[#D2AB68] transition-colors cursor-pointer"
-                >
-                  <LogOut className="w-5 h-5 stroke-[2.2]" />
-                </button>
-              </form>
-            </div>
+        {/* Cerrar sesión: misma lógica (logoutAction); ítem de menú con caja Border Button + degradé. */}
+        <form action={logoutAction} className="mt-auto pt-6">
+          <button
+            type="submit"
+            title="Cerrar sesión"
+            className="group ui-nav-item flex flex-col items-center gap-1.5 cursor-pointer"
+          >
+            <span className="ui-btn-dark w-[40px] h-[34px] inline-flex items-center justify-center rounded-[5px] transition-colors">
+              <LogOut className="w-5 h-5 text-steffen-silver group-hover:text-steffen-gold transition-colors" />
+            </span>
+            <span className="ui-nav-label text-[11px] font-semibold leading-tight text-center text-steffen-muted">
+              Cerrar
+              <br />
+              sesión
+            </span>
+          </button>
+        </form>
+      </aside>
 
-          </div>
+      <div className="flex-1 min-w-0 flex flex-col">
+        {/* Tablet / mobile (< 1280): barra superior + drawer con todos los accesos */}
+        <ErpNavMobile logo={<SteffenLogoIcon className="w-6 h-8" />} logoutAction={logoutAction} />
 
-          {/* Menú Móvil */}
-          <ErpNavMobile />
-        </div>
-      </header>
-
-      {/* Contenido Principal */}
-      <main className="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-5">
-        {children}
-      </main>
-
-      {/* Footer Mínimo */}
-      <footer className="bg-white py-4 text-center text-[11px] text-gray-400 font-medium">
-        Steffen ERP • Cosmética Capilar
-      </footer>
+        <main className="flex-1 w-full min-w-0 px-4 md:px-6 xl:px-14 py-5 xl:py-8">
+          <ErpPageHeader sessionLabel="Admin" sessionTitle={user.email} />
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

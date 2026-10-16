@@ -148,7 +148,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-md text-xs font-semibold text-[#DD0000]">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-[5px] text-xs font-semibold text-steffen-red">
             {error}
           </div>
         )}
@@ -160,14 +160,14 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <label className="font-semibold text-black w-28">Codigo</label>
-              <div className="flex-1 h-9 px-3 flex items-center border border-dashed border-gray-300 rounded-md text-gray-500 bg-gray-50 font-mono">
+              <div className="flex-1 h-9 px-3 flex items-center border border-dashed border-gray-300 rounded-[5px] text-gray-500 bg-gray-50">
                 {isEdit ? customer?.code : 'Automatico'}
               </div>
             </div>
 
             <div className="flex items-center justify-between">
               <label className="font-semibold text-black w-28">Fecha Creacion</label>
-              <div className="flex-1 h-9 px-3 flex items-center border border-gray-300 rounded-md bg-gray-50 text-gray-700">
+              <div className="flex-1 h-9 px-3 flex items-center border border-gray-300 rounded-[5px] bg-gray-50 text-gray-700">
                 {isEdit && customer?.createdAt
                   ? new Date(customer.createdAt).toLocaleDateString('es-AR')
                   : new Date().toLocaleDateString('es-AR')}
@@ -182,7 +182,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
                 placeholder="Nombre o Razón Social"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="flex-1 h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                className="flex-1 h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
               />
             </div>
 
@@ -193,7 +193,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
                 placeholder="Dirección comercial"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                className="flex-1 h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                className="flex-1 h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
               />
             </div>
 
@@ -204,7 +204,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
                 placeholder="Ciudad / Localidad"
                 value={locality}
                 onChange={(e) => setLocality(e.target.value)}
-                className="flex-1 h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                className="flex-1 h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
               />
             </div>
 
@@ -215,7 +215,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
                 placeholder="Provincia"
                 value={province}
                 onChange={(e) => setProvince(e.target.value)}
-                className="flex-1 h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                className="flex-1 h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
               />
             </div>
 
@@ -226,7 +226,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
                 placeholder="Teléfono o WhatsApp"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="flex-1 h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                className="flex-1 h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
               />
             </div>
 
@@ -237,7 +237,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
                 placeholder="Documento o CUIT"
                 value={dni}
                 onChange={(e) => setDni(e.target.value)}
-                className="flex-1 h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                className="flex-1 h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
               />
             </div>
           </div>
@@ -251,7 +251,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
                 placeholder="Empresa de transporte"
                 value={transportName}
                 onChange={(e) => setTransportName(e.target.value)}
-                className="flex-1 h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                className="flex-1 h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
               />
             </div>
 
@@ -262,7 +262,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
                 placeholder="Dirección del depósito o expreso"
                 value={transportAddress}
                 onChange={(e) => setTransportAddress(e.target.value)}
-                className="flex-1 h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                className="flex-1 h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
               />
             </div>
 
@@ -273,7 +273,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
                 placeholder="Distribuidor, Salón, etc."
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="flex-1 h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                className="flex-1 h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
               />
             </div>
 
@@ -288,7 +288,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
                   placeholder="0"
                   value={discount1Pct}
                   onChange={(e) => setDiscount1Pct(e.target.value)}
-                  className="w-full h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                  className="w-full h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
                 />
                 <span className="text-gray-500 font-bold">%</span>
               </div>
@@ -305,7 +305,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
                   placeholder="0"
                   value={discount2Pct}
                   onChange={(e) => setDiscount2Pct(e.target.value)}
-                  className="w-full h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                  className="w-full h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
                 />
                 <span className="text-gray-500 font-bold">%</span>
               </div>
@@ -322,7 +322,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
                   placeholder="0"
                   value={discount3Pct}
                   onChange={(e) => setDiscount3Pct(e.target.value)}
-                  className="w-full h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                  className="w-full h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
                 />
                 <span className="text-gray-500 font-bold">%</span>
               </div>

@@ -36,7 +36,7 @@ export default async function PreciosPage(props: {
   // Si no hay listas en absoluto (caso de base vacía), crear fallback visual limpio
   if (priceListRecords.length === 0) {
     return (
-      <div className="max-w-[1600px] mx-auto py-12 text-center text-gray-500">
+      <div className=" py-12 text-center text-gray-500">
         No hay listas de precios configuradas en el sistema.
       </div>
     );

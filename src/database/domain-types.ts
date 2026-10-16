@@ -28,7 +28,9 @@ export type OperationType =
   | 'OPERATING_EXPENSE'
   | 'WITHDRAWAL'
   | 'MARKETPLACE_SETTLEMENT'
-  | 'STOCK_ADJUSTMENT';
+  | 'STOCK_ADJUSTMENT'
+  | 'OPENING_BALANCE'
+  | 'CASH_DEPOSIT';
 
 export type PatrimonialMovementType =
   | 'RETIRO'
@@ -38,7 +40,9 @@ export type PatrimonialMovementType =
   | 'TRANSPORTE'
   | 'VENTA'
   | 'GASTO_OPERATIVO'
-  | 'TRANSFERENCIA_MERCADO_LIBRE';
+  | 'TRANSFERENCIA_MERCADO_LIBRE'
+  | 'SALDO_APERTURA'
+  | 'INGRESO_CAJA';
 
 export type PaymentType = 'CUSTOMER' | 'SUPPLIER';
 export type ExpenseType = 'LUZ' | 'ALQUILER' | 'COMISIÓN' | 'OTRO';

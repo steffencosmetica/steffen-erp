@@ -133,11 +133,11 @@ export const AltaRapidaInsumoModal: React.FC<AltaRapidaInsumoModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto animate-in fade-in duration-100">
-      <div className="bg-white border border-[#D9D9D9] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden my-auto flex flex-col">
+      <div className="bg-white border border-steffen-border rounded-[10px] w-full max-w-lg shadow-2xl overflow-hidden my-auto flex flex-col">
         {/* Cabecera */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#D9D9D9] bg-white">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-steffen-border bg-white">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-[#0E50A0]/10 flex items-center justify-center text-[#0E50A0]">
+            <div className="w-7 h-7 rounded-[5px] bg-steffen-blue/10 flex items-center justify-center text-steffen-blue">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
@@ -162,14 +162,14 @@ export const AltaRapidaInsumoModal: React.FC<AltaRapidaInsumoModalProps> = ({
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs text-black">
           {errorMsg && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs font-semibold text-[#DD0000] flex items-center gap-2">
+            <div className="p-3 bg-red-50 border border-red-200 rounded-[5px] text-xs font-semibold text-steffen-red flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           {/* Banner normativo */}
-          <div className="p-3 bg-blue-50/80 border border-[#0E50A0]/20 rounded-xl text-[11px] text-[#0E50A0] leading-relaxed">
+          <div className="p-3 bg-blue-50/80 border border-steffen-blue/20 rounded-[10px] text-[11px] text-steffen-blue leading-relaxed">
             <strong>Normativa de Compras (FLOWS.md §8):</strong> El insumo se crea con stock inicial{' '}
             <strong>0</strong> y queda preasociado a <strong>{supplierName}</strong> ({supplierCurrency}).
             El ingreso físico de stock se registrará únicamente al confirmar la compra actual.
@@ -184,10 +184,10 @@ export const AltaRapidaInsumoModal: React.FC<AltaRapidaInsumoModalProps> = ({
               <button
                 type="button"
                 onClick={() => handleTypeChange('MPR')}
-                className={`py-2 px-3 rounded-[2px] font-bold text-xs uppercase tracking-wider border transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`py-2 px-3 rounded-[5px] font-bold text-xs uppercase tracking-wider border transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
                   !isCom
-                    ? 'bg-[#0E50A0] text-white border-[#0E50A0]'
-                    : 'bg-white text-gray-700 border-[#D9D9D9] hover:bg-gray-50'
+                    ? 'bg-steffen-blue text-white border-steffen-blue'
+                    : 'bg-white text-gray-700 border-steffen-border hover:bg-gray-50'
                 }`}
               >
                 {!isCom && <Check className="w-3.5 h-3.5" />}
@@ -196,10 +196,10 @@ export const AltaRapidaInsumoModal: React.FC<AltaRapidaInsumoModalProps> = ({
               <button
                 type="button"
                 onClick={() => handleTypeChange('COM')}
-                className={`py-2 px-3 rounded-[2px] font-bold text-xs uppercase tracking-wider border transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`py-2 px-3 rounded-[5px] font-bold text-xs uppercase tracking-wider border transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
                   isCom
-                    ? 'bg-[#0E50A0] text-white border-[#0E50A0]'
-                    : 'bg-white text-gray-700 border-[#D9D9D9] hover:bg-gray-50'
+                    ? 'bg-steffen-blue text-white border-steffen-blue'
+                    : 'bg-white text-gray-700 border-steffen-border hover:bg-gray-50'
                 }`}
               >
                 {isCom && <Check className="w-3.5 h-3.5" />}
@@ -220,7 +220,7 @@ export const AltaRapidaInsumoModal: React.FC<AltaRapidaInsumoModalProps> = ({
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={isSubmitting}
-              className="w-full h-9 px-3 border border-[#D9D9D9] rounded-[2px] bg-white text-xs font-medium focus:outline-none focus:border-[#0E50A0]"
+              className="w-full h-9 px-3 border border-steffen-border rounded-[5px] bg-white text-xs font-medium focus:outline-none focus:border-steffen-gold"
             />
           </div>
 
@@ -236,7 +236,7 @@ export const AltaRapidaInsumoModal: React.FC<AltaRapidaInsumoModalProps> = ({
                 value={inci}
                 onChange={(e) => setInci(e.target.value)}
                 disabled={isSubmitting}
-                className="w-full h-9 px-3 border border-[#D9D9D9] rounded-[2px] bg-white text-xs font-medium focus:outline-none focus:border-[#0E50A0]"
+                className="w-full h-9 px-3 border border-steffen-border rounded-[5px] bg-white text-xs font-medium focus:outline-none focus:border-steffen-gold"
               />
             </div>
           )}
@@ -255,7 +255,7 @@ export const AltaRapidaInsumoModal: React.FC<AltaRapidaInsumoModalProps> = ({
                 value={stockMinimum}
                 onChange={(e) => setStockMinimum(e.target.value)}
                 disabled={isSubmitting}
-                className="w-full h-9 px-3 border border-[#D9D9D9] rounded-[2px] bg-white text-xs font-medium text-right focus:outline-none focus:border-[#0E50A0]"
+                className="w-full h-9 px-3 border border-steffen-border rounded-[5px] bg-white text-xs font-medium text-right focus:outline-none focus:border-steffen-gold"
               />
             </div>
 
@@ -276,7 +276,7 @@ export const AltaRapidaInsumoModal: React.FC<AltaRapidaInsumoModalProps> = ({
                   value={quotedPriceNet}
                   onChange={(e) => setQuotedPriceNet(e.target.value)}
                   disabled={isSubmitting}
-                  className="w-full h-9 pl-9 pr-3 border border-[#D9D9D9] rounded-[2px] bg-white text-xs font-medium text-right focus:outline-none focus:border-[#0E50A0]"
+                  className="w-full h-9 pl-9 pr-3 border border-steffen-border rounded-[5px] bg-white text-xs font-medium text-right focus:outline-none focus:border-steffen-gold"
                 />
               </div>
             </div>
@@ -292,7 +292,7 @@ export const AltaRapidaInsumoModal: React.FC<AltaRapidaInsumoModalProps> = ({
                 type="text"
                 readOnly
                 value={supplierName}
-                className="w-full h-8 px-2.5 border border-[#D9D9D9] rounded-[2px] bg-gray-50 text-[11px] font-semibold text-gray-600 cursor-not-allowed truncate"
+                className="w-full h-8 px-2.5 border border-steffen-border rounded-[5px] bg-gray-50 text-[11px] font-semibold text-gray-600 cursor-not-allowed truncate"
               />
             </div>
             <div>
@@ -303,25 +303,25 @@ export const AltaRapidaInsumoModal: React.FC<AltaRapidaInsumoModalProps> = ({
                 type="text"
                 readOnly
                 value={isCom ? '0 unid (Sin MST)' : '0.000 kg (Sin MST)'}
-                className="w-full h-8 px-2.5 border border-[#D9D9D9] rounded-[2px] bg-gray-50 text-[11px] font-mono text-gray-600 cursor-not-allowed"
+                className="w-full h-8 px-2.5 border border-steffen-border rounded-[5px] bg-gray-50 text-[11px] text-gray-600 cursor-not-allowed"
               />
             </div>
           </div>
 
           {/* Botones de Pie */}
-          <div className="pt-3 border-t border-[#D9D9D9] flex items-center justify-end gap-3">
+          <div className="pt-3 border-t border-steffen-border flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 border border-[#DD0000] text-[#DD0000] hover:bg-red-50 rounded-[2px] font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer disabled:opacity-50"
+              className="px-4 py-2 border border-steffen-red text-steffen-red hover:bg-red-50 rounded-[5px] font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer disabled:opacity-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2 bg-[#0E50A0] hover:bg-[#0c4386] text-white rounded-[2px] font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-colors cursor-pointer shadow-sm disabled:opacity-50"
+              className="px-5 py-2 bg-steffen-blue hover:bg-steffen-blue-hover text-white rounded-[5px] font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-colors cursor-pointer shadow-sm disabled:opacity-50"
             >
               {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               Crear y Usar en Compra

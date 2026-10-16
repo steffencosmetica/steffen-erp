@@ -192,9 +192,9 @@ function formatStockQuantity(value: Decimal | string | number, unitType?: 'KG' |
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="relative w-full max-w-lg bg-white border border-[#D9D9D9] rounded-[5px] p-6 max-h-[92vh] overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-white border border-steffen-border rounded-[10px] p-6 max-h-[92vh] overflow-y-auto">
         {/* Encabezado */}
-        <div className="flex items-center justify-between pb-3 border-b border-[#D9D9D9]">
+        <div className="flex items-center justify-between pb-3 border-b border-steffen-border">
           <div>
             <h2 className="text-base font-bold text-black uppercase tracking-tight">
               AJUSTE MANUAL DE STOCK
@@ -213,8 +213,8 @@ function formatStockQuantity(value: Decimal | string | number, unitType?: 'KG' |
         </div>
 
         {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-[2px] flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-[#DD0000] shrink-0" />
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-[5px] flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-steffen-red shrink-0" />
             <span>{error}</span>
           </div>
         )}
@@ -228,7 +228,7 @@ function formatStockQuantity(value: Decimal | string | number, unitType?: 'KG' |
             <select
               value={selectedItemId}
               onChange={(e) => setSelectedItemId(e.target.value)}
-              className="w-full px-3 py-2 border border-[#D9D9D9] text-xs font-semibold text-black rounded-[2px] bg-white focus:outline-none focus:border-[#0E50A0]"
+              className="w-full px-3 py-2 border border-steffen-border text-xs font-semibold text-black rounded-[5px] bg-white focus:outline-none focus:border-steffen-gold"
             >
               {items.map((item) => (
                 <option key={item.id} value={item.id}>
@@ -248,10 +248,10 @@ function formatStockQuantity(value: Decimal | string | number, unitType?: 'KG' |
               <button
                 type="button"
                 onClick={() => setDirection('IN')}
-                className={`flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold rounded-[2px] border transition-colors cursor-pointer ${
+                className={`flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold rounded-[5px] border transition-colors cursor-pointer ${
                   direction === 'IN'
                     ? 'bg-emerald-50 border-emerald-500 text-emerald-800'
-                    : 'bg-white border-[#D9D9D9] text-gray-700 hover:bg-gray-50'
+                    : 'bg-white border-steffen-border text-gray-700 hover:bg-gray-50'
                 }`}
               >
                 <ArrowUpRight className="w-4 h-4 text-emerald-600" />
@@ -260,10 +260,10 @@ function formatStockQuantity(value: Decimal | string | number, unitType?: 'KG' |
               <button
                 type="button"
                 onClick={() => setDirection('OUT')}
-                className={`flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold rounded-[2px] border transition-colors cursor-pointer ${
+                className={`flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold rounded-[5px] border transition-colors cursor-pointer ${
                   direction === 'OUT'
                     ? 'bg-rose-50 border-rose-500 text-rose-800'
-                    : 'bg-white border-[#D9D9D9] text-gray-700 hover:bg-gray-50'
+                    : 'bg-white border-steffen-border text-gray-700 hover:bg-gray-50'
                 }`}
               >
                 <ArrowDownRight className="w-4 h-4 text-rose-600" />
@@ -287,7 +287,7 @@ function formatStockQuantity(value: Decimal | string | number, unitType?: 'KG' |
                   placeholder={selectedItem?.unitType === 'KG' ? 'Ej: 5.250' : 'Ej: 10'}
                   value={quantityInput}
                   onChange={(e) => setQuantityInput(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#D9D9D9] text-xs font-bold text-black rounded-[2px] focus:outline-none focus:border-[#0E50A0]"
+                  className="w-full px-3 py-2 border border-steffen-border text-xs font-bold text-black rounded-[5px] focus:outline-none focus:border-steffen-gold"
                 />
                 <span className="absolute right-3 top-2 text-xs font-bold text-gray-400 uppercase pointer-events-none">
                   {selectedItem?.unitType === 'KG' ? 'kg' : 'un'}
@@ -303,24 +303,24 @@ function formatStockQuantity(value: Decimal | string | number, unitType?: 'KG' |
                 type="date"
                 value={businessDate}
                 onChange={(e) => setBusinessDate(e.target.value)}
-                className="w-full px-3 py-2 border border-[#D9D9D9] text-xs font-semibold text-black rounded-[2px] bg-white focus:outline-none focus:border-[#0E50A0]"
+                className="w-full px-3 py-2 border border-steffen-border text-xs font-semibold text-black rounded-[5px] bg-white focus:outline-none focus:border-steffen-gold"
               />
             </div>
           </div>
 
           {/* Cuadro Resumen de Impacto en Saldo */}
           {selectedItem && (
-            <div className="p-3 bg-gray-50 border border-[#D9D9D9] rounded-[2px] text-xs space-y-1.5">
+            <div className="p-3 bg-gray-50 border border-steffen-border rounded-[5px] text-xs space-y-1.5">
               <div className="flex justify-between items-center text-gray-600">
                 <span>Saldo actual registrado:</span>
-                <span className="font-mono font-bold text-black">
+                <span className="font-bold text-black">
                   {formatStockQuantity(currentBalDecimal, selectedItem.unitType)}
                 </span>
               </div>
               <div className="flex justify-between items-center text-gray-600">
                 <span>Ajuste a aplicar:</span>
                 <span
-                  className={`font-mono font-bold ${
+                  className={`font-bold ${
                     direction === 'IN' ? 'text-emerald-700' : 'text-rose-700'
                   }`}
                 >
@@ -335,13 +335,13 @@ function formatStockQuantity(value: Decimal | string | number, unitType?: 'KG' |
               <div className="border-t border-gray-200 pt-1.5 flex justify-between items-center font-bold">
                 <span className="text-black">Nuevo saldo resultante:</span>
                 <span
-                  className={`font-mono text-sm ${
-                    direction === 'OUT' && resultingBalDecimal.lt(0) ? 'text-[#DD0000]' : 'text-black'
+                  className={`text-sm ${
+                    direction === 'OUT' && resultingBalDecimal.lt(0) ? 'text-steffen-red' : 'text-black'
                   }`}
                 >
                   {formatStockQuantity(resultingBalDecimal, selectedItem.unitType)}
                   {direction === 'OUT' && resultingBalDecimal.lt(0) && (
-                    <span className="text-[10px] text-[#DD0000] ml-1.5 uppercase font-bold">
+                    <span className="text-[10px] text-steffen-red ml-1.5 uppercase font-bold">
                       (STOCK INSUFICIENTE)
                     </span>
                   )}
@@ -361,26 +361,26 @@ function formatStockQuantity(value: Decimal | string | number, unitType?: 'KG' |
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Ej: Conteo físico mensual, rotura de envase, calibración de balanza..."
-              className="w-full px-3 py-2 border border-[#D9D9D9] text-xs font-medium text-black rounded-[2px] focus:outline-none focus:border-[#0E50A0]"
+              className="w-full px-3 py-2 border border-steffen-border text-xs font-medium text-black rounded-[5px] focus:outline-none focus:border-steffen-gold"
             />
           </div>
 
           {/* Botones de Acción */}
-          <div className="pt-3 border-t border-[#D9D9D9] flex justify-end gap-3">
+          <div className="pt-3 border-t border-steffen-border flex justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="px-4 py-2 border border-[#D9D9D9] text-xs font-bold text-black rounded-[2px] hover:bg-gray-100 transition-colors cursor-pointer"
+              className="px-4 py-2 border border-steffen-border text-xs font-bold text-black rounded-[5px] hover:bg-gray-100 transition-colors cursor-pointer"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isPending || (direction === 'OUT' && resultingBalDecimal.lt(0))}
-              className={`px-5 py-2 text-white text-xs font-bold uppercase tracking-wider rounded-[2px] transition-colors cursor-pointer disabled:opacity-50 ${
+              className={`px-5 py-2 text-white text-xs font-bold uppercase tracking-wider rounded-[5px] transition-colors cursor-pointer disabled:opacity-50 ${
                 direction === 'OUT' && resultingBalDecimal.lt(0)
-                  ? 'bg-[#DD0000] cursor-not-allowed'
+                  ? 'bg-steffen-red cursor-not-allowed'
                   : 'bg-black hover:bg-neutral-800'
               }`}
             >

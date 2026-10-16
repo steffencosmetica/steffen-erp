@@ -1,5 +1,6 @@
 'use server';
 
+import { requireAuthenticatedUser } from '@/auth/guard';
 import { revalidatePath } from 'next/cache';
 import { getRemittanceService, getDocumentService } from '@/services/composition';
 import {
@@ -23,6 +24,7 @@ export async function previewRtmAction(
   transportCostArs?: string | number
 ): Promise<ActionResponse<RtmPreviewDTO>> {
   try {
+    await requireAuthenticatedUser();
     const service = getRemittanceService();
     const preview = await service.previewRtm(remittanceId, transportCostArs);
 
@@ -43,6 +45,7 @@ export async function completeRtmAction(
   transportCostArs: string | number
 ): Promise<ActionResponse<CompletedRtmDTO>> {
   try {
+    await requireAuthenticatedUser();
     const service = getRemittanceService();
     const result = await service.completeRtm(remittanceId, transportCostArs);
 
@@ -80,6 +83,7 @@ export async function getMarginRemittanceByRemittanceIdAction(
   remittanceId: string
 ): Promise<ActionResponse<MarginRemittanceDetailDTO | null>> {
   try {
+    await requireAuthenticatedUser();
     const service = getRemittanceService();
     const record = await service.getMarginRemittanceByRemittanceId(remittanceId);
 

@@ -152,20 +152,20 @@ export const EditRawMaterialModal: React.FC<EditRawMaterialModalProps> = ({
       <div className="space-y-6 text-xs">
 
         {/* Sección 1: Ficha Técnica */}
-        <form onSubmit={handleSaveMetadata} className="p-4 border border-gray-200 rounded-lg space-y-4 bg-white">
+        <form onSubmit={handleSaveMetadata} className="p-4 border border-gray-200 rounded-[5px] space-y-4 bg-white">
           <div className="flex items-center justify-between border-b border-gray-200 pb-2">
             <h3 className="font-bold text-black uppercase tracking-wide">
               1. Ficha Técnica / Metadatos
             </h3>
             {metaSuccess && (
-              <span className="text-[11px] font-bold text-[#008102]">
+              <span className="text-[11px] font-bold text-steffen-green">
                 ✓ Ficha guardada
               </span>
             )}
           </div>
 
           {metaError && (
-            <div className="p-2 bg-red-50 border border-red-200 rounded text-[#DD0000] font-semibold">
+            <div className="p-2 bg-red-50 border border-red-200 rounded text-steffen-red font-semibold">
               {metaError}
             </div>
           )}
@@ -178,7 +178,7 @@ export const EditRawMaterialModal: React.FC<EditRawMaterialModalProps> = ({
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                className="w-full h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
               />
             </div>
 
@@ -188,7 +188,7 @@ export const EditRawMaterialModal: React.FC<EditRawMaterialModalProps> = ({
                 type="text"
                 value={inci}
                 onChange={(e) => setInci(e.target.value)}
-                className="w-full h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                className="w-full h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
               />
             </div>
 
@@ -201,13 +201,13 @@ export const EditRawMaterialModal: React.FC<EditRawMaterialModalProps> = ({
                 required
                 value={stockMinimumKg}
                 onChange={(e) => setStockMinimumKg(e.target.value)}
-                className="w-full h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                className="w-full h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
               />
             </div>
 
             <div>
               <label className="font-semibold text-black block mb-1">Stock Actual (kg)</label>
-              <div className="h-9 px-3 flex items-center border border-gray-200 rounded-md bg-gray-50 text-gray-700 font-bold">
+              <div className="h-9 px-3 flex items-center border border-gray-200 rounded-[5px] bg-gray-50 text-gray-700 font-bold">
                 {rawMaterial.stockCurrentKg} kg (inmutable por edición)
               </div>
             </div>
@@ -226,20 +226,20 @@ export const EditRawMaterialModal: React.FC<EditRawMaterialModalProps> = ({
         </form>
 
         {/* Sección 2: Cotización de Proveedor */}
-        <form onSubmit={handleSaveQuote} className="p-4 border border-gray-200 rounded-lg space-y-4 bg-white">
+        <form onSubmit={handleSaveQuote} className="p-4 border border-gray-200 rounded-[5px] space-y-4 bg-white">
           <div className="flex items-center justify-between border-b border-gray-200 pb-2">
             <h3 className="font-bold text-black uppercase tracking-wide">
               2. Cotización Vigente del Proveedor
             </h3>
             {quoteSuccess && (
-              <span className="text-[11px] font-bold text-[#008102]">
+              <span className="text-[11px] font-bold text-steffen-green">
                 ✓ Cotización actualizada
               </span>
             )}
           </div>
 
           {quoteError && (
-            <div className="p-2 bg-red-50 border border-red-200 rounded text-[#DD0000] font-semibold">
+            <div className="p-2 bg-red-50 border border-red-200 rounded text-steffen-red font-semibold">
               {quoteError}
             </div>
           )}
@@ -251,7 +251,7 @@ export const EditRawMaterialModal: React.FC<EditRawMaterialModalProps> = ({
                 required
                 value={quoteSupplierId}
                 onChange={(e) => setQuoteSupplierId(e.target.value)}
-                className="w-full h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0] bg-white"
+                className="w-full h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold bg-white"
               >
                 {activeSuppliers.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -272,7 +272,7 @@ export const EditRawMaterialModal: React.FC<EditRawMaterialModalProps> = ({
                 required
                 value={quotePriceNet}
                 onChange={(e) => setQuotePriceNet(e.target.value)}
-                className="w-full h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                className="w-full h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
               />
             </div>
           </div>

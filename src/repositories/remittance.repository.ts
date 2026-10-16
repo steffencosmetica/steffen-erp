@@ -84,6 +84,13 @@ export interface MonthlySaleRecord {
   gainArs: Decimal;
 }
 
+export interface CompletedSaleAmountRecord {
+  remittanceId: string;
+  businessDate: string;
+  totalOrderArs: Decimal;
+  gainArs: Decimal;
+}
+
 export interface RemittanceCodeRecord {
   id: string;
   code: string;
@@ -95,6 +102,7 @@ export interface IRemittanceRepository {
   getRemittanceByOrderId(orderId: string): Promise<RemittanceRecord | null>;
   getPendingRtmRemittance(): Promise<RemittanceRecord | null>;
   listCompletedSalesForMonth(year: number, month: number): Promise<MonthlySaleRecord[]>;
+  listCompletedSaleAmounts(): Promise<CompletedSaleAmountRecord[]>;
   listAllRemittanceCodes(): Promise<RemittanceCodeRecord[]>;
 }
 
@@ -412,10 +420,10 @@ export class RemittanceRepository extends BaseSupabaseRepository implements IRem
         customer_source,
         customer_id,
         recipient_name_snapshot,
-        total_order_ars,
+        total_order_ars::text,
         customers (name),
         business_operations (business_date),
-        margin_remittances (id, code, gain_ars)
+        margin_remittances (id, code, gain_ars::text)
       `)
       .eq('status', 'COMPLETED')
       .gte('business_operations.business_date', startDate)
@@ -451,12 +459,48 @@ export class RemittanceRepository extends BaseSupabaseRepository implements IRem
         businessDate: bo.business_date,
         customerSource: row.customer_source as CustomerSource,
         customerDisplayName,
-        totalOrderArs: new Decimal(row.total_order_ars),
-        gainArs: new Decimal(mr.gain_ars),
+        totalOrderArs: readExactDecimal(row.total_order_ars, 'remittances.total_order_ars'),
+        gainArs: readExactDecimal(mr.gain_ars, 'margin_remittances.gain_ars'),
       });
     }
 
     results.sort((a, b) => b.businessDate.localeCompare(a.businessDate));
+    return results;
+  }
+
+  /**
+   * Base de "Ventas por mes / año": todos los RTO COMPLETED con RTM, con la fecha
+   * funcional del RTO (business_operations.business_date) y los snapshots
+   * definitivos exactos (total_order_ars, gain_ars). Sin recalcular.
+   */
+  async listCompletedSaleAmounts(): Promise<CompletedSaleAmountRecord[]> {
+    const { data, error } = await this.client
+      .from('remittances')
+      .select('id, total_order_ars::text, business_operations (business_date), margin_remittances (gain_ars::text)')
+      .eq('status', 'COMPLETED');
+
+    if (error) {
+      throw new DomainError(`Error listando ventas por período: ${error.message}`);
+    }
+
+    const results: CompletedSaleAmountRecord[] = [];
+    for (const row of (data || []) as unknown as Array<{
+      id: string;
+      total_order_ars: unknown;
+      business_operations: { business_date: string | null } | { business_date: string | null }[] | null;
+      margin_remittances: { gain_ars: unknown } | { gain_ars: unknown }[] | null;
+    }>) {
+      const bo = Array.isArray(row.business_operations) ? row.business_operations[0] : row.business_operations;
+      const mr = Array.isArray(row.margin_remittances) ? row.margin_remittances[0] : row.margin_remittances;
+      // Misma definición de venta cerrada que Ventas del mes: RTO COMPLETED con RTM real.
+      if (!bo?.business_date || !mr) continue;
+      results.push({
+        remittanceId: row.id,
+        businessDate: bo.business_date,
+        totalOrderArs: readExactDecimal(row.total_order_ars, 'remittances.total_order_ars'),
+        gainArs: readExactDecimal(mr.gain_ars, 'margin_remittances.gain_ars'),
+      });
+    }
     return results;
   }
 

@@ -75,11 +75,11 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="relative w-full max-w-2xl bg-white border border-[#D9D9D9] rounded-[4px] shadow-2xl p-6 max-h-[90vh] flex flex-col">
+      <div className="relative w-full max-w-2xl bg-white border border-steffen-border rounded-[5px] shadow-2xl p-6 max-h-[90vh] flex flex-col">
         {/* Encabezado */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#D9D9D9] shrink-0">
+        <div className="flex items-center justify-between pb-4 border-b border-steffen-border shrink-0">
           <div className="flex items-center gap-2">
-            <History className="w-5 h-5 text-[#0E50A0]" />
+            <History className="w-5 h-5 text-steffen-blue" />
             <h2 className="text-lg font-bold tracking-tight text-black uppercase">
               HISTORIAL DE PRECIOS — {product.productCode}
             </h2>
@@ -94,7 +94,7 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
         </div>
 
         {/* Subencabezado de Contexto */}
-        <div className="mt-3 p-3 bg-gray-50 border border-[#D9D9D9] rounded-[2px] text-xs flex justify-between items-center shrink-0">
+        <div className="mt-3 p-3 bg-gray-50 border border-steffen-border rounded-[5px] text-xs flex justify-between items-center shrink-0">
           <div>
             <span className="block text-gray-500 font-bold uppercase tracking-wider text-[10px]">
               Producto
@@ -105,7 +105,7 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
             <span className="block text-gray-500 font-bold uppercase tracking-wider text-[10px]">
               Lista
             </span>
-            <span className="font-bold text-[#0E50A0]">{priceList.name}</span>
+            <span className="font-bold text-steffen-blue">{priceList.name}</span>
           </div>
         </div>
 
@@ -116,7 +116,7 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
               Cargando historial de precios...
             </div>
           ) : error ? (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-[2px] text-xs font-semibold text-[#DD0000] flex items-center gap-2">
+            <div className="p-4 bg-red-50 border border-red-200 rounded-[5px] text-xs font-semibold text-steffen-red flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{error}</span>
             </div>
@@ -125,10 +125,10 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
               No hay historial de precios registrado para este producto en la lista seleccionada.
             </div>
           ) : (
-            <div className="border border-[#D9D9D9] rounded-[2px] overflow-hidden">
+            <div className="border border-steffen-border rounded-[5px] overflow-hidden">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="bg-[#D9D9D9] text-black font-bold uppercase text-left border-b border-[#D9D9D9]">
+                  <tr className="bg-steffen-gray text-black font-bold uppercase text-left border-b border-steffen-border">
                     <th className="py-2.5 px-3">Estado</th>
                     <th className="py-2.5 px-3 text-right">Precio</th>
                     <th className="py-2.5 px-3">Vigente Desde</th>
@@ -143,7 +143,7 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
                     >
                       <td className="py-2.5 px-3">
                         {record.isActive ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-green-100 text-[#008102] border border-green-300">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-green-100 text-steffen-green border border-green-300">
                             VIGENTE
                           </span>
                         ) : (
@@ -160,7 +160,7 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
                       </td>
                       <td className="py-2.5 px-3 text-gray-600">
                         {record.validTo ? formatDate(record.validTo) : (
-                          <span className="font-semibold text-[#008102]">Actualidad</span>
+                          <span className="font-semibold text-steffen-green">Actualidad</span>
                         )}
                       </td>
                     </tr>
@@ -171,11 +171,11 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
           )}
         </div>
 
-        <div className="flex justify-end pt-4 border-t border-[#D9D9D9] mt-4 shrink-0">
+        <div className="flex justify-end pt-4 border-t border-steffen-border mt-4 shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="h-[38px] px-5 rounded-[2px] text-xs font-bold uppercase tracking-wider bg-white border border-[#D9D9D9] text-black hover:bg-gray-100 transition-colors cursor-pointer"
+            className="h-[29px] px-5 rounded-[5px] text-xs font-bold uppercase tracking-wider bg-white border border-steffen-border text-black hover:bg-gray-100 transition-colors cursor-pointer"
           >
             Cerrar
           </button>

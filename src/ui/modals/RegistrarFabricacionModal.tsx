@@ -20,6 +20,14 @@ interface RegistrarFabricacionModalProps {
   onClose: () => void;
   onSuccess: () => void;
   baseProducts: BaseProductOption[];
+  /**
+   * Simular fabricación (Próxima fabricación en Mi Fábrica y Dashboard): solo muestra la
+   * previsualización de requerimientos vs disponibilidad (getManufacturingPreviewAction).
+   * No registra: no genera GRA/MFA/MST, consumos, reservas ni cambios de stock.
+   */
+  simulateOnly?: boolean;
+  /** Producto Base preseleccionado al abrir. */
+  initialBaseProductId?: string;
 }
 
 export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps> = ({
@@ -27,8 +35,10 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
   onClose,
   onSuccess,
   baseProducts,
+  simulateOnly = false,
+  initialBaseProductId,
 }) => {
-  const [baseProductId, setBaseProductId] = useState<string>(baseProducts[0]?.id || '');
+  const [baseProductId, setBaseProductId] = useState<string>(initialBaseProductId || baseProducts[0]?.id || '');
   const [businessDate, setBusinessDate] = useState<string>(() => {
     return new Date().toISOString().split('T')[0];
   });
@@ -41,6 +51,13 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
 
   const [isPending, startTransition] = useTransition();
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Preselección del Producto Base al abrir (p. ej. SIMULAR desde Próxima fabricación)
+  useEffect(() => {
+    if (isOpen && initialBaseProductId) {
+      setBaseProductId(initialBaseProductId);
+    }
+  }, [isOpen, initialBaseProductId]);
 
   // Cargar previsualización de requerimientos de MPR cada vez que cambia PBA o kg
   useEffect(() => {
@@ -82,6 +99,7 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
   if (!isOpen) return null;
 
   const canSubmit =
+    !simulateOnly &&
     !isPending &&
     !previewLoading &&
     preview !== null &&
@@ -90,7 +108,7 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canSubmit || !preview) return;
+    if (simulateOnly || !canSubmit || !preview) return;
 
     setSubmitError(null);
     startTransition(async () => {
@@ -113,11 +131,11 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white border border-[#D9D9D9] rounded-[5px] w-full max-w-xl max-h-[90vh] flex flex-col justify-between overflow-hidden shadow-none animate-in fade-in zoom-in-95 duration-100">
+      <div className="bg-white border border-steffen-border rounded-[10px] w-full max-w-xl max-h-[90vh] flex flex-col justify-between overflow-hidden shadow-none animate-in fade-in zoom-in-95 duration-100">
         {/* Cabecera */}
-        <div className="px-6 py-4 border-b border-[#D9D9D9] flex justify-between items-center bg-white">
+        <div className="px-6 py-4 border-b border-steffen-border flex justify-between items-center bg-white">
           <h2 className="text-lg font-bold text-black uppercase tracking-wider">
-            Fabricacion
+            {simulateOnly ? 'Simular fabricación' : 'Fabricacion'}
           </h2>
           <button
             type="button"
@@ -131,30 +149,36 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 space-y-4 text-xs">
           {submitError && (
-            <div className="p-3 bg-red-50 border border-[#DD0000] text-[#DD0000] rounded-[3px] flex items-center gap-2">
+            <div className="p-3 bg-red-50 border border-steffen-red text-steffen-red rounded-[5px] flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{submitError}</span>
             </div>
           )}
 
+          {simulateOnly && (
+            <p className="text-[11px] text-steffen-muted">
+              Simulación: comprueba la disponibilidad de materias primas. No registra fabricación ni modifica stock.
+            </p>
+          )}
+
           {/* Campo Código */}
-          <div className="grid grid-cols-3 items-center gap-4">
+          <div className={`grid grid-cols-3 items-center gap-4 ${simulateOnly ? 'hidden' : ''}`}>
             <label className="font-bold text-gray-800 text-right">Codigo</label>
-            <div className="col-span-2 text-gray-500 font-mono text-xs">
+            <div className="col-span-2 text-gray-500 text-xs">
               Automatico (GRAxxxx)
             </div>
           </div>
 
           {/* Fecha Lote */}
-          <div className="grid grid-cols-3 items-center gap-4">
+          <div className={`grid grid-cols-3 items-center gap-4 ${simulateOnly ? 'hidden' : ''}`}>
             <label className="font-bold text-gray-800 text-right">Fecha Lote</label>
             <div className="col-span-2">
               <input
                 type="date"
                 value={businessDate}
                 onChange={(e) => setBusinessDate(e.target.value)}
-                required
-                className="w-full h-8 px-2.5 border border-[#D9D9D9] rounded-[5px] text-xs focus:outline-none focus:border-[#0E50A0]"
+                required={!simulateOnly}
+                className="w-full h-8 px-2.5 border border-steffen-border rounded-[10px] text-xs focus:outline-none focus:border-steffen-gold"
               />
             </div>
           </div>
@@ -167,7 +191,7 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
                 value={baseProductId}
                 onChange={(e) => setBaseProductId(e.target.value)}
                 required
-                className="w-full h-8 px-2.5 border border-[#D9D9D9] rounded-[5px] text-xs bg-white focus:outline-none focus:border-[#0E50A0]"
+                className="w-full h-8 px-2.5 border border-steffen-border rounded-[10px] text-xs bg-white focus:outline-none focus:border-steffen-gold"
               >
                 {baseProducts.length === 0 && (
                   <option value="">No hay productos base con fórmula</option>
@@ -193,13 +217,13 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
                 onChange={(e) => setKgFabricated(e.target.value)}
                 placeholder="ej. 100"
                 required
-                className="w-full h-8 px-2.5 border border-[#D9D9D9] rounded-[5px] text-xs focus:outline-none focus:border-[#0E50A0] font-mono"
+                className="w-full h-8 px-2.5 border border-steffen-border rounded-[10px] text-xs focus:outline-none focus:border-steffen-gold"
               />
             </div>
           </div>
 
           {/* Observaciones */}
-          <div className="grid grid-cols-3 items-center gap-4">
+          <div className={`grid grid-cols-3 items-center gap-4 ${simulateOnly ? 'hidden' : ''}`}>
             <label className="font-bold text-gray-800 text-right">Observaciones</label>
             <div className="col-span-2">
               <input
@@ -207,19 +231,19 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
                 value={observations}
                 onChange={(e) => setObservations(e.target.value)}
                 placeholder="Observaciones de la fabricación (opcional)"
-                className="w-full h-8 px-2.5 border border-[#D9D9D9] rounded-[5px] text-xs focus:outline-none focus:border-[#0E50A0]"
+                className="w-full h-8 px-2.5 border border-steffen-border rounded-[10px] text-xs focus:outline-none focus:border-steffen-gold"
               />
             </div>
           </div>
 
           {/* Tabla de Requerimientos vs Disponibilidad de MPR */}
-          <div className="pt-3 border-t border-[#D9D9D9] space-y-2">
+          <div className="pt-3 border-t border-steffen-border space-y-2">
             <div className="flex justify-between items-center">
               <h3 className="font-bold text-black uppercase tracking-wider text-[11px]">
                 Requerimiento de Materias Primas
               </h3>
               {preview && (
-                <span className="text-[11px] text-gray-500 font-mono">
+                <span className="text-[11px] text-gray-500">
                   Fórmula v{preview.formulaVersionNumber} (Base: {formatKg(preview.baseFormulaKg)} kg)
                 </span>
               )}
@@ -231,39 +255,39 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
                 <span>Calculando proporciones y stock...</span>
               </div>
             ) : previewError ? (
-              <div className="p-2.5 bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-[3px]">
+              <div className="p-2.5 bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-[5px]">
                 {previewError}
               </div>
             ) : preview ? (
-              <div className="border border-[#D9D9D9] rounded-[3px] overflow-hidden">
+              <div className="border border-steffen-border rounded-[5px] overflow-hidden">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="bg-[#D9D9D9] text-black font-bold uppercase text-[10px]">
+                    <tr className="bg-steffen-gray text-black font-bold uppercase text-[10px]">
                       <th className="py-2 px-2.5 text-left">MATERIA PRIMA</th>
                       <th className="py-2 px-2 text-right">REQUERIDO</th>
                       <th className="py-2 px-2 text-right">DISPONIBLE</th>
                       <th className="py-2 px-2 text-center">ESTADO</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#E5E5E5]">
+                  <tbody className="divide-y divide-steffen-gray">
                     {preview.items.map((it) => (
-                      <tr key={it.rawMaterialId} className={!it.isSufficient ? 'bg-[#FFA8A8]/30' : ''}>
+                      <tr key={it.rawMaterialId} className={!it.isSufficient ? 'bg-steffen-alert/30' : ''}>
                         <td className="py-1.5 px-2.5 font-medium text-gray-800">
-                          {it.rawMaterialName} <span className="text-gray-400 font-mono">({it.rawMaterialCode})</span>
+                          {it.rawMaterialName} <span className="text-gray-400">({it.rawMaterialCode})</span>
                         </td>
-                        <td className="py-1.5 px-2 text-right font-mono font-semibold">
+                        <td className="py-1.5 px-2 text-right font-semibold">
                           {formatKg(it.requiredKg)} kg
                         </td>
-                        <td className="py-1.5 px-2 text-right font-mono text-gray-600">
+                        <td className="py-1.5 px-2 text-right text-gray-600">
                           {formatKg(it.availableKg)} kg
                         </td>
                         <td className="py-1.5 px-2 text-center">
                           {it.isSufficient ? (
-                            <span className="inline-block px-1.5 py-0.5 text-[9px] font-bold text-green-800 bg-green-100 rounded">
+                            <span className="inline-block px-1.5 py-0.5 text-[10px] font-bold text-green-800 bg-green-100 rounded">
                               OK
                             </span>
                           ) : (
-                            <span className="inline-block px-1.5 py-0.5 text-[9px] font-bold text-white bg-[#DD0000] rounded">
+                            <span className="inline-block px-1.5 py-0.5 text-[10px] font-bold text-white bg-steffen-red rounded">
                               INSUFICIENTE
                             </span>
                           )}
@@ -276,31 +300,37 @@ export const RegistrarFabricacionModal: React.FC<RegistrarFabricacionModalProps>
             ) : null}
 
             {preview && !preview.isAllSufficient && (
-              <div className="text-[11px] font-semibold text-[#DD0000] flex items-center gap-1.5 pt-1">
+              <div className="text-[11px] font-semibold text-steffen-red flex items-center gap-1.5 pt-1">
                 <AlertCircle className="w-3.5 h-3.5" />
-                <span>Stock insuficiente. La fabricación no puede registrarse.</span>
+                <span>
+                  {simulateOnly
+                    ? 'Stock insuficiente para fabricar esa cantidad.'
+                    : 'Stock insuficiente. La fabricación no puede registrarse.'}
+                </span>
               </div>
             )}
           </div>
 
           {/* Botones de Acción */}
-          <div className="pt-4 border-t border-[#D9D9D9] grid grid-cols-2 gap-3">
+          <div className={`pt-4 border-t border-steffen-border grid gap-3 ${simulateOnly ? 'grid-cols-1' : 'grid-cols-2'}`}>
             <button
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="h-10 bg-[#DD0000] hover:bg-[#c40000] text-white rounded-[2px] font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
+              className="h-10 bg-steffen-red hover:bg-steffen-red-hover text-white rounded-[5px] font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
             >
-              Cancelar
+              {simulateOnly ? 'Cerrar' : 'Cancelar'}
             </button>
+            {!simulateOnly && (
             <button
               type="submit"
               disabled={!canSubmit}
-              className="h-10 bg-[#0E50A0] hover:bg-[#0c4386] text-white rounded-[2px] font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-10 bg-steffen-blue hover:bg-steffen-blue-hover text-white rounded-[5px] font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
               <span>{preview && !preview.isAllSufficient ? 'STOCK INSUFICIENTE' : 'Registrar'}</span>
             </button>
+            )}
           </div>
         </form>
       </div>

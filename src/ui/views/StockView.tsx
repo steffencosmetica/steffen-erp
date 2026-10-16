@@ -48,9 +48,9 @@ export const StockView: React.FC<{
   return (
     <div className="space-y-6">
       {/* Header and Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-lg border border-[#D9D9D9]">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-[5px] border border-steffen-border">
         <div>
-          <h1 className="text-2xl font-bold text-[#000000]">Stock de Fábrica</h1>
+          <h1 className="text-2xl font-bold text-steffen-surface">Stock de Fábrica</h1>
           <p className="text-xs text-gray-500">
             Control de existencias de Productos Finales, Materias Primas y Componentes ordenados por ratio crítico.
           </p>
@@ -66,7 +66,7 @@ export const StockView: React.FC<{
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-[#D9D9D9] bg-white px-4 rounded-t-lg">
+      <div className="flex border-b border-steffen-border bg-white px-4 rounded-t-lg">
         {[
           { id: 'PRO', label: 'Productos Finales' },
           { id: 'MPR', label: 'Materias Primas (kg)' },
@@ -78,7 +78,7 @@ export const StockView: React.FC<{
             onClick={() => setActiveTab(tab.id as any)}
             className={`py-3 px-5 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
               activeTab === tab.id
-                ? 'border-[#B99D22] text-[#B99D22]'
+                ? 'border-steffen-gold text-steffen-gold'
                 : 'border-transparent text-gray-500 hover:text-black'
             }`}
           >
@@ -89,13 +89,13 @@ export const StockView: React.FC<{
 
       {/* Supplier Filter for MPR / COM */}
       {(activeTab === 'MPR' || activeTab === 'COM') && (
-        <div className="bg-white p-3 rounded-lg border border-[#D9D9D9] flex items-center justify-between">
+        <div className="bg-white p-3 rounded-[5px] border border-steffen-border flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs font-semibold text-gray-600">
             <Filter className="w-4 h-4" />
             <span>Filtrar por Proveedor de Referencia:</span>
           </div>
           <select
-            className="h-8 px-2 border border-[#D9D9D9] rounded bg-white text-xs"
+            className="h-8 px-2 border border-steffen-border rounded bg-white text-xs"
             value={supplierFilter}
             onChange={(e) => setSupplierFilter(e.target.value)}
           >
@@ -110,7 +110,7 @@ export const StockView: React.FC<{
       )}
 
       {/* Content */}
-      <div className="bg-white p-5 rounded-lg border border-[#D9D9D9] shadow-xs">
+      <div className="bg-white p-5 rounded-[5px] border border-steffen-border shadow-xs">
         {activeTab !== 'MST' ? (
           items.length === 0 ? (
             <p className="text-sm text-gray-400 py-6 text-center">No hay ítems registrados en esta categoría.</p>
@@ -118,7 +118,7 @@ export const StockView: React.FC<{
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-[#D9D9D9] text-gray-500 font-bold text-left bg-gray-50">
+                  <tr className="border-b border-steffen-border text-gray-500 font-bold text-left bg-gray-50">
                     <th className="py-2.5 px-3">CÓDIGO</th>
                     <th className="py-2.5 px-3">NOMBRE</th>
                     {activeTab !== 'PRO' && <th className="py-2.5 px-3">PROVEEDOR VIGENTE</th>}
@@ -138,10 +138,10 @@ export const StockView: React.FC<{
 
                     return (
                       <tr key={item.id} className={`hover:bg-gray-50 ${isCritical ? 'bg-red-50/50' : ''}`}>
-                        <td className={`py-3 px-3 font-bold ${isCritical ? 'text-[#DD0000]' : 'text-[#B99D22]'}`}>
+                        <td className={`py-3 px-3 font-bold ${isCritical ? 'text-steffen-red' : 'text-steffen-gold'}`}>
                           {item.code}
                         </td>
-                        <td className="py-3 px-3 font-semibold text-[#000]">{item.name}</td>
+                        <td className="py-3 px-3 font-semibold text-steffen-surface">{item.name}</td>
                         {activeTab !== 'PRO' && (
                           <td className="py-3 px-3 text-gray-600">{costInfo?.supplierName || 'Sin asignar'}</td>
                         )}
@@ -151,7 +151,7 @@ export const StockView: React.FC<{
                             $ {costInfo?.grossArs.toFixed(2)}
                           </td>
                         )}
-                        <td className={`py-3 px-3 text-right font-bold text-sm ${isCritical ? 'text-[#DD0000]' : 'text-[#008102]'}`}>
+                        <td className={`py-3 px-3 text-right font-bold text-sm ${isCritical ? 'text-steffen-red' : 'text-steffen-green'}`}>
                           {balance.toFixed(decimals)} {unit}
                         </td>
                         <td className="py-3 px-3 text-right text-gray-500">
@@ -159,11 +159,11 @@ export const StockView: React.FC<{
                         </td>
                         <td className="py-3 px-3 text-center">
                           {isCritical ? (
-                            <span className="px-2 py-0.5 rounded font-bold text-[11px] bg-red-100 text-[#DD0000] border border-red-300">
+                            <span className="px-2 py-0.5 rounded font-bold text-[11px] bg-red-100 text-steffen-red border border-red-300">
                               {(ratio * 100).toFixed(0)}% (CRÍTICO)
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded font-medium text-[11px] bg-green-100 text-[#008102]">
+                            <span className="px-2 py-0.5 rounded font-medium text-[11px] bg-green-100 text-steffen-green">
                               {(ratio * 100).toFixed(0)}%
                             </span>
                           )}
@@ -180,10 +180,10 @@ export const StockView: React.FC<{
           stockMovements.length === 0 ? (
             <p className="text-sm text-gray-400 py-6 text-center">No hay movimientos de stock registrados.</p>
           ) : (
-            <div className="overflow-x-auto max-h-[550px]">
+            <div className="overflow-x-auto max-h-[413px]">
               <table className="w-full text-xs">
                 <thead className="sticky top-0 bg-white">
-                  <tr className="border-b border-[#D9D9D9] text-gray-500 font-bold text-left bg-gray-50">
+                  <tr className="border-b border-steffen-border text-gray-500 font-bold text-left bg-gray-50">
                     <th className="py-2.5 px-3">CÓDIGO MST</th>
                     <th className="py-2.5 px-3">FECHA</th>
                     <th className="py-2.5 px-3">TIPO</th>
@@ -209,12 +209,12 @@ export const StockView: React.FC<{
                             {mov.movement_type}
                           </span>
                         </td>
-                        <td className="py-2.5 px-3 font-medium text-[#000]">
+                        <td className="py-2.5 px-3 font-medium text-steffen-surface">
                           {it?.name} ({it?.code})
                         </td>
                         <td
                           className={`py-2.5 px-3 text-right font-bold ${
-                            isPositive ? 'text-[#008102]' : 'text-[#DD0000]'
+                            isPositive ? 'text-steffen-green' : 'text-steffen-red'
                           }`}
                         >
                           {isPositive ? '+' : ''}

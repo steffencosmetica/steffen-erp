@@ -13,6 +13,11 @@ import type {
   EditPaymentDTO,
   RegisterWithdrawalDTO,
   RegisterOperatingExpenseDTO,
+  RegisterCashDepositDTO,
+  OpeningBalancePartyTypeDTO,
+  OpeningBalanceStateDTO,
+  RegisterOpeningBalanceDTO,
+  EditOpeningBalanceDTO,
   PatrimonialMovementDTO,
   AccountPaymentOptionDTO,
   PaymentDetailDTO,
@@ -203,6 +208,133 @@ export async function registerOperatingExpenseAction(dto: RegisterOperatingExpen
       success: false,
       error: error.message || 'Error registrando gasto operativo',
     };
+  }
+}
+
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
+function revalidateAccounts(partyPath?: '/clientes' | '/proveedores') {
+  revalidatePath('/');
+  revalidatePath('/administracion');
+  revalidatePath('/movimientos');
+  if (partyPath) revalidatePath(partyPath);
+}
+
+const partyPathOf = (partyType: OpeningBalancePartyTypeDTO) =>
+  partyType === 'CUSTOMER' ? '/clientes' : '/proveedores';
+
+export async function registerCashDepositAction(dto: RegisterCashDepositDTO) {
+  try {
+    await checkAuth();
+    const res = await getPatrimonyService().registerCashDeposit({
+      amountArs: dto.amountArs,
+      description: dto.description,
+      businessDate: dto.businessDate,
+    });
+
+    revalidateAccounts();
+
+    return {
+      success: true,
+      data: {
+        operationId: res.operationId,
+        cashDepositId: res.cashDepositId,
+        movementId: res.movementId,
+        code: res.code,
+        amountArs: toNumericString(res.amountArs),
+        businessDate: res.businessDate,
+      },
+    };
+  } catch (error: unknown) {
+    return { success: false, error: errorMessage(error, 'Error registrando ingreso de caja') };
+  }
+}
+
+export async function getOpeningBalanceStateAction(
+  partyType: OpeningBalancePartyTypeDTO,
+  partyId: string
+): Promise<{ success: boolean; data?: OpeningBalanceStateDTO; error?: string }> {
+  try {
+    await checkAuth();
+    const state = await getPatrimonyService().getOpeningBalanceState(partyType, partyId);
+
+    return {
+      success: true,
+      data: {
+        hasAccount: state.accountId !== null,
+        currentBalanceArs: state.currentBalance ? toNumericString(state.currentBalance) : null,
+        opening: state.opening
+          ? {
+              id: state.opening.id,
+              amountArs: toNumericString(state.opening.amountArs),
+              businessDate: state.opening.businessDate,
+              observation: state.opening.observation,
+              movementCode: state.opening.movementCode,
+            }
+          : null,
+        editable: state.accountId !== null && !state.hasOtherActivity,
+      },
+    };
+  } catch (error: unknown) {
+    return { success: false, error: errorMessage(error, 'Error consultando saldo de apertura') };
+  }
+}
+
+export async function registerOpeningBalanceAction(dto: RegisterOpeningBalanceDTO) {
+  try {
+    await checkAuth();
+    const res = await getPatrimonyService().registerOpeningBalance({
+      partyType: dto.partyType,
+      partyId: dto.partyId,
+      amountArs: dto.amountArs,
+      businessDate: dto.businessDate,
+      observation: dto.observation,
+    });
+
+    revalidateAccounts(partyPathOf(dto.partyType));
+
+    return {
+      success: true,
+      data: { openingBalanceId: res.openingBalanceId, code: res.code, amountArs: toNumericString(res.amountArs) },
+    };
+  } catch (error: unknown) {
+    return { success: false, error: errorMessage(error, 'Error registrando saldo de apertura') };
+  }
+}
+
+export async function editOpeningBalanceAction(partyType: OpeningBalancePartyTypeDTO, dto: EditOpeningBalanceDTO) {
+  try {
+    await checkAuth();
+    const res = await getPatrimonyService().editOpeningBalance({
+      openingBalanceId: dto.openingBalanceId,
+      newAmountArs: dto.amountArs,
+      newBusinessDate: dto.businessDate,
+      observation: dto.observation,
+    });
+
+    revalidateAccounts(partyPathOf(partyType));
+
+    return {
+      success: true,
+      data: { openingBalanceId: res.openingBalanceId, code: res.code, newAmountArs: toNumericString(res.newAmountArs) },
+    };
+  } catch (error: unknown) {
+    return { success: false, error: errorMessage(error, 'Error editando saldo de apertura') };
+  }
+}
+
+export async function deleteOpeningBalanceAction(partyType: OpeningBalancePartyTypeDTO, openingBalanceId: string) {
+  try {
+    await checkAuth();
+    const res = await getPatrimonyService().deleteOpeningBalance(openingBalanceId);
+
+    revalidateAccounts(partyPathOf(partyType));
+
+    return { success: true, data: { openingBalanceId: res.openingBalanceId, code: res.code } };
+  } catch (error: unknown) {
+    return { success: false, error: errorMessage(error, 'Error eliminando saldo de apertura') };
   }
 }
 

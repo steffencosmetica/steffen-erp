@@ -24,6 +24,44 @@ export interface RegisterWithdrawalDTO {
   businessDate: string;
 }
 
+/** Importe como string decimal exacto (nunca Number). */
+export interface RegisterCashDepositDTO {
+  amountArs: string;
+  description: string;
+  businessDate: string;
+}
+
+export type OpeningBalancePartyTypeDTO = 'CUSTOMER' | 'SUPPLIER';
+
+export interface OpeningBalanceStateDTO {
+  hasAccount: boolean;
+  currentBalanceArs: string | null;
+  opening: {
+    id: string;
+    amountArs: string;
+    businessDate: string;
+    observation: string | null;
+    movementCode: string;
+  } | null;
+  /** true: se puede crear (sin apertura) o editar/eliminar (con apertura). */
+  editable: boolean;
+}
+
+export interface RegisterOpeningBalanceDTO {
+  partyType: OpeningBalancePartyTypeDTO;
+  partyId: string;
+  amountArs: string;
+  businessDate: string;
+  observation?: string;
+}
+
+export interface EditOpeningBalanceDTO {
+  openingBalanceId: string;
+  amountArs: string;
+  businessDate: string;
+  observation?: string;
+}
+
 export interface RegisterOperatingExpenseDTO {
   expenseType: ExpenseType | string;
   description?: string;
@@ -63,7 +101,7 @@ export interface PaymentDetailDTO {
 export interface AccountMovementDTO {
   id: string;
   date: string;
-  type: 'COMPRA' | 'VENTA' | 'PAGO';
+  type: 'COMPRA' | 'VENTA' | 'PAGO' | 'APERTURA';
   documentCode: string;
   amountArs: string;
   isPayment: boolean;

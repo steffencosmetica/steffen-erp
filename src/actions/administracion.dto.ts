@@ -9,6 +9,8 @@ export interface AdminCustomerRowDTO {
 export interface AdminSupplierRowDTO {
   id: string;
   name: string;
+  /** Moneda de la ficha del proveedor (fija). El saldo patrimonial se expresa en ARS. */
+  currencyCode: 'ARS' | 'USD' | null;
   balanceArs: string;
   lastPaymentDate: string | null;
   lastPurchaseDate: string | null;

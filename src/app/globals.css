@@ -1,20 +1,556 @@
 @import "tailwindcss";
 
-:root {
-  --color-brand-primary: #1e293b;
-  --color-brand-accent: #0284c7;
-  --color-bg-canvas: #f8fafc;
-  --color-bg-card: #ffffff;
-  --color-border-subtle: #e2e8f0;
-  --color-text-main: #0f172a;
-  --color-text-muted: #64748b;
+/* ==========================================================================
+   Steffen ERP — sistema visual dark definitivo
+   Fuente: docs/DESIGN.md §4–§13, docs/COMPONENTS.md §3, frame de estilo
+   docs/visual-references/figma/Frame 1.png.
+   Dorado normativo único: #C38926. Obsoletos: #D2AB68, #B99D22, #FFA8A8.
+
+   Los colores viven en variables por tema (`data-theme` en <html>). Hoy solo
+   existe dark; el modo light futuro redefine estas mismas variables bajo
+   [data-theme="light"] (Fondo #EFEFEF, superficies Surface) sin tocar
+   componentes.
+   ========================================================================== */
+
+:root,
+[data-theme="dark"] {
+  /* Paleta (DESIGN.md §4.1) */
+  --steffen-gold: #C38926;            /* Primary */
+  --steffen-bg: #000000;              /* Secondary: paneles, sidebar */
+  --steffen-page: #101010;            /* Fondo Dark: fondo de página */
+  --steffen-surface: #FBFBFB;         /* Surface: texto principal */
+  --steffen-border: #D9D9D9;          /* Border Button */
+  --steffen-gray: #393939;            /* Border Contenedor / header de tabla */
+  --steffen-blue: #0E50A0;            /* Tertiary */
+  --steffen-blue-hover: #6E96C6;
+  --steffen-green: #008102;
+  --steffen-green-hover: #015C02;
+  --steffen-red: #DD0000;
+  --steffen-red-hover: #B10000;
+  --steffen-degrade: linear-gradient(180deg, #121212 0%, #000000 100%); /* Surface Dark Degrade */
+
+  /* Derivados documentados (DESIGN.md §4.1) */
+  --steffen-text-muted: #9A9A9A;      /* Text Muted */
+  --steffen-alert: #6B0000;           /* Alert Row */
+  --steffen-button-hover: #393939;    /* Button Hover */
+  --steffen-text-soft: rgb(251 251 251 / 0.8);
+  --steffen-chrome: linear-gradient(180deg, #FFFFFF 0%, #C9C9C9 45%, #8E8E8E 70%, #E6E6E6 100%); /* íconos cromados */
+  --steffen-silver: #C9C9C9;          /* plateado para íconos lineales (SVG) sin máscara */
+  --steffen-gold-chrome: linear-gradient(180deg, #F5DCA0 0%, #C38926 45%, #8C5F14 70%, #E8C177 100%); /* dorado cromado (hover de navegación) */
+
+  /* Tintes (tokens con alfa) para estados de fondo heredados */
+  --steffen-gray-tint: rgb(57 57 57 / 0.55);
+  --steffen-red-tint: rgb(177 0 0 / 0.28);
+  --steffen-green-tint: rgb(0 129 2 / 0.22);
+  --steffen-gold-tint: rgb(195 137 38 / 0.16);
+  --steffen-blue-tint: rgb(14 80 160 / 0.22);
+
+  /* Radius (DESIGN.md §4.3) */
+  --steffen-radius-control: 5px;
+  --steffen-radius-panel: 10px;
+
+  color-scheme: dark;
+}
+
+/* Densidad del sistema (DESIGN.md §5–§7): escala nativa equivalente a la densidad
+   visual de Chrome al 75 %, sin zoom ni transform. --spacing 3px reduce padding y
+   gaps ~25 % (p-5 = 15px, gap-3 = 9px); la escala text-* sigue la tipografía
+   compacta (H1 22 · H2 18 · H3 14 · body 12 · auxiliar 11). Borders: 1px. */
+@theme {
+  --spacing: 3px;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-lg: 14px;
+  --text-xl: 16px;
+  --text-2xl: 18px;
+  --text-3xl: 22px;
+  --text-4xl: 26px;
+}
+
+/* Utilidades Tailwind enlazadas a las variables (bg-steffen-*, text-steffen-*, border-steffen-*). */
+@theme inline {
+  --color-steffen-gold: var(--steffen-gold);
+  --color-steffen-bg: var(--steffen-bg);
+  --color-steffen-page: var(--steffen-page);
+  --color-steffen-surface: var(--steffen-surface);
+  --color-steffen-border: var(--steffen-border);
+  --color-steffen-gray: var(--steffen-gray);
+  --color-steffen-blue: var(--steffen-blue);
+  --color-steffen-blue-hover: var(--steffen-blue-hover);
+  --color-steffen-green: var(--steffen-green);
+  --color-steffen-green-hover: var(--steffen-green-hover);
+  --color-steffen-red: var(--steffen-red);
+  --color-steffen-red-hover: var(--steffen-red-hover);
+  --color-steffen-muted: var(--steffen-text-muted);
+  --color-steffen-alert: var(--steffen-alert);
+  --color-steffen-silver: var(--steffen-silver);
+  --font-sans: var(--font-inter), "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+html {
+  background-color: var(--steffen-page);
 }
 
 body {
-  background-color: var(--color-bg-canvas);
-  color: var(--color-text-main);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background-color: var(--steffen-page);
+  color: var(--steffen-surface);
+  font-family: var(--font-sans);
+  font-size: 12px;
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background-color: var(--steffen-gold);
+  color: var(--steffen-bg);
+}
+
+/* ==========================================================================
+   Primitivas del sistema (COMPONENTS.md §4, §7, §62)
+   ========================================================================== */
+
+/* Superficie degradé: botones, inputs, cards de pedido, ítem de lista seleccionado. */
+.ui-degrade {
+  background-image: var(--steffen-degrade);
+}
+
+/* Botón dark (PrimaryDark): degradé + Border Button; hover Button Hover. */
+.ui-btn-dark {
+  background-color: var(--steffen-bg);
+  background-image: var(--steffen-degrade);
+  border: 1px solid var(--steffen-border);
+  color: var(--steffen-surface);
+}
+.ui-btn-dark:hover:not(:disabled) {
+  background-image: none;
+  background-color: var(--steffen-button-hover);
+}
+
+/* Ítem de lista: transparente; hover/seleccionado con degradé. */
+.ui-list-item {
+  background: transparent;
+  color: var(--steffen-surface);
+  border: 1px solid transparent;
+}
+.ui-list-item:hover,
+.ui-list-item[aria-pressed="true"],
+.ui-list-item[aria-selected="true"] {
+  background-image: var(--steffen-degrade);
+  border-color: var(--steffen-gray);
+}
+
+/* Panel: Secondary + Border Contenedor + radius 10. */
+.ui-panel {
+  background-color: var(--steffen-bg);
+  border: 1px solid var(--steffen-gray);
+  border-radius: var(--steffen-radius-panel);
+}
+
+/* Ícono por máscara (ErpIcon, COMPONENTS.md §63). */
+.ui-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+.ui-icon--chrome { background-image: var(--steffen-chrome); }
+.ui-icon--gold { background-color: var(--steffen-gold); }
+.ui-icon--light { background-color: var(--steffen-surface); }
+.ui-icon--muted { background-color: var(--steffen-text-muted); }
+.ui-icon--red { background-color: var(--steffen-red); }
+.ui-icon--dark { background-color: var(--steffen-bg); }
+
+/* Fila de alerta (DESIGN.md §13). */
+.ui-row-alert {
+  background-color: var(--steffen-alert);
+  color: var(--steffen-surface);
+}
+
+/* ==========================================================================
+   Capa de compatibilidad dark (Fase 15, primera pasada global).
+   Las vistas existentes usan utilidades de la identidad clara anterior
+   (bg-white, text-black, grises, header #D9D9D9...). Esta capa, acotada a
+   .erp-dark, las reinterpreta con los tokens dark sin tocar la lógica de
+   ninguna pantalla. Se irá retirando a medida que cada pantalla adopte los
+   componentes base (SectionHeader, Panel, KpiCard, ...).
+   Estas reglas están fuera de @layer para prevalecer sobre las utilidades.
+   ========================================================================== */
+
+/* --- Superficies ---------------------------------------------------------- */
+.erp-dark .bg-white,
+.erp-dark .bg-gray-50,
+.erp-dark .bg-\[\#FBFBFB\],
+.erp-dark .bg-\[\#F5F5F5\],
+.erp-dark .bg-\[\#FAFAFA\],
+.erp-dark .bg-slate-50,
+.erp-dark .bg-neutral-50 {
+  background-color: var(--steffen-bg);
+}
+
+.erp-dark .bg-gray-100,
+.erp-dark .bg-gray-200,
+.erp-dark .bg-neutral-100,
+.erp-dark .bg-gray-50\/50,
+.erp-dark .bg-gray-50\/80 {
+  background-color: var(--steffen-gray-tint);
+}
+
+/* Header de tabla: gris oscuro con texto claro (DESIGN.md §12). */
+.erp-dark .bg-\[\#D9D9D9\],
+.erp-dark .bg-gray-300 {
+  background-color: var(--steffen-gray);
+  color: var(--steffen-surface);
+}
+
+/* Fila de alerta (antes salmón / #B10000): Alert Row definitivo. */
+.erp-dark .bg-\[\#B10000\] {
+  background-color: var(--steffen-alert);
+  color: var(--steffen-surface);
+}
+
+.erp-dark .bg-red-50,
+.erp-dark .bg-red-100 {
+  background-color: var(--steffen-red-tint);
+}
+
+.erp-dark .bg-green-50,
+.erp-dark .bg-green-100,
+.erp-dark .bg-emerald-50 {
+  background-color: var(--steffen-green-tint);
+}
+
+.erp-dark .bg-amber-50,
+.erp-dark .bg-amber-100,
+.erp-dark .bg-yellow-50,
+.erp-dark .bg-orange-50 {
+  background-color: var(--steffen-gold-tint);
+}
+
+.erp-dark .bg-blue-50,
+.erp-dark .bg-sky-50,
+.erp-dark .bg-\[\#0E50A0\]\/10 {
+  background-color: var(--steffen-blue-tint);
+}
+
+/* --- Hover de superficies --------------------------------------------------- */
+.erp-dark .hover\:bg-gray-50:hover,
+.erp-dark .hover\:bg-gray-100:hover,
+.erp-dark .hover\:bg-gray-200:hover,
+.erp-dark .hover\:bg-gray-50\/50:hover,
+.erp-dark .hover\:bg-gray-50\/80:hover,
+.erp-dark .hover\:bg-neutral-50:hover,
+.erp-dark .hover\:bg-neutral-100:hover,
+.erp-dark .hover\:bg-black\/10:hover {
+  background-color: var(--steffen-gray-tint);
+}
+
+.erp-dark .hover\:bg-gray-300:hover,
+.erp-dark .hover\:bg-neutral-800:hover,
+.erp-dark .hover\:bg-neutral-900:hover,
+.erp-dark .hover\:bg-gray-800:hover {
+  background-color: var(--steffen-gray);
+}
+
+.erp-dark .hover\:bg-red-50:hover,
+.erp-dark .hover\:bg-red-100:hover {
+  background-color: var(--steffen-red-tint);
+}
+
+.erp-dark .hover\:bg-blue-50:hover {
+  background-color: var(--steffen-blue-tint);
+}
+
+/* --- Texto ---------------------------------------------------------------- */
+.erp-dark .text-black,
+.erp-dark .text-\[\#000\],
+.erp-dark .text-\[\#000000\],
+.erp-dark .text-slate-900,
+.erp-dark .text-gray-900,
+.erp-dark .hover\:text-black:hover {
+  color: var(--steffen-surface);
+}
+
+.erp-dark .text-gray-800,
+.erp-dark .text-gray-700,
+.erp-dark .text-\[\#393939\],
+.erp-dark .text-neutral-700 {
+  color: var(--steffen-text-soft);
+}
+
+.erp-dark .text-gray-600,
+.erp-dark .text-gray-500,
+.erp-dark .text-gray-400,
+.erp-dark .text-gray-300,
+.erp-dark .text-neutral-400,
+.erp-dark .text-neutral-500,
+.erp-dark .text-slate-500 {
+  color: var(--steffen-text-muted);
+}
+
+.erp-dark .text-red-500,
+.erp-dark .text-red-600,
+.erp-dark .text-red-700,
+.erp-dark .text-red-800,
+.erp-dark .hover\:text-red-600:hover,
+.erp-dark .hover\:text-red-700:hover {
+  color: var(--steffen-red);
+}
+
+.erp-dark .text-green-600,
+.erp-dark .text-green-700,
+.erp-dark .text-emerald-700 {
+  color: var(--steffen-green);
+}
+
+.erp-dark .text-amber-600,
+.erp-dark .text-amber-700,
+.erp-dark .text-amber-800,
+.erp-dark .text-amber-900,
+.erp-dark .text-yellow-800 {
+  color: var(--steffen-gold);
+}
+
+.erp-dark .text-blue-600,
+.erp-dark .text-blue-700,
+.erp-dark .text-blue-800 {
+  color: var(--steffen-blue-hover);
+}
+
+/* --- Bordes y divisores ----------------------------------------------------- */
+.erp-dark .border-black {
+  border-color: var(--steffen-border);
+}
+
+.erp-dark .border-gray-100,
+.erp-dark .border-gray-200,
+.erp-dark .border-gray-300,
+.erp-dark .border-\[\#E5E5E5\],
+.erp-dark .border-slate-200,
+.erp-dark .border-neutral-200 {
+  border-color: var(--steffen-gray);
+}
+
+.erp-dark .divide-gray-100 > :not(:last-child),
+.erp-dark .divide-gray-200 > :not(:last-child),
+.erp-dark .divide-\[\#E5E5E5\] > :not(:last-child),
+.erp-dark .divide-\[\#D9D9D9\] > :not(:last-child) {
+  border-color: var(--steffen-gray);
+}
+
+.erp-dark .border-red-100,
+.erp-dark .border-red-200,
+.erp-dark .border-red-300 {
+  border-color: var(--steffen-red-hover);
+}
+
+.erp-dark .border-green-200,
+.erp-dark .border-green-300 {
+  border-color: var(--steffen-green);
+}
+
+.erp-dark .border-amber-200,
+.erp-dark .border-amber-300 {
+  border-color: var(--steffen-gold);
+}
+
+.erp-dark .border-blue-200 {
+  border-color: var(--steffen-blue);
+}
+
+/* --- Sin sombras decorativas (DESIGN.md §4.2) -------------------------------- */
+.erp-dark .shadow-sm,
+.erp-dark .shadow,
+.erp-dark .shadow-md,
+.erp-dark .shadow-lg,
+.erp-dark .shadow-xl,
+.erp-dark .shadow-2xl {
+  box-shadow: none;
+}
+
+/* --- Títulos de sección: TÍTULO ———— línea (DESIGN.md §10.1) ---------------- */
+.erp-dark h2.uppercase {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--steffen-text-muted);
+  font-size: 12px;
+}
+
+.erp-dark h2.uppercase::after {
+  content: "";
+  flex: 1 1 auto;
+  min-width: 24px;
+  height: 1px;
+  background-color: var(--steffen-gray);
+}
+
+/* --- Inputs / selects dark (DESIGN.md §11.1) --------------------------------- */
+.erp-dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+.erp-dark select,
+.erp-dark textarea {
+  background-color: var(--steffen-bg);
+  background-image: var(--steffen-degrade);
+  color: var(--steffen-surface);
+  border-color: var(--steffen-border);
+  border-radius: var(--steffen-radius-control);
+  color-scheme: dark;
+}
+
+.erp-dark select option {
+  background-color: var(--steffen-bg);
+  color: var(--steffen-surface);
+}
+
+.erp-dark input:disabled,
+.erp-dark select:disabled,
+.erp-dark textarea:disabled,
+.erp-dark input[readonly] {
+  background-image: none;
+  background-color: var(--steffen-gray-tint);
+  color: var(--steffen-text-soft);
+}
+
+.erp-dark input::placeholder,
+.erp-dark textarea::placeholder {
+  color: var(--steffen-text-muted);
+}
+
+.erp-dark input:focus,
+.erp-dark select:focus,
+.erp-dark textarea:focus {
+  border-color: var(--steffen-gold);
+  outline: none;
+}
+
+.erp-dark input[aria-invalid="true"],
+.erp-dark select[aria-invalid="true"] {
+  border-color: var(--steffen-red);
+}
+
+.erp-dark input[type="checkbox"],
+.erp-dark input[type="radio"] {
+  accent-color: var(--steffen-gold);
+}
+
+/* --- Superficie invertida (compatibilidad; la selección vigente usa .ui-list-item / borde Primary) --- */
+.erp-dark .ui-inverted {
+  background-color: var(--steffen-surface);
+  color: var(--steffen-bg);
+}
+
+.erp-dark .ui-inverted .text-black,
+.erp-dark .ui-inverted .text-\[\#000\],
+.erp-dark .ui-inverted .text-\[\#000000\],
+.erp-dark .ui-inverted .text-gray-800,
+.erp-dark .ui-inverted .text-gray-700,
+.erp-dark .ui-inverted .text-gray-600,
+.erp-dark .ui-inverted .text-gray-500 {
+  color: var(--steffen-bg);
+}
+
+/* Fila/caja de alerta tokenizada: texto Surface sobre Alert Row (antes reinterpretado vía bg-[#B10000]). */
+.erp-dark .bg-steffen-alert {
+  color: var(--steffen-surface);
+}
+
+/* Tipografía única: números, códigos y textos técnicos usan la familia del sistema (sin monospace). */
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-sans);
+}
+
+/* Encabezados de tabla con radius 5px (Figma). En border-collapse el fondo del tr no se
+   recorta: el fondo se traslada a cada th y se redondean la primera y la última celda. */
+.erp-dark thead th:first-child {
+  border-top-left-radius: var(--steffen-radius-control);
+  border-bottom-left-radius: var(--steffen-radius-control);
+}
+.erp-dark thead th:last-child {
+  border-top-right-radius: var(--steffen-radius-control);
+  border-bottom-right-radius: var(--steffen-radius-control);
+}
+.erp-dark thead.bg-steffen-gray,
+.erp-dark thead > tr.bg-steffen-gray {
+  background-color: transparent;
+}
+.erp-dark thead.bg-steffen-gray th:not([class*="bg-"]),
+.erp-dark thead > tr.bg-steffen-gray > th:not([class*="bg-"]) {
+  background-color: var(--steffen-gray);
+}
+
+/* Navegación lateral: hover en dorado cromado (ícono + texto); el activo conserva Primary sólido. */
+.ui-nav-item:not([aria-current]):hover .ui-icon {
+  background-color: transparent;
+  background-image: var(--steffen-gold-chrome);
+}
+.ui-nav-item:not([aria-current]):hover .ui-nav-label {
+  background-image: var(--steffen-gold-chrome);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Peso tipográfico de tablas (DESIGN.md §12): el contenido de las celdas va en Inter 400.
+   Excepciones con énfasis semántico: filas de total (tr font-semibold/bold), valores en
+   rojo/verde (alertas, faltantes, ganancias) y badges de estado (con fondo). Encabezados
+   (thead) sin cambios. */
+.erp-dark tbody > tr:not(.font-semibold):not(.font-bold):not(.font-extrabold) > td:not(.text-steffen-red):not(.text-steffen-green),
+.erp-dark tbody > tr:not(.font-semibold):not(.font-bold):not(.font-extrabold) > td :is(span, div, a, button, p, strong, b, label):not(.text-steffen-red):not(.text-steffen-green):not([class*="bg-"]) {
+  font-weight: 400;
+}
+
+/* ==========================================================================
+   Responsive (DESIGN.md §3, Fase 18): desktop >= 1280 (xl) conserva la composición;
+   tablet 768–1279 reduce columnas; mobile < 768 apila. Nunca scroll horizontal
+   global: el contenido ancho (tablas, matrices) scrollea dentro de su contenedor.
+   ========================================================================== */
+
+/* Hijos de grilla y paneles pueden encogerse (evita que una tabla ensanche la página). */
+@layer base {
+  .erp-dark .grid > * {
+    min-width: 0;
+  }
+}
+/* En @layer base: estas protecciones NO deben pisar las utilidades de cada componente
+   (p. ej. los max-w-* de los modales). Fuera de capa ganaban a Tailwind y los modales
+   se estiraban a todo el ancho en desktop. */
+@layer base {
+  .ui-panel {
+    min-width: 0;
+    overflow-x: auto;
+  }
+
+  /* Modales / ventanas operativas: siempre dentro del viewport, con scroll interno.
+     El ancho lo define cada modal (max-w-md … max-w-5xl); tope de respaldo 900px. */
+  .erp-dark .fixed.inset-0 {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .erp-dark .fixed.inset-0 > div {
+    max-width: min(100%, 900px);
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+  }
+}
+
+/* Importes / cantidades en tablas: nunca partir "$" del número (la tabla scrollea en su panel). */
+.erp-dark td.tabular-nums,
+.erp-dark td .tabular-nums {
+  white-space: nowrap;
+}
+
+/* Display ExtraLight (DESIGN.md §5.1): importes grandes de cards de Cuentas/Caja y Total facturado.
+   Inter 200 con tracking levemente negativo; solo para este token, no global. */
+.ui-display-extralight {
+  font-weight: 200;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
 }

@@ -4,7 +4,17 @@
  * Sin dependencias de React para poder usarse desde código server-only.
  */
 export const STEFFEN_LOGO_VIEWBOX = '0 0 40 44';
+
+/**
+ * Relleno del logo en el template PDF v1.0 (rto-default / rtm-default). Se
+ * conserva tal cual porque los documentos ya generados con esa versión no se
+ * modifican; el rediseño de PDFs llegará con una nueva versión de template
+ * (docs/PDFS.md, nota de vigencia).
+ */
 export const STEFFEN_LOGO_FILL = '#D2AB68';
+
+/** Relleno del logo en la UI: dorado normativo vigente (docs/DESIGN.md §4.1). */
+export const STEFFEN_LOGO_UI_FILL = '#C38926';
 
 export const STEFFEN_LOGO_PATHS = [
   'M12.5 40C8.2 38.1 4.5 34.4 2.8 29.5C0.8 23.9 1.4 17.6 4.3 12.5C5.3 10.7 7.0 8.5 7.8 8.8C8.5 9.1 8.2 11.5 7.8 13.5C6.9 18.2 8.1 23.5 11.2 27.2C13.2 29.6 16.0 31.4 18.8 32.5C16.2 35.8 14.1 38.5 12.5 40Z',

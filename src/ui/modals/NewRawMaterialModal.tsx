@@ -176,7 +176,7 @@ export const NewRawMaterialModal: React.FC<NewRawMaterialModalProps> = ({
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-md text-xs font-semibold text-[#DD0000]">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-[5px] text-xs font-semibold text-steffen-red">
             {error}
           </div>
         )}
@@ -191,7 +191,7 @@ export const NewRawMaterialModal: React.FC<NewRawMaterialModalProps> = ({
               <select
                 value={itemType}
                 onChange={(e) => setItemType(e.target.value as 'MPR' | 'COM')}
-                className="flex-1 h-9 px-3 border border-gray-300 rounded-md bg-white text-black focus:outline-none focus:border-[#0E50A0]"
+                className="flex-1 h-9 px-3 border border-gray-300 rounded-[5px] bg-white text-black focus:outline-none focus:border-steffen-gold"
               >
                 <option value="MPR">Materia Prima (MPR)</option>
                 <option value="COM">Componente (COM)</option>
@@ -206,7 +206,7 @@ export const NewRawMaterialModal: React.FC<NewRawMaterialModalProps> = ({
                 placeholder={itemType === 'COM' ? 'Nombre del componente' : 'Nombre del insumo'}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="flex-1 h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                className="flex-1 h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
               />
             </div>
 
@@ -219,7 +219,7 @@ export const NewRawMaterialModal: React.FC<NewRawMaterialModalProps> = ({
                   placeholder="Nomenclatura INCI opcional"
                   value={inci}
                   onChange={(e) => setInci(e.target.value)}
-                  className="flex-1 h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                  className="flex-1 h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
                 />
               </div>
             )}
@@ -236,7 +236,7 @@ export const NewRawMaterialModal: React.FC<NewRawMaterialModalProps> = ({
                 placeholder="0.00"
                 value={initialQuotedPriceNet}
                 onChange={(e) => setInitialQuotedPriceNet(e.target.value)}
-                className="flex-1 h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                className="flex-1 h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
               />
             </div>
 
@@ -250,7 +250,7 @@ export const NewRawMaterialModal: React.FC<NewRawMaterialModalProps> = ({
                 placeholder={itemType === 'COM' ? 'Ej: 100' : 'Ej: 10.000'}
                 value={stockMinimum}
                 onChange={(e) => setStockMinimum(e.target.value)}
-                className="flex-1 h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                className="flex-1 h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
               />
             </div>
           </div>
@@ -259,7 +259,7 @@ export const NewRawMaterialModal: React.FC<NewRawMaterialModalProps> = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <label className="font-semibold text-black w-32">Codigo</label>
-              <div className="flex-1 h-9 px-3 flex items-center border border-dashed border-gray-300 rounded-md text-gray-500 bg-gray-50 font-mono">
+              <div className="flex-1 h-9 px-3 flex items-center border border-dashed border-gray-300 rounded-[5px] text-gray-500 bg-gray-50">
                 {itemType === 'COM' ? 'Automático (COMxxxx)' : 'Automático (MPRxxxx)'}
               </div>
             </div>
@@ -270,7 +270,7 @@ export const NewRawMaterialModal: React.FC<NewRawMaterialModalProps> = ({
                 required
                 value={initialSupplierId}
                 onChange={(e) => setInitialSupplierId(e.target.value)}
-                className="flex-1 h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0] bg-white"
+                className="flex-1 h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold bg-white"
               >
                 {activeSuppliers.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -282,7 +282,7 @@ export const NewRawMaterialModal: React.FC<NewRawMaterialModalProps> = ({
 
             <div className="flex items-center justify-between">
               <label className="font-semibold text-black w-32">Moneda</label>
-              <div className="flex-1 h-9 px-3 flex items-center border border-gray-300 rounded-md bg-gray-50 text-gray-700 font-bold">
+              <div className="flex-1 h-9 px-3 flex items-center border border-gray-300 rounded-[5px] bg-gray-50 text-gray-700 font-bold">
                 {selectedSupplier ? selectedSupplier.currencyCode : 'ARS'} (heredada)
               </div>
             </div>
@@ -296,7 +296,7 @@ export const NewRawMaterialModal: React.FC<NewRawMaterialModalProps> = ({
                 placeholder={itemType === 'COM' ? '0' : '0.000'}
                 value={initialStock}
                 onChange={(e) => setInitialStock(e.target.value)}
-                className="flex-1 h-9 px-3 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#0E50A0]"
+                className="flex-1 h-9 px-3 border border-gray-300 rounded-[5px] text-black focus:outline-none focus:border-steffen-gold"
               />
             </div>
           </div>

@@ -5,6 +5,7 @@ import type {
   ManufactureBulkLotResult,
 } from '@/repositories/factory.repository';
 import type { BulkManufacturingPreview } from '@/services/factory.service';
+import type { NextManufacturingProduct } from '@/domain/next-manufacturing';
 
 export interface BulkLotDTO {
   id: string;
@@ -288,5 +289,29 @@ export function serializePackageProductResult(
     bulkLotKgAvailable: toNumericString(result.bulkLotKgAvailable),
     unitCostSnapshotArs: toNumericString(result.unitCostSnapshotArs),
     totalCostSnapshotArs: toNumericString(result.totalCostSnapshotArs),
+  };
+}
+
+/**
+ * Próxima fabricación (Mi Fábrica y Dashboard → Producto Final): DTO JSON-safe de la
+ * regla única `selectNextManufacturingProducts` (src/domain/next-manufacturing.ts).
+ */
+export interface NextManufacturingProductDTO {
+  id: string;
+  name: string;
+  baseProductId: string;
+  stockMinimum: string;
+  stockActual: string;
+  isUrgentForOrders: boolean;
+}
+
+export function serializeNextManufacturingProduct(p: NextManufacturingProduct): NextManufacturingProductDTO {
+  return {
+    id: p.productId,
+    name: p.name,
+    baseProductId: p.baseProductId,
+    stockMinimum: toNumericString(p.stockMinimum),
+    stockActual: toNumericString(p.balance),
+    isUrgentForOrders: p.isUrgentForOrders,
   };
 }

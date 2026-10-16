@@ -16,6 +16,7 @@ import {
 import type { RtoPreviewDTO } from '@/actions/remittance.dto';
 import { Decimal, toWholePesos, toKgPrecision } from '@/domain/decimal';
 import { formatArs, formatKg } from '@/lib/format';
+import { Button, tableStyles } from '@/ui/components/UIComponents';
 
 interface VerPedidoModalProps {
   orderId: string | null;
@@ -25,6 +26,8 @@ interface VerPedidoModalProps {
   onOrderDeleted?: () => void;
   hasPendingRtm?: boolean;
   pendingRtmCode?: string | null;
+  /** 'inline': panel dentro de la pantalla Pedidos (Figma); 'modal': ventana (default). */
+  variant?: 'modal' | 'inline';
 }
 
 interface EditableLine {
@@ -46,7 +49,9 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
   onOrderDeleted,
   hasPendingRtm,
   pendingRtmCode,
+  variant = 'modal',
 }) => {
+  const isInline = variant === 'inline';
   const [isPending, startTransition] = useTransition();
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -376,29 +381,35 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-[5px] border border-[#D9D9D9] w-full max-w-4xl p-6 relative my-8 max-h-[92vh] flex flex-col">
-        {/* Header */}
-        <div className="flex justify-between items-center pb-3 border-b border-[#D9D9D9]">
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl font-bold tracking-tight text-black">PEDIDO</h2>
-            {order && (
-              <span className="text-sm font-bold bg-[#D2AB68]/20 text-[#0E50A0] px-2 py-0.5 rounded-[2px]">
-                {order.code}
-              </span>
-            )}
-          </div>
+    <div
+      className={
+        isInline ? '' : 'fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 overflow-y-auto'
+      }
+    >
+      <div
+        className={
+          isInline
+            ? 'bg-black rounded-[10px] border border-steffen-gray w-full p-5 relative flex flex-col'
+            : 'bg-black rounded-[10px] border border-steffen-border/40 w-full max-w-4xl p-6 relative my-8 max-h-[92vh] flex flex-col'
+        }
+      >
+        {/* Header: PEDIDO xxxx (Figma Pedido) */}
+        <div className="flex justify-between items-center pb-2">
+          <h2 className="text-2xl font-bold tracking-tight text-steffen-surface">
+            PEDIDO {order ? order.code : ''}
+          </h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-black transition-colors"
+            aria-label="Cerrar pedido"
+            className="p-1 rounded-[5px] text-steffen-surface/70 hover:text-steffen-surface hover:bg-steffen-gray transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {errorMsg && (
-          <div className="mt-3 p-3 bg-red-50 border border-[#DD0000] text-[#DD0000] text-xs font-semibold rounded-[2px] flex items-center gap-2">
+          <div className="mt-3 p-3 bg-red-50 border border-steffen-red text-steffen-red text-xs font-semibold rounded-[5px] flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
@@ -407,9 +418,9 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
         {loading ? (
           <div className="py-16 text-center text-gray-500 text-sm">Cargando pedido...</div>
         ) : order ? (
-          <div className="overflow-y-auto flex-1 pr-1 space-y-4 mt-4">
-            {/* Metadata Header Exacto a Figma PEDIDO.png */}
-            <div className="bg-[#FBFBFB] border border-[#D9D9D9] p-3 rounded-[4px] text-xs space-y-2">
+          <div className={`${isInline ? '' : 'overflow-y-auto flex-1 pr-1'} space-y-4 mt-2`}>
+            {/* Cabecera en grilla de pares label/valor (Figma Pedido) */}
+            <div className="text-sm space-y-3 text-steffen-surface">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <span className="font-bold text-gray-700">Codigo:</span>{' '}
@@ -442,7 +453,7 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center pt-1 border-t border-gray-200">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-gray-700">Cant. bultos:</span>
                   <input
@@ -452,7 +463,7 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                     value={packageCount}
                     onChange={(e) => setPackageCount(e.target.value)}
                     placeholder="-"
-                    className="w-20 p-1 border border-[#D9D9D9] rounded-[2px] bg-white text-center font-bold focus:outline-none focus:border-[#D2AB68]"
+                    className="w-20 h-8 p-1 border border-steffen-border rounded-[5px] text-center font-semibold focus:outline-none focus:border-steffen-gold"
                   />
                 </div>
                 <div>
@@ -467,10 +478,10 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
             </div>
 
             {/* Tabla de Renglones Exacta a Figma PEDIDO.png */}
-            <div className="border border-[#D9D9D9] rounded-[2px] overflow-hidden">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead className="bg-[#D9D9D9] text-black font-bold uppercase text-[11px]">
-                  <tr>
+            <div className="overflow-hidden">
+              <table className={`${tableStyles.table} text-left`}>
+                <thead>
+                  <tr className={tableStyles.headRowHighlight}>
                     <th className="py-2 px-3 w-14 text-center">Acción</th>
                     <th className="py-2 px-3 w-20 text-center">Cant.</th>
                     <th className="py-2 px-3">Producto</th>
@@ -479,17 +490,18 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                     <th className="py-2 px-3 text-center w-24">AG</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#D9D9D9]">
+                <tbody className="divide-y divide-steffen-border">
                   {lines.map((l) => {
                     const linePt = l.unitPriceArs.times(l.requestedQuantity);
                     return (
-                      <tr key={l.id} className="hover:bg-gray-50">
+                      <tr key={l.id} className={tableStyles.row}>
                         <td className="py-2 px-2 text-center">
                           <button
                             type="button"
                             onClick={() => handleRemoveLine(l.id)}
-                            className="w-5 h-5 inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors cursor-pointer"
+                            className="w-5 h-5 inline-flex items-center justify-center bg-steffen-red hover:bg-steffen-red-hover text-steffen-surface rounded-full transition-colors cursor-pointer"
                             title="Eliminar producto"
+                            aria-label="Eliminar producto"
                           >
                             <X className="w-3 h-3 stroke-[3]" />
                           </button>
@@ -501,7 +513,7 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                             step="1"
                             value={l.requestedQuantity}
                             onChange={(e) => handleUpdateLineQuantity(l.id, e.target.value)}
-                            className="w-16 p-1 border border-[#D9D9D9] rounded-[2px] text-center font-bold focus:outline-none focus:border-[#D2AB68]"
+                            className="w-16 p-1 border border-steffen-border rounded-[5px] text-center font-bold focus:outline-none focus:border-steffen-gold"
                           />
                         </td>
                         <td className="py-2 px-3 font-semibold text-black">
@@ -517,7 +529,7 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                             value={l.agQuantity !== null ? l.agQuantity : ''}
                             onChange={(e) => handleUpdateLineAg(l.id, e.target.value)}
                             placeholder={String(l.requestedQuantity)}
-                            className="w-20 p-1 border border-[#D9D9D9] rounded-[2px] text-center text-xs font-semibold focus:outline-none focus:border-[#D2AB68]"
+                            className="w-20 p-1 border border-steffen-border rounded-[5px] text-center text-xs font-semibold focus:outline-none focus:border-steffen-gold"
                           />
                         </td>
                       </tr>
@@ -532,13 +544,13 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
               <button
                 type="button"
                 onClick={() => setShowAddProduct(true)}
-                className="h-[32px] px-3 bg-black hover:bg-gray-800 text-[#D2AB68] font-bold rounded-[2px] flex items-center gap-1.5 transition-colors cursor-pointer text-xs"
+                className="h-[30px] px-5 bg-black border border-steffen-border hover:bg-steffen-gray text-steffen-surface rounded-[5px] flex items-center gap-1.5 transition-colors cursor-pointer text-base"
               >
                 <Plus className="w-4 h-4" />
                 <span>Agregar producto</span>
               </button>
             ) : (
-              <div className="border border-[#D9D9D9] p-3 rounded-[4px] bg-[#FBFBFB] space-y-2 text-xs">
+              <div className="border border-steffen-gray p-3 rounded-[10px] space-y-2 text-xs">
                 <span className="font-bold text-black block uppercase tracking-wider">
                   Agregar nuevo producto al pedido
                 </span>
@@ -551,15 +563,15 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                       step="1"
                       value={newProdQty}
                       onChange={(e) => setNewProdQty(e.target.value)}
-                      className="w-full p-1.5 border border-[#D9D9D9] rounded-[2px] bg-white text-center font-bold"
+                      className="w-full p-1.5 border border-steffen-border rounded-[5px] bg-white text-center font-bold"
                     />
                   </div>
-                  <div className="flex-1 min-w-[200px]">
+                  <div className="flex-1 min-w-[150px]">
                     <label className="block text-gray-600 font-medium mb-1">Producto</label>
                     <select
                       value={selectedNewProdId}
                       onChange={(e) => setSelectedNewProdId(e.target.value)}
-                      className="w-full p-1.5 border border-[#D9D9D9] rounded-[2px] bg-white"
+                      className="w-full p-1.5 border border-steffen-border rounded-[5px] bg-white"
                     >
                       <option value="">Seleccionar...</option>
                       {availableProducts.map((p) => (
@@ -578,20 +590,20 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                       value={newProdAg}
                       onChange={(e) => setNewProdAg(e.target.value)}
                       placeholder="AG"
-                      className="w-full p-1.5 border border-[#D9D9D9] rounded-[2px] bg-white text-center"
+                      className="w-full p-1.5 border border-steffen-border rounded-[5px] bg-white text-center"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={handleAddProductToOrder}
-                    className="h-[32px] px-3 bg-black hover:bg-gray-800 text-[#D2AB68] font-bold rounded-[2px] transition-colors"
+                    className="h-[24px] px-3 bg-black hover:bg-gray-800 text-steffen-gold font-bold rounded-[5px] transition-colors"
                   >
                     Añadir
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowAddProduct(false)}
-                    className="h-[32px] px-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-[2px] transition-colors"
+                    className="h-[24px] px-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-[5px] transition-colors"
                   >
                     Cancelar
                   </button>
@@ -600,20 +612,20 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
             )}
 
             {/* Totales alineados a la derecha Exactos a Figma PEDIDO.png */}
-            <div className="flex flex-col items-end pt-2 border-t border-[#D9D9D9] space-y-1 text-xs">
+            <div className="flex flex-col items-end pt-2 space-y-1.5 text-sm">
               <div className="flex justify-between w-64">
                 <span className="font-bold text-gray-700 uppercase">SUBTOTAL</span>
                 <span className="font-bold text-black">{formatArs(subtotal)}</span>
               </div>
 
               {liveDiscountSteps.map((ds) => (
-                <div key={ds.position} className="flex justify-between w-64 text-red-600">
+                <div key={ds.position} className="flex justify-between w-64">
                   <span className="font-bold uppercase">DESCUENTO {ds.percent.toString()}%</span>
                   <span>- {formatArs(ds.amount)}</span>
                 </div>
               ))}
 
-              <div className="flex justify-between w-64 pt-1 border-t border-gray-200">
+              <div className="flex justify-between w-64 pt-1">
                 <span className="font-extrabold text-black uppercase">TOTAL PEDIDO</span>
                 <span className="font-extrabold text-black text-sm">{formatArs(totalPedido)}</span>
               </div>
@@ -621,21 +633,21 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
               {order.customerSource === 'REGISTERED_CUSTOMER' && (
                 <div className="flex justify-between w-64">
                   <span className="font-bold text-gray-600 uppercase">SALDO</span>
-                  <span className={priorBalance.gt(0) ? 'font-bold text-[#0E50A0]' : 'text-gray-600'}>
+                  <span className={priorBalance.gt(0) ? 'font-bold text-steffen-blue' : 'text-gray-600'}>
                     {formatArs(priorBalance)}
                   </span>
                 </div>
               )}
 
-              <div className="flex justify-between w-64 pt-1 border-t border-gray-300">
+              <div className="flex justify-between w-64 pt-1">
                 <span className="font-extrabold text-black uppercase">TOTAL A COBRAR</span>
-                <span className="font-extrabold text-[#0E50A0] text-sm">{formatArs(totalToCollect)}</span>
+                <span className="font-extrabold text-steffen-surface text-sm">{formatArs(totalToCollect)}</span>
               </div>
             </div>
 
             {/* Confirmación de Borrado */}
             {showDeleteConfirm && (
-              <div className="p-3 bg-red-50 border border-red-300 rounded-[3px] text-xs space-y-2 mt-2">
+              <div className="p-3 bg-red-50 border border-red-300 rounded-[5px] text-xs space-y-2 mt-2">
                 <div className="font-bold text-red-700">
                   ¿Confirmar borrado del pedido {order.code}?
                 </div>
@@ -646,7 +658,7 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowDeleteConfirm(false)}
-                    className="px-3 py-1 bg-gray-200 hover:bg-gray-300 text-black font-semibold rounded-[2px]"
+                    className="px-3 py-1 bg-gray-200 hover:bg-gray-300 text-black font-semibold rounded-[5px]"
                   >
                     No, mantener
                   </button>
@@ -654,7 +666,7 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                     type="button"
                     onClick={handleDeleteOrder}
                     disabled={isPending}
-                    className="px-3 py-1 bg-[#DD0000] hover:bg-red-700 text-white font-bold rounded-[2px]"
+                    className="px-3 py-1 bg-steffen-red hover:bg-red-700 text-white font-bold rounded-[5px]"
                   >
                     {isPending ? 'Borrando...' : 'Sí, borrar'}
                   </button>
@@ -665,35 +677,18 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
         ) : null}
 
         {/* Footer Buttons Exactos a Figma PEDIDO.png */}
-        <div className="flex justify-between items-center pt-4 border-t border-[#D9D9D9] mt-4">
-          <div>
-            <button
-              type="button"
-              onClick={() => setShowDeleteConfirm(true)}
-              disabled={isPending || !order}
-              className="px-4 py-2 bg-[#DD0000] hover:bg-[#b80000] text-white font-bold text-xs rounded-[2px] transition-colors cursor-pointer"
-            >
-              Borrar pedido
-            </button>
-          </div>
-
+        {/* Footer: Borrar (Danger) · Cancelar / Guardar (Secondary) · Generar Remito (Success) — Figma Pedido */}
+        <div className="flex flex-wrap items-center gap-3 pt-4 mt-4">
+          <Button variant="rojo" onClick={() => setShowDeleteConfirm(true)} disabled={isPending || !order}>
+            Borrar pedido
+          </Button>
+          <Button variant="secundario" onClick={onClose} disabled={isPending}>
+            Cancelar
+          </Button>
+          <Button variant="secundario" onClick={handleSave} disabled={isPending || !order}>
+            {isPending ? 'Guardando...' : 'Guardar'}
+          </Button>
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isPending}
-              className="px-4 py-2 bg-[#0E50A0]/10 hover:bg-[#0E50A0]/20 text-[#0E50A0] font-bold text-xs rounded-[2px] transition-colors cursor-pointer"
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={isPending || !order}
-              className="px-5 py-2 bg-[#0E50A0] hover:bg-[#0c4386] text-white font-bold text-xs rounded-[2px] transition-colors cursor-pointer"
-            >
-              {isPending ? 'Guardando...' : 'Guardar'}
-            </button>
             <button
               type="button"
               onClick={handleOpenRtoPreview}
@@ -703,10 +698,10 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                   ? `Bloqueado: Existe un remito pendiente de transporte (${pendingRtmCode || ''}). Debe procesarse en Fase 13.`
                   : 'Confirmar venta y generar remito (RTO)'
               }
-              className={`px-5 py-2 font-bold text-xs rounded-[2px] transition-colors cursor-pointer ${
+              className={`h-[30px] px-5 font-bold text-xs uppercase rounded-[5px] border transition-colors cursor-pointer ${
                 hasPendingRtm
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-75'
-                  : 'bg-[#008102] hover:bg-[#006e02] text-white active:scale-[0.99]'
+                  ? 'bg-steffen-gray border-steffen-gray text-steffen-surface/50 cursor-not-allowed'
+                  : 'bg-steffen-green border-steffen-green hover:bg-steffen-green-hover text-steffen-surface'
               }`}
             >
               {loading ? 'Calculando...' : 'Generar Remito'}
@@ -718,10 +713,10 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
         {/* DIÁLOGO MODAL: CONFIRMACIÓN DE REMITO (RTO)                    */}
         {/* ============================================================== */}
         {showRtoConfirm && rtoPreview && (
-          <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-4">
-            <div className="bg-white rounded-[5px] border border-[#D9D9D9] w-full max-w-2xl p-6 shadow-xl max-h-[90vh] flex flex-col space-y-4">
+          <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/75 p-4">
+            <div className="bg-black rounded-[10px] border border-steffen-border/40 w-full max-w-2xl p-6 max-h-[90vh] flex flex-col space-y-4">
               {/* Header */}
-              <div className="flex justify-between items-center pb-3 border-b border-[#D9D9D9]">
+              <div className="flex justify-between items-center pb-3 border-b border-steffen-border">
                 <div>
                   <h3 className="text-lg font-bold text-black uppercase tracking-tight">
                     Confirmar Generación de Remito (RTO)
@@ -741,7 +736,7 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
               </div>
 
               {rtoErrorMsg && (
-                <div className="p-3 bg-red-50 border border-[#DD0000] text-[#DD0000] text-xs font-semibold rounded-[2px] flex items-center gap-2">
+                <div className="p-3 bg-red-50 border border-steffen-red text-steffen-red text-xs font-semibold rounded-[5px] flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{rtoErrorMsg}</span>
                 </div>
@@ -749,10 +744,10 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
 
               <div className="overflow-y-auto space-y-4 flex-1 pr-1 text-xs">
                 {/* Meta datos */}
-                <div className="grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded-[3px] border border-[#D9D9D9]">
+                <div className="grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded-[5px] border border-steffen-border">
                   <div>
                     <span className="text-gray-500 font-semibold block text-[11px]">PEDIDO:</span>
-                    <span className="font-bold text-[#0E50A0] text-sm">{rtoPreview.orderCode}</span>
+                    <span className="font-bold text-steffen-blue text-sm">{rtoPreview.orderCode}</span>
                   </div>
                   <div>
                     <span className="text-gray-500 font-semibold block text-[11px]">DESTINATARIO:</span>
@@ -776,18 +771,18 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                   <div className="font-bold text-gray-700 uppercase mb-1.5 text-[11px]">
                     Detalle de productos a remitir
                   </div>
-                  <table className="w-full text-left border-collapse border border-[#D9D9D9]">
-                    <thead className="bg-[#D9D9D9] text-black font-bold uppercase text-[10px]">
+                  <table className="w-full text-left border-collapse border border-steffen-border">
+                    <thead className="bg-steffen-gray text-black font-bold uppercase text-[10px]">
                       <tr>
                         <th className="py-2 px-2.5">CÓDIGO</th>
                         <th className="py-2 px-2.5">PRODUCTO</th>
                         <th className="py-2 px-2.5 text-center">PED</th>
-                        <th className="py-2 px-2.5 text-center bg-[#D2AB68]/20">AG (REMITO)</th>
+                        <th className="py-2 px-2.5 text-center bg-steffen-gold/20">AG (REMITO)</th>
                         <th className="py-2 px-2.5 text-right">PRECIO</th>
                         <th className="py-2 px-2.5 text-right">TOTAL</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#D9D9D9]">
+                    <tbody className="divide-y divide-steffen-border">
                       {rtoPreview.lines.map((it) => {
                         const isZero = it.agQuantity === 0;
                         return (
@@ -808,7 +803,7 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                               className={`py-2 px-2.5 text-center font-extrabold ${
                                 isZero
                                   ? 'text-gray-400'
-                                  : 'text-[#0E50A0] bg-[#D2AB68]/10'
+                                  : 'text-steffen-blue bg-steffen-gold/10'
                               }`}
                             >
                               {isZero ? '0 (omitido)' : it.agQuantity}
@@ -825,7 +820,7 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                 </div>
 
                 {/* Desglose de Totales */}
-                <div className="flex flex-col items-end space-y-1 pt-2 border-t border-[#D9D9D9]">
+                <div className="flex flex-col items-end space-y-1 pt-2 border-t border-steffen-border">
                   <div className="flex justify-between w-64">
                     <span className="font-bold text-gray-700 uppercase">SUBTOTAL RTO</span>
                     <span className="font-bold text-black">{formatArs(rtoPreview.subtotalArs)}</span>
@@ -848,7 +843,7 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                   {rtoPreview.customerSource === 'REGISTERED_CUSTOMER' && (
                     <div className="flex justify-between w-64">
                       <span className="font-bold text-gray-600 uppercase">SALDO ANTERIOR</span>
-                      <span className="font-bold text-[#0E50A0]">
+                      <span className="font-bold text-steffen-blue">
                         {formatArs(rtoPreview.priorBalanceArs)}
                       </span>
                     </div>
@@ -856,7 +851,7 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
 
                   <div className="flex justify-between w-64 pt-1 border-t border-gray-300">
                     <span className="font-extrabold text-black uppercase">TOTAL A COBRAR</span>
-                    <span className="font-extrabold text-[#0E50A0] text-sm">
+                    <span className="font-extrabold text-steffen-blue text-sm">
                       {formatArs(rtoPreview.totalToCollectArs)}
                     </span>
                   </div>
@@ -875,7 +870,7 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                 </div>
 
                 {/* Advertencia Crítica */}
-                <div className="p-3 bg-amber-50 border border-amber-300 rounded-[3px] text-[11px] text-amber-900 space-y-1">
+                <div className="p-3 bg-amber-50 border border-amber-300 rounded-[5px] text-[11px] text-amber-900 space-y-1">
                   <div className="font-bold flex items-center gap-1.5 text-amber-950">
                     <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
                     <span>ADVERTENCIA NORMATIVA IRREVERSIBLE:</span>
@@ -891,12 +886,12 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
               </div>
 
               {/* Botones */}
-              <div className="flex justify-end items-center gap-3 pt-3 border-t border-[#D9D9D9]">
+              <div className="flex justify-end items-center gap-3 pt-3 border-t border-steffen-border">
                 <button
                   type="button"
                   onClick={() => setShowRtoConfirm(false)}
                   disabled={isConfirmingRto}
-                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-black font-semibold text-xs rounded-[2px] transition-colors cursor-pointer"
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-black font-semibold text-xs rounded-[5px] transition-colors cursor-pointer"
                 >
                   Cancelar / Volver
                 </button>
@@ -904,7 +899,7 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                   type="button"
                   onClick={handleConfirmRto}
                   disabled={isConfirmingRto}
-                  className="px-5 py-2 bg-[#008102] hover:bg-[#006e02] text-white font-bold text-xs rounded-[2px] transition-colors cursor-pointer shadow-xs active:scale-[0.99] flex items-center gap-2"
+                  className="px-5 py-2 bg-steffen-green hover:bg-steffen-green-hover text-white font-bold text-xs rounded-[5px] transition-colors cursor-pointer shadow-xs active:scale-[0.99] flex items-center gap-2"
                 >
                   {isConfirmingRto ? 'Confirmando venta...' : 'CONFIRMAR Y GENERAR REMITO'}
                 </button>

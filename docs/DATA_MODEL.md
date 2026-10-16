@@ -304,6 +304,8 @@ Tipos iniciales:
 - `WITHDRAWAL`
 - `MARKETPLACE_SETTLEMENT`
 - `STOCK_ADJUSTMENT`
+- `OPENING_BALANCE` (Fase 19.1 — saldo de apertura, §55.1)
+- `CASH_DEPOSIT` (Fase 19.1 — ingreso de caja, §55.2)
 
 Objetivo:
 
@@ -1637,6 +1639,8 @@ Tipos iniciales:
 - VENTA
 - GASTO_OPERATIVO
 - TRANSFERENCIA_MERCADO_LIBRE
+- SALDO_APERTURA (Fase 19.1)
+- INGRESO_CAJA (Fase 19.1)
 
 Una operación puede generar más de un MOV.
 
@@ -1782,6 +1786,59 @@ Caja Steffen.
 
 ---
 
+## 55.1 Tabla `opening_balances` (Fase 19.1)
+
+Saldo de apertura: deuda previa al inicio operativo del ERP (BUSINESS_RULES §20.2).
+
+| Campo | Tipo |
+|---|---|
+| `id` | UUID PK |
+| `operation_id` | UUID UNIQUE/FK → `business_operations` (`OPENING_BALANCE`) |
+| `financial_account_id` | UUID UNIQUE/FK → `financial_accounts` |
+| `amount_ars` | NUMERIC(20,6) `> 0` |
+| `observation` | TEXT NULL |
+| `created_at` | TIMESTAMPTZ |
+| `updated_at` | TIMESTAMPTZ |
+
+Restricciones:
+
+- `UNIQUE (financial_account_id)`: máximo un saldo de apertura por cuenta.
+- solo cuentas `CUSTOMER_RECEIVABLE` o `SUPPLIER_PAYABLE` (validado en la RPC; nunca CASH).
+- fecha comercial en `business_operations.business_date`.
+
+Genera un `MOV SALDO_APERTURA` con un único `financial_entry` `+importe` sobre la cuenta corriente.
+
+RPCs atómicas (solo `service_role`):
+
+- `register_opening_balance_atomic(account, amount, date, observation)`;
+- `edit_opening_balance_atomic(id, amount, date, observation)`: modifica el MOV original y su asiento, recalcula `current_balance` por diferencia;
+- `delete_opening_balance_atomic(id)`: revierte el saldo y elimina asiento, MOV, registro y operación propios;
+- `get_opening_balance_state(party_type, party_id)`: estado (solo lectura, importes como texto exacto).
+
+Crear, editar y eliminar se rechazan (SQLSTATE `SA002`) si la cuenta tiene cualquier otra actividad: asientos de otro MOV, pagos, compras (proveedor) o RTO (cliente). Duplicado: `SA001`. Tipo de cuenta no admitido: `SA003`.
+
+---
+
+## 55.2 Tabla `cash_deposits` (Fase 19.1)
+
+Ingreso de caja: contraparte de `withdrawals`.
+
+| Campo | Tipo |
+|---|---|
+| `id` | UUID PK |
+| `operation_id` | UUID UNIQUE/FK → `business_operations` (`CASH_DEPOSIT`) |
+| `description` | TEXT |
+| `amount_ars` | NUMERIC(20,6) `> 0` |
+| `created_at` | TIMESTAMPTZ |
+
+Cuenta destino:
+
+Caja Steffen.
+
+RPC atómica: `register_cash_deposit_atomic(amount, description, date)` → `MOV INGRESO_CAJA`, entry `+importe` sobre Caja Steffen. Mismo criterio de edición que Retiro: solo alta.
+
+---
+
 # 56. Tabla `marketplace_settlements`
 
 Liquidaciones de Mercado Libre.
@@ -1873,6 +1930,22 @@ Total salida Caja Mercado Libre:
 ## Retiro
 
 `CASH_STEFFEN -= importe`
+
+## Ingreso de caja
+
+`CASH_STEFFEN += importe`
+
+No es venta: no afecta facturación, ganancia, deudas ni stock.
+
+## Saldo de apertura cliente
+
+`CUSTOMER_RECEIVABLE += importe`
+
+## Saldo de apertura proveedor
+
+`SUPPLIER_PAYABLE += importe`
+
+Saldo de apertura representa deuda previa al inicio operativo del ERP y no constituye venta, compra, ingreso, egreso ni movimiento de stock.
 
 ---
 

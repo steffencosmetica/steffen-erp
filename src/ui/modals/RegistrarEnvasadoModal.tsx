@@ -24,6 +24,8 @@ interface RegistrarEnvasadoModalProps {
   onSuccess: () => void;
   bulkLots: BulkLotDTO[];
   products: PackagingProductOption[];
+  /** Lote preseleccionado al abrir (atajo visual desde el tile de GRANELES). */
+  initialBulkLotId?: string;
 }
 
 export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
@@ -32,6 +34,7 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
   onSuccess,
   bulkLots,
   products,
+  initialBulkLotId,
 }) => {
   // 1. Estados de formulario
   const [selectedLotId, setSelectedLotId] = useState<string>('');
@@ -60,6 +63,13 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
       setSubmitError(null);
     }
   }, [isOpen, bulkLots, selectedLotId]);
+
+  // Atajo desde un tile de granel: preselecciona ese lote en el mismo selector.
+  useEffect(() => {
+    if (isOpen && initialBulkLotId && bulkLots.some((l) => l.id === initialBulkLotId)) {
+      setSelectedLotId(initialBulkLotId);
+    }
+  }, [isOpen, initialBulkLotId, bulkLots]);
 
   const selectedLot = bulkLots.find((l) => l.id === selectedLotId) || bulkLots[0] || null;
 
@@ -158,9 +168,9 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white border border-[#D9D9D9] rounded-[5px] w-full max-w-xl max-h-[92vh] flex flex-col justify-between overflow-hidden shadow-none animate-in fade-in zoom-in-95 duration-100">
+      <div className="bg-white border border-steffen-border rounded-[10px] w-full max-w-xl max-h-[92vh] flex flex-col justify-between overflow-hidden shadow-none animate-in fade-in zoom-in-95 duration-100">
         {/* Cabecera del modal */}
-        <div className="px-6 py-4 border-b border-[#D9D9D9] flex justify-between items-center bg-white">
+        <div className="px-6 py-4 border-b border-steffen-border flex justify-between items-center bg-white">
           <h2 className="text-lg font-bold text-black uppercase tracking-wider">
             Envasado
           </h2>
@@ -176,7 +186,7 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
         {/* Cuerpo del modal */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
           {submitError && (
-            <div className="p-3 bg-[#FFA8A8] border border-[#DD0000] rounded-[5px] text-[#DD0000] font-semibold flex items-center gap-2">
+            <div className="p-3 bg-steffen-alert border border-steffen-red rounded-[10px] text-steffen-red font-semibold flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{submitError}</span>
             </div>
@@ -191,7 +201,7 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
               <select
                 value={selectedLotId}
                 onChange={(e) => setSelectedLotId(e.target.value)}
-                className="w-full h-8 px-2 border border-[#D9D9D9] rounded-[2px] bg-white text-xs font-medium text-black focus:outline-none focus:border-[#0E50A0]"
+                className="w-full h-8 px-2 border border-steffen-border rounded-[5px] bg-white text-xs font-medium text-black focus:outline-none focus:border-steffen-gold"
                 disabled={isPending || bulkLots.length === 0}
               >
                 {bulkLots.length === 0 ? (
@@ -213,7 +223,7 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
               Granel
             </label>
             <div className="col-span-2">
-              <div className="w-full h-8 px-2 border border-[#D9D9D9] rounded-[2px] bg-gray-50 flex items-center text-xs font-semibold text-black">
+              <div className="w-full h-8 px-2 border border-steffen-border rounded-[5px] bg-gray-50 flex items-center text-xs font-semibold text-black">
                 {selectedLot?.baseProductName || '—'}
               </div>
             </div>
@@ -225,7 +235,7 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
               Kg Disponibles
             </label>
             <div className="col-span-2">
-              <div className="w-full h-8 px-2 border border-[#D9D9D9] rounded-[2px] bg-gray-50 flex items-center text-xs font-mono font-bold text-black">
+              <div className="w-full h-8 px-2 border border-steffen-border rounded-[5px] bg-gray-50 flex items-center text-xs font-bold text-black">
                 {selectedLot ? `${formatKg(selectedLot.kgAvailable)} Kg` : '—'}
               </div>
             </div>
@@ -240,7 +250,7 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
               <select
                 value={selectedProductId}
                 onChange={(e) => setSelectedProductId(e.target.value)}
-                className="w-full h-8 px-2 border border-[#D9D9D9] rounded-[2px] bg-white text-xs font-medium text-black focus:outline-none focus:border-[#0E50A0]"
+                className="w-full h-8 px-2 border border-steffen-border rounded-[5px] bg-white text-xs font-medium text-black focus:outline-none focus:border-steffen-gold"
                 disabled={isPending || compatibleProducts.length === 0}
               >
                 {compatibleProducts.length === 0 ? (
@@ -269,7 +279,7 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
                 value={unitsPackaged}
                 onChange={(e) => setUnitsPackaged(e.target.value)}
                 placeholder="10"
-                className="w-full h-8 px-2 border border-[#D9D9D9] rounded-[2px] bg-white text-xs font-mono font-semibold text-black focus:outline-none focus:border-[#0E50A0]"
+                className="w-full h-8 px-2 border border-steffen-border rounded-[5px] bg-white text-xs font-semibold text-black focus:outline-none focus:border-steffen-gold"
                 disabled={isPending}
               />
             </div>
@@ -286,7 +296,7 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
                 value={observations}
                 onChange={(e) => setObservations(e.target.value)}
                 placeholder="Opcional..."
-                className="w-full h-8 px-2 border border-[#D9D9D9] rounded-[2px] bg-white text-xs text-black focus:outline-none focus:border-[#0E50A0]"
+                className="w-full h-8 px-2 border border-steffen-border rounded-[5px] bg-white text-xs text-black focus:outline-none focus:border-steffen-gold"
                 disabled={isPending}
               />
             </div>
@@ -303,7 +313,7 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
                   type="checkbox"
                   checked={isLastOfLot}
                   onChange={(e) => setIsLastOfLot(e.target.checked)}
-                  className="w-4 h-4 text-[#0E50A0] border-[#D9D9D9] rounded-[2px] focus:ring-0 cursor-pointer"
+                  className="w-4 h-4 text-steffen-blue border-steffen-border rounded-[5px] focus:ring-0 cursor-pointer"
                   disabled={isPending}
                 />
                 <span className="text-xs font-medium text-black">
@@ -313,9 +323,9 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
 
               {/* Indicador Merma / Sobrante según cálculo */}
               {isLastOfLot && preview && (
-                <div className="text-xs font-mono font-bold">
+                <div className="text-xs font-bold">
                   {preview.varianceType === 'MERMA' && (
-                    <span className="text-[#DD0000]">
+                    <span className="text-steffen-red">
                       MERMA: {preview.varianceKg} Kg
                     </span>
                   )}
@@ -335,7 +345,7 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
           </div>
 
           {/* Sección de previsualización técnica de stock */}
-          <div className="mt-4 pt-3 border-t border-[#D9D9D9]">
+          <div className="mt-4 pt-3 border-t border-steffen-border">
             <div className="flex justify-between items-center mb-2">
               <span className="font-bold text-black uppercase text-[11px]">
                 Previsualización de Envasado
@@ -349,7 +359,7 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
             </div>
 
             {previewError && (
-              <div className="p-2.5 bg-[#FFA8A8] border border-[#DD0000] rounded-[2px] text-[#DD0000] text-xs">
+              <div className="p-2.5 bg-steffen-alert border border-steffen-red rounded-[5px] text-steffen-red text-xs">
                 {previewError}
               </div>
             )}
@@ -358,31 +368,31 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
               <div className="space-y-3">
                 {/* Granel Requerido vs Disponible */}
                 <div
-                  className={`p-2.5 rounded-[2px] border text-xs flex justify-between items-center ${
+                  className={`p-2.5 rounded-[5px] border text-xs flex justify-between items-center ${
                     !preview.isBulkSufficient
-                      ? 'bg-[#FFA8A8] border-[#DD0000] text-[#DD0000]'
-                      : 'bg-gray-50 border-[#D9D9D9] text-black'
+                      ? 'bg-steffen-alert border-steffen-red text-steffen-red'
+                      : 'bg-gray-50 border-steffen-border text-black'
                   }`}
                 >
                   <div>
                     <span className="font-bold">Granel Requerido:</span>{' '}
-                    <span className="font-mono">{formatKg(preview.kgConsumed)} Kg</span>
+                    <span>{formatKg(preview.kgConsumed)} Kg</span>
                   </div>
                   <div>
                     <span className="font-bold">Disponible:</span>{' '}
-                    <span className="font-mono">{formatKg(preview.kgAvailable)} Kg</span>
+                    <span>{formatKg(preview.kgAvailable)} Kg</span>
                   </div>
                   {!preview.isBulkSufficient && (
-                    <span className="font-bold uppercase text-[10px] text-[#DD0000]">
+                    <span className="font-bold uppercase text-[10px] text-steffen-red">
                       ¡Granel Insuficiente!
                     </span>
                   )}
                 </div>
 
                 {/* Tabla de Componentes */}
-                <div className="border border-[#D9D9D9] rounded-[2px] overflow-hidden">
+                <div className="border border-steffen-border rounded-[5px] overflow-hidden">
                   <table className="w-full text-left text-[11px]">
-                    <thead className="bg-[#D9D9D9] text-black font-bold uppercase text-[10px]">
+                    <thead className="bg-steffen-gray text-black font-bold uppercase text-[10px]">
                       <tr>
                         <th className="py-1.5 px-2">COMPONENTE</th>
                         <th className="py-1.5 px-2 text-right">REQ</th>
@@ -390,20 +400,20 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
                         <th className="py-1.5 px-2 text-center">ESTADO</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#E5E5E5]">
+                    <tbody className="divide-y divide-steffen-gray">
                       {preview.components.map((c) => (
                         <tr
                           key={c.componentId}
-                          className={!c.isSufficient ? 'bg-[#FFA8A8]/40' : ''}
+                          className={!c.isSufficient ? 'bg-steffen-alert/40' : ''}
                         >
                           <td className="py-1.5 px-2 font-medium text-black">
-                            <span className="font-mono font-semibold">{c.componentCode}</span>{' '}
+                            <span className="font-semibold">{c.componentCode}</span>{' '}
                             {c.componentName}
                           </td>
-                          <td className="py-1.5 px-2 text-right font-mono font-bold text-black">
+                          <td className="py-1.5 px-2 text-right font-bold text-black">
                             {c.requiredUnits} u
                           </td>
-                          <td className="py-1.5 px-2 text-right font-mono text-black">
+                          <td className="py-1.5 px-2 text-right text-black">
                             {c.availableUnits} u
                           </td>
                           <td className="py-1.5 px-2 text-center">
@@ -412,7 +422,7 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
                                 OK
                               </span>
                             ) : (
-                              <span className="text-[#DD0000] font-bold text-[10px] bg-[#FFA8A8] px-1 py-0.5 rounded-[2px]">
+                              <span className="text-steffen-red font-bold text-[10px] bg-steffen-alert px-1 py-0.5 rounded-[5px]">
                                 FALTANTE
                               </span>
                             )}
@@ -424,11 +434,11 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
                 </div>
 
                 {/* Resumen de costos congelados */}
-                <div className="bg-gray-50 border border-[#D9D9D9] p-2.5 rounded-[2px] flex justify-between items-center text-xs">
+                <div className="bg-gray-50 border border-steffen-border p-2.5 rounded-[5px] flex justify-between items-center text-xs">
                   <span className="font-semibold text-gray-700">
                     Costo unitario estimado:
                   </span>
-                  <span className="font-mono font-bold text-black">
+                  <span className="font-bold text-black">
                     ${preview.estimatedUnitCostArs} ARS
                   </span>
                 </div>
@@ -437,19 +447,19 @@ export const RegistrarEnvasadoModal: React.FC<RegistrarEnvasadoModalProps> = ({
           </div>
 
           {/* Botones de acción inferiores */}
-          <div className="pt-4 border-t border-[#D9D9D9] flex justify-end gap-3">
+          <div className="pt-4 border-t border-steffen-border flex justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="h-8 px-6 bg-[#DD0000] hover:bg-[#b50000] text-white rounded-[2px] font-bold uppercase tracking-wider text-xs transition-colors cursor-pointer"
+              className="h-8 px-6 bg-steffen-red hover:bg-steffen-red-hover text-white rounded-[5px] font-bold uppercase tracking-wider text-xs transition-colors cursor-pointer"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={!canSubmit}
-              className="h-8 px-6 bg-[#0E50A0] hover:bg-[#0c4386] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-[2px] font-bold uppercase tracking-wider text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="h-8 px-6 bg-steffen-blue hover:bg-steffen-blue-hover disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-[5px] font-bold uppercase tracking-wider text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
             >
               {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               <span>Registrar</span>

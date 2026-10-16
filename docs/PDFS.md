@@ -93,7 +93,9 @@ Estilo:
 - fondo blanco;
 - tipografía legible;
 - uso predominante de negro/gris;
-- dorado Steffen `#B99D22` como acento;
+- dorado Steffen `#B99D22` como acento.
+
+> Nota de vigencia: `#B99D22` es la referencia histórica de esta especificación MVP y no es el dorado global del ERP. El template implementado `rto-default` / `rtm-default` versión `1.0` (con el que se generaron los documentos existentes) usa `#D2AB68`; esos documentos no se regeneran. El dorado normativo vigente es `#C38926` (`DESIGN.md`). El rediseño visual de los PDFs se hará con una **nueva versión de template**, que usará la identidad vigente.
 - logo en encabezado;
 - tablas con bordes/divisores discretos;
 - totales destacados.

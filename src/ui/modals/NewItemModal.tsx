@@ -117,7 +117,7 @@ export const NewItemModal: React.FC<{
   return (
     <Modal title="Nuevo Insumo (Materia Prima o Componente)" isOpen={isOpen} onClose={onClose}>
       <div className="space-y-4">
-        {error && <div className="p-3 bg-red-100 text-[#DD0000] rounded text-sm font-semibold">{error}</div>}
+        {error && <div className="p-3 bg-red-100 text-steffen-red rounded text-sm font-semibold">{error}</div>}
 
         <FormField label="Tipo de Insumo">
           <div className="grid grid-cols-2 gap-2">
@@ -128,7 +128,7 @@ export const NewItemModal: React.FC<{
                 setStockMinimum(10);
               }}
               className={`p-2.5 text-xs font-bold rounded border cursor-pointer ${
-                itemType === 'MPR' ? 'bg-[#B99D22] text-white border-[#B99D22]' : 'bg-gray-50 border-gray-300'
+                itemType === 'MPR' ? 'bg-steffen-gold text-white border-steffen-gold' : 'bg-gray-50 border-gray-300'
               }`}
             >
               Materia Prima (MPR - en kg)
@@ -140,7 +140,7 @@ export const NewItemModal: React.FC<{
                 setStockMinimum(50);
               }}
               className={`p-2.5 text-xs font-bold rounded border cursor-pointer ${
-                itemType === 'COM' ? 'bg-[#B99D22] text-white border-[#B99D22]' : 'bg-gray-50 border-gray-300'
+                itemType === 'COM' ? 'bg-steffen-gold text-white border-steffen-gold' : 'bg-gray-50 border-gray-300'
               }`}
             >
               Componente (COM - en unidades)
@@ -151,7 +151,7 @@ export const NewItemModal: React.FC<{
         <FormField label="Nombre Comercial">
           <input
             type="text"
-            className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full font-bold"
+            className="h-[30px] px-3 border border-steffen-border rounded w-full font-bold"
             placeholder={itemType === 'MPR' ? 'Ej: Aceite de Coco Puro' : 'Ej: Envase Pet 250cc'}
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -162,7 +162,7 @@ export const NewItemModal: React.FC<{
           <FormField label="Nomenclatura INCI (Opcional)">
             <input
               type="text"
-              className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full text-xs"
+              className="h-[30px] px-3 border border-steffen-border rounded w-full text-xs"
               placeholder="Ej: Cocos Nucifera Oil"
               value={inci}
               onChange={(e) => setInci(e.target.value)}
@@ -173,7 +173,7 @@ export const NewItemModal: React.FC<{
         <div className="grid grid-cols-2 gap-4">
           <FormField label="Proveedor Inicial">
             <select
-              className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full bg-white"
+              className="h-[30px] px-3 border border-steffen-border rounded w-full bg-white"
               value={supplierId}
               onChange={(e) => setSupplierId(e.target.value)}
             >
@@ -194,7 +194,7 @@ export const NewItemModal: React.FC<{
               type="number"
               step="0.01"
               min="0.01"
-              className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full font-bold"
+              className="h-[30px] px-3 border border-steffen-border rounded w-full font-bold"
               value={quotedPriceNet || ''}
               onChange={(e) => setQuotedPriceNet(parseFloat(e.target.value) || 0)}
             />
@@ -209,7 +209,7 @@ export const NewItemModal: React.FC<{
               type="number"
               min="0.001"
               step={itemType === 'MPR' ? '0.001' : '1'}
-              className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full font-bold text-red-600"
+              className="h-[30px] px-3 border border-steffen-border rounded w-full font-bold text-red-600"
               value={stockMinimum || ''}
               onChange={(e) => setStockMinimum(parseFloat(e.target.value) || 0)}
             />
@@ -220,14 +220,14 @@ export const NewItemModal: React.FC<{
               type="number"
               min="0"
               step={itemType === 'MPR' ? '0.001' : '1'}
-              className="h-[40px] px-3 border border-[#D9D9D9] rounded w-full"
+              className="h-[30px] px-3 border border-steffen-border rounded w-full"
               value={initialStock || ''}
               onChange={(e) => setInitialStock(parseFloat(e.target.value) || 0)}
             />
           </FormField>
         </div>
 
-        <div className="flex justify-end gap-3 pt-3 border-t border-[#D9D9D9]">
+        <div className="flex justify-end gap-3 pt-3 border-t border-steffen-border">
           <Button variant="secundario" onClick={onClose}>
             Cancelar
           </Button>

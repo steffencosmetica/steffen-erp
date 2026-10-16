@@ -1300,6 +1300,38 @@ Cuentas iniciales:
 
 Las cuentas pueden ser negativas.
 
+Al iniciar el uso del ERP, Caja Steffen y Caja Mercado Libre arrancan en `0`. No existe saldo de apertura de caja ni de granel.
+
+---
+
+## 20.2 Saldo de apertura (Fase 19.1)
+
+Saldo de apertura representa deuda previa al inicio operativo del ERP y no constituye venta, compra, ingreso, egreso ni movimiento de stock.
+
+Casos:
+
+- **Cliente**: dinero que el cliente ya le debía a Steffen antes del arranque → `Deudas Clientes += importe` (cuenta del cliente, convención §21.1).
+- **Proveedor**: dinero que Steffen ya le debía al proveedor antes del arranque → `Deudas Proveedores += importe` (cuenta del proveedor, convención §22).
+
+Reglas:
+
+- el usuario ingresa siempre un importe positivo (`> 0`); 0 y negativos se rechazan;
+- máximo **1** saldo de apertura por cuenta corriente;
+- nunca sobre Caja Steffen, Caja Mercado Libre ni otro tipo de cuenta;
+- la deuda se expresa siempre en ARS, también para proveedores que compran en USD (la cuenta patrimonial es ARS, §19.5);
+- registra fecha comercial, `created_at` de auditoría y observación opcional;
+- genera `MOV SALDO_APERTURA` con un único asiento sobre la cuenta corriente;
+- **no** genera caja, stock, MST, MFA, compra, pedido, RTO, RTM, venta, ganancia, comisión, gasto ni ingreso, ni aparece en reportes de ventas o compras.
+
+Crear / editar / eliminar:
+
+- permitido solo mientras la cuenta **no tenga ninguna otra actividad** (pagos, compras, RTO u otro asiento);
+- con cualquier movimiento distinto de la apertura, la apertura queda bloqueada (no se edita ni elimina);
+- editar modifica el MOV original y recalcula la cuenta, sin movimiento compensatorio (mismo criterio que §23.3);
+- eliminar (con confirmación) revierte el saldo y elimina la operación de apertura completa; solo es posible durante la carga inicial, antes de cualquier operación real sobre la cuenta.
+
+DEUDAS CLIENTES, DEUDAS PROVEEDORES y NETO reflejan las aperturas automáticamente desde los saldos de cuenta (§20.1).
+
 ---
 
 # 21. CLIENTES Y SALDOS
@@ -1470,6 +1502,32 @@ Genera:
 
 ---
 
+## 26.1 Ingreso de caja (Fase 19.1)
+
+Contraparte de Retiro: dinero que entra manualmente a Caja Steffen y que **no** proviene de una venta, pago de cliente u otra operación comercial registrada (aporte del propietario, incorporación/corrección manual de efectivo, ingreso extraordinario).
+
+No debe usarse para registrar ventas.
+
+Datos:
+
+- Fecha;
+- Concepto / observación (obligatorio);
+- Importe (`> 0`).
+
+Efecto:
+
+`Caja Steffen += importe`
+
+Genera:
+
+`MOV INGRESO_CAJA`
+
+No afecta Caja Mercado Libre, stock, MST, MFA, clientes, proveedores, deudas, pedidos, RTO, RTM, compras, ventas, facturación, ganancia ni comisión. Aparece en Movimientos patrimoniales igual que Retiro.
+
+Edición: mismo criterio que Retiro (solo alta, sin edición ni eliminación).
+
+---
+
 # 27. MERCADO LIBRE
 
 ## 27.1 Venta
@@ -1559,7 +1617,9 @@ Tipos confirmados hasta el momento:
 - TRANSPORTE;
 - VENTA;
 - GASTO_OPERATIVO;
-- transferencia/liquidación Mercado Libre.
+- transferencia/liquidación Mercado Libre;
+- SALDO_APERTURA (§20.2);
+- INGRESO_CAJA (§26.1).
 
 La tabla registra:
 

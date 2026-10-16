@@ -11,6 +11,7 @@ import type {
   MonthlySaleWithDocumentsRecord,
 } from '@/services/remittance.service';
 import type { DocumentGenerationOutcome } from '@/services/document.service';
+import { toNumericString } from '@/domain/decimal';
 
 export interface DocumentOutcomeDTO {
   status: string;
@@ -264,8 +265,10 @@ export interface MonthlySaleDTO {
   businessDate: string;
   customerSource: string;
   customerDisplayName: string;
-  totalOrderArs: number;
-  gainArs: number;
+  /** NUMERIC exacto como string (snapshot congelado). */
+  totalOrderArs: string;
+  /** Ganancia congelada del RTM, NUMERIC exacto como string. */
+  gainArs: string;
   rtoDocumentStatus: string;
   rtmDocumentStatus: string;
 }
@@ -279,8 +282,8 @@ export function serializeMonthlySale(record: MonthlySaleWithDocumentsRecord): Mo
     businessDate: record.businessDate,
     customerSource: record.customerSource,
     customerDisplayName: record.customerDisplayName,
-    totalOrderArs: record.totalOrderArs.toNumber(),
-    gainArs: record.gainArs.toNumber(),
+    totalOrderArs: toNumericString(record.totalOrderArs),
+    gainArs: toNumericString(record.gainArs),
     rtoDocumentStatus: record.rtoDocumentStatus,
     rtmDocumentStatus: record.rtmDocumentStatus,
   };

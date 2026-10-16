@@ -1,5 +1,5 @@
 import React from 'react';
-import { STEFFEN_LOGO_VIEWBOX, STEFFEN_LOGO_FILL, STEFFEN_LOGO_PATHS } from './steffen-logo-geometry';
+import { STEFFEN_LOGO_VIEWBOX, STEFFEN_LOGO_UI_FILL, STEFFEN_LOGO_PATHS } from './steffen-logo-geometry';
 
 export const SteffenLogoIcon: React.FC<{ className?: string }> = ({ className = 'w-7 h-7' }) => {
   return (
@@ -11,7 +11,7 @@ export const SteffenLogoIcon: React.FC<{ className?: string }> = ({ className = 
       aria-label="Steffen Logo"
     >
       {STEFFEN_LOGO_PATHS.map((d) => (
-        <path key={d} d={d} fill={STEFFEN_LOGO_FILL} />
+        <path key={d} d={d} fill={STEFFEN_LOGO_UI_FILL} />
       ))}
     </svg>
   );

@@ -5,12 +5,15 @@ import {
   getFormulaService,
   getProductService,
   getFactoryService,
+  getPlanningService,
 } from '@/services/composition';
 import { serializeCostGainAnalysis } from '@/actions/cost-gain.dto';
 import {
   serializeBulkLot,
   serializeFactoryMovement,
+  serializeNextManufacturingProduct,
 } from '@/actions/factory.dto';
+import { selectNextManufacturingProducts, urgentProductIdsFromPlanning } from '@/domain/next-manufacturing';
 import {
   FabricaView,
   type FabricaFormulaOptionDTO,
@@ -49,6 +52,7 @@ export default async function FabricaPage(props: {
     productRecords,
     openLotsRecords,
     recentMovementsRecords,
+    planningMatrix,
   ] = await Promise.all([
     costGainService.listProductAnalysis(requestedProfileId, true).catch(async () => {
       if (requestedProfileId) {
@@ -60,6 +64,8 @@ export default async function FabricaPage(props: {
     productService.listProducts(false),
     factoryService.listOpenBulkLots(),
     factoryService.listRecentFactoryMovements(50),
+    // URG PARA PEDIDOS: faltantes de Pedidos OPEN según el motor de planificación.
+    getPlanningService().getPlanningMatrix(),
   ]);
 
   const analysisDTO = serializeCostGainAnalysis(analysisResult);
@@ -89,15 +95,12 @@ export default async function FabricaPage(props: {
     }));
 
   // 5. Alertas reales de producción bajo stock
-  const lowStockProducts: FabricaLowStockProductDTO[] = productRecords
-    .filter((p) => p.active && p.stockMinimum && p.balance.lte(p.stockMinimum))
-    .map((p) => ({
-      id: p.productId,
-      name: p.name,
-      stockMinimum: p.stockMinimum ? toNumericString(p.stockMinimum) : '0',
-      stockActual: toNumericString(p.balance),
-      isCritical: p.balance.lte(0),
-    }));
+  const lowStockProducts: FabricaLowStockProductDTO[] = selectNextManufacturingProducts(
+    productRecords,
+    urgentProductIdsFromPlanning(planningMatrix.products)
+  ).map(
+    serializeNextManufacturingProduct
+  );
 
   // 6. Opciones de productos compatibles para envasado
   const productsForPackaging = productRecords

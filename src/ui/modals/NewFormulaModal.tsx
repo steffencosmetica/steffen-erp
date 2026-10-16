@@ -146,9 +146,9 @@ export const NewFormulaModal: React.FC<NewFormulaModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="relative w-full max-w-4xl bg-white border border-[#D9D9D9] rounded-[4px] shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-4xl bg-white border border-steffen-border rounded-[5px] shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
         {/* Encabezado del Modal */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#D9D9D9]">
+        <div className="flex items-center justify-between pb-4 border-b border-steffen-border">
           <h2 className="text-xl font-bold tracking-tight text-black uppercase">
             NUEVA FORMULA
           </h2>
@@ -162,7 +162,7 @@ export const NewFormulaModal: React.FC<NewFormulaModalProps> = ({
         </div>
 
         {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-[2px]">
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-[5px]">
             {error}
           </div>
         )}
@@ -176,7 +176,7 @@ export const NewFormulaModal: React.FC<NewFormulaModalProps> = ({
                 <label className="block text-xs font-bold text-black uppercase mb-1">
                   Codigo
                 </label>
-                <div className="w-full px-3 py-2 bg-gray-100 border border-[#D9D9D9] text-xs text-gray-500 font-mono rounded-[2px]">
+                <div className="w-full px-3 py-2 bg-gray-100 border border-steffen-border text-xs text-gray-500 rounded-[5px]">
                   Automatico (PBAxxxx)
                 </div>
               </div>
@@ -190,7 +190,7 @@ export const NewFormulaModal: React.FC<NewFormulaModalProps> = ({
                   placeholder="Ej: Shampoo Semi de Lino"
                   value={pbaName}
                   onChange={(e) => setPbaName(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#D9D9D9] text-xs rounded-[2px] focus:outline-none focus:border-[#0E50A0]"
+                  className="w-full px-3 py-2 border border-steffen-border text-xs rounded-[5px] focus:outline-none focus:border-steffen-gold"
                   required
                 />
               </div>
@@ -206,7 +206,7 @@ export const NewFormulaModal: React.FC<NewFormulaModalProps> = ({
                   type="date"
                   value={businessDate}
                   onChange={(e) => setBusinessDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#D9D9D9] text-xs rounded-[2px] focus:outline-none focus:border-[#0E50A0]"
+                  className="w-full px-3 py-2 border border-steffen-border text-xs rounded-[5px] focus:outline-none focus:border-steffen-gold"
                 />
               </div>
 
@@ -219,18 +219,18 @@ export const NewFormulaModal: React.FC<NewFormulaModalProps> = ({
                   placeholder="Notas de formulación (opcional)"
                   value={observations}
                   onChange={(e) => setObservations(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#D9D9D9] text-xs rounded-[2px] focus:outline-none focus:border-[#0E50A0]"
+                  className="w-full px-3 py-2 border border-steffen-border text-xs rounded-[5px] focus:outline-none focus:border-steffen-gold"
                 />
               </div>
             </div>
           </div>
 
           {/* Tabla de Renglones de Ingredientes según Figma: NUEVA-FORMULA.png */}
-          <div className="border-t border-[#D9D9D9] pt-4">
+          <div className="border-t border-steffen-border pt-4">
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-[#D9D9D9] text-black font-bold uppercase text-left">
+                  <tr className="border-b border-steffen-border text-black font-bold uppercase text-left">
                     <th className="py-2 px-2 w-36">Cantidad (kg)</th>
                     <th className="py-2 px-2">Materia prima</th>
                     <th className="py-2 px-2 w-32 text-right">Costo por kilo</th>
@@ -252,7 +252,7 @@ export const NewFormulaModal: React.FC<NewFormulaModalProps> = ({
                             placeholder="0.000"
                             value={row.quantityKg}
                             onChange={(e) => handleRowChange(idx, 'quantityKg', e.target.value)}
-                            className="w-full px-2 py-1.5 border border-[#D9D9D9] text-xs font-mono rounded-[2px] focus:outline-none focus:border-[#0E50A0]"
+                            className="w-full px-2 py-1.5 border border-steffen-border text-xs rounded-[5px] focus:outline-none focus:border-steffen-gold"
                             required
                           />
                         </td>
@@ -262,7 +262,7 @@ export const NewFormulaModal: React.FC<NewFormulaModalProps> = ({
                           <select
                             value={row.rawMaterialId}
                             onChange={(e) => handleRowChange(idx, 'rawMaterialId', e.target.value)}
-                            className="w-full px-2 py-1.5 border border-[#D9D9D9] text-xs rounded-[2px] focus:outline-none focus:border-[#0E50A0] bg-white"
+                            className="w-full px-2 py-1.5 border border-steffen-border text-xs rounded-[5px] focus:outline-none focus:border-steffen-gold bg-white"
                             required
                           >
                             <option value="">Seleccionar Materia Prima...</option>
@@ -275,12 +275,12 @@ export const NewFormulaModal: React.FC<NewFormulaModalProps> = ({
                         </td>
 
                         {/* Costo por Kilo Informativo */}
-                        <td className="py-2 px-2 text-right font-mono text-gray-700">
+                        <td className="py-2 px-2 text-right text-gray-700">
                           {rowCosts.unitCostFormatted}
                         </td>
 
                         {/* Costo Total Renglón */}
-                        <td className="py-2 px-2 text-right font-mono font-semibold text-black">
+                        <td className="py-2 px-2 text-right font-semibold text-black">
                           {rowCosts.lineCostFormatted}
                         </td>
 
@@ -309,7 +309,7 @@ export const NewFormulaModal: React.FC<NewFormulaModalProps> = ({
               <button
                 type="button"
                 onClick={handleAddRow}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-black text-[#D2AB68] hover:bg-neutral-800 text-xs font-bold rounded-[2px] transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-black text-steffen-gold hover:bg-neutral-800 text-xs font-bold rounded-[5px] transition-colors cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Agregar materia prima
@@ -318,36 +318,36 @@ export const NewFormulaModal: React.FC<NewFormulaModalProps> = ({
           </div>
 
           {/* Resumen inferior según Figma: KG GRANEL y Costo Granel */}
-          <div className="flex flex-wrap items-center justify-between gap-4 py-3 px-4 bg-gray-50 border border-[#D9D9D9] rounded-[2px] text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-4 py-3 px-4 bg-gray-50 border border-steffen-border rounded-[5px] text-xs">
             <div className="flex items-center gap-2">
               <span className="font-bold text-black uppercase tracking-wider">KG GRANEL</span>
-              <span className="font-mono font-bold text-black">
+              <span className="font-bold text-black">
                 {totalKg > 0 ? `${totalKg.toLocaleString('es-AR', { maximumFractionDigits: 3 })} kg` : 'Automatico'}
               </span>
             </div>
 
             <div className="flex items-center gap-2">
               <span className="font-bold text-black uppercase tracking-wider">Costo Granel:</span>
-              <span className="font-mono font-bold text-black">
+              <span className="font-bold text-black">
                 {totalCost > 0 ? formatArs(totalCost) : 'Automatico'}
               </span>
             </div>
           </div>
 
           {/* Botones de acción según Figma: Cancelar (Rojo) y Crear formula (Azul) */}
-          <div className="flex items-center justify-center gap-3 pt-4 border-t border-[#D9D9D9]">
+          <div className="flex items-center justify-center gap-3 pt-4 border-t border-steffen-border">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="w-36 py-2 bg-[#DD0000] text-white hover:bg-red-700 text-xs font-bold uppercase rounded-[2px] transition-colors cursor-pointer disabled:opacity-50"
+              className="w-36 py-2 bg-steffen-red text-white hover:bg-red-700 text-xs font-bold uppercase rounded-[5px] transition-colors cursor-pointer disabled:opacity-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-44 py-2 bg-[#0E50A0] text-white hover:bg-blue-800 text-xs font-bold uppercase rounded-[2px] transition-colors cursor-pointer disabled:opacity-50"
+              className="w-44 py-2 bg-steffen-blue text-white hover:bg-blue-800 text-xs font-bold uppercase rounded-[5px] transition-colors cursor-pointer disabled:opacity-50"
             >
               {isSubmitting ? 'Creando...' : 'Crear formula'}
             </button>

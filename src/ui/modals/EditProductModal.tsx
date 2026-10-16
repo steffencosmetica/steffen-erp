@@ -76,9 +76,9 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="relative w-full max-w-4xl bg-white border border-[#D9D9D9] rounded-[4px] shadow-2xl p-6 max-h-[92vh] overflow-y-auto">
+      <div className="relative w-full max-w-4xl bg-white border border-steffen-border rounded-[5px] shadow-2xl p-6 max-h-[92vh] overflow-y-auto">
         {/* Encabezado según Figma PRODUCTOS-FINALES.png */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#D9D9D9]">
+        <div className="flex items-center justify-between pb-4 border-b border-steffen-border">
           <div>
             <h2 className="text-xl font-bold tracking-tight text-black uppercase">
               FICHA DE PRODUCTO FINAL — {product.code}
@@ -97,8 +97,8 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
         </div>
 
         {/* Nota informativa de inmutabilidad normativa */}
-        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 text-blue-900 text-xs rounded-[2px] flex items-center gap-2">
-          <Lock className="w-4 h-4 text-[#0E50A0] shrink-0" />
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 text-blue-900 text-xs rounded-[5px] flex items-center gap-2">
+          <Lock className="w-4 h-4 text-steffen-blue shrink-0" />
           <span>
             Regla de Dominio: El Producto Base (PBA), el peso y la composición de componentes (BOM)
             son <strong>inmutables</strong> después del alta. Los campos editables son Nombre,
@@ -107,7 +107,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
         </div>
 
         {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-[2px] flex items-center gap-2">
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-[5px] flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
             <span>{error}</span>
           </div>
@@ -127,7 +127,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#D9D9D9] text-xs font-semibold text-black rounded-[2px] focus:outline-none focus:border-[#0E50A0]"
+                  className="w-full px-3 py-2 border border-steffen-border text-xs font-semibold text-black rounded-[5px] focus:outline-none focus:border-steffen-gold"
                 />
               </div>
 
@@ -135,7 +135,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
                   Codigo (Inmutable)
                 </label>
-                <div className="px-3 py-2 bg-gray-50 border border-[#D9D9D9] text-xs font-mono font-bold text-gray-700 rounded-[2px]">
+                <div className="px-3 py-2 bg-gray-50 border border-steffen-border text-xs font-bold text-gray-700 rounded-[5px]">
                   {product.code}
                 </div>
               </div>
@@ -144,7 +144,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
                   Producto Base (Inmutable)
                 </label>
-                <div className="px-3 py-2 bg-gray-50 border border-[#D9D9D9] text-xs font-medium text-gray-700 rounded-[2px]">
+                <div className="px-3 py-2 bg-gray-50 border border-steffen-border text-xs font-medium text-gray-700 rounded-[5px]">
                   {product.baseProductCode} — {product.baseProductName}
                 </div>
               </div>
@@ -153,7 +153,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
                   Peso / Contenido en Granel (Inmutable)
                 </label>
-                <div className="px-3 py-2 bg-gray-50 border border-[#D9D9D9] text-xs font-mono font-bold text-gray-700 rounded-[2px]">
+                <div className="px-3 py-2 bg-gray-50 border border-steffen-border text-xs font-bold text-gray-700 rounded-[5px]">
                   {formatKg(product.weightKg)} kg
                 </div>
               </div>
@@ -170,7 +170,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
                   required
                   value={presentation}
                   onChange={(e) => setPresentation(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#D9D9D9] text-xs font-semibold text-black rounded-[2px] focus:outline-none focus:border-[#0E50A0]"
+                  className="w-full px-3 py-2 border border-steffen-border text-xs font-semibold text-black rounded-[5px] focus:outline-none focus:border-steffen-gold"
                 />
               </div>
 
@@ -185,7 +185,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
                   required
                   value={stockMinimum}
                   onChange={(e) => setStockMinimum(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#D9D9D9] text-xs font-mono rounded-[2px] focus:outline-none focus:border-[#0E50A0]"
+                  className="w-full px-3 py-2 border border-steffen-border text-xs rounded-[5px] focus:outline-none focus:border-steffen-gold"
                 />
               </div>
 
@@ -193,7 +193,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
                   Stock Actual en Inventario (Read-only)
                 </label>
-                <div className="px-3 py-2 bg-gray-50 border border-[#D9D9D9] text-xs font-mono font-bold text-gray-700 rounded-[2px]">
+                <div className="px-3 py-2 bg-gray-50 border border-steffen-border text-xs font-bold text-gray-700 rounded-[5px]">
                   {product.stockCurrent} un
                 </div>
               </div>
@@ -214,14 +214,14 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
                     onChange={(e) => setActive(e.target.checked)}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0E50A0]"></div>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-steffen-blue"></div>
                 </label>
               </div>
             </div>
           </div>
 
           {/* Tabla de BOM de Componentes según Figma PRODUCTOS-FINALES.png */}
-          <div className="border-t border-[#D9D9D9] pt-4">
+          <div className="border-t border-steffen-border pt-4">
             <h3 className="text-xs font-bold text-black uppercase tracking-wider mb-3">
               COMPOSICIÓN Y ESTRUCTURA DE COSTOS
             </h3>
@@ -229,7 +229,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-[#D9D9D9] text-black font-bold uppercase text-left">
+                  <tr className="border-b border-steffen-border text-black font-bold uppercase text-left">
                     <th className="py-2.5 px-3 w-28">CODIGO</th>
                     <th className="py-2.5 px-3 text-right w-32">CANTIDAD</th>
                     <th className="py-2.5 px-3">COMPONENTE / GRANEL</th>
@@ -239,16 +239,16 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
                 <tbody className="divide-y divide-gray-100">
                   {/* Fila 1: Producto Base (Granel) */}
                   <tr className="hover:bg-gray-50/50 bg-blue-50/20">
-                    <td className="py-2.5 px-3 font-mono font-bold text-black">
+                    <td className="py-2.5 px-3 font-bold text-black">
                       {product.baseProductCode}
                     </td>
-                    <td className="py-2.5 px-3 text-right font-mono text-black">
+                    <td className="py-2.5 px-3 text-right text-black">
                       {formatKg(product.weightKg)} kg
                     </td>
                     <td className="py-2.5 px-3 font-semibold text-black">
                       {product.baseProductName} <span className="text-gray-500 font-normal">(Granel PBA)</span>
                     </td>
-                    <td className="py-2.5 px-3 text-right font-mono font-bold text-black">
+                    <td className="py-2.5 px-3 text-right font-bold text-black">
                       {formatArs(product.cost.baseCostArs)}
                     </td>
                   </tr>
@@ -256,16 +256,16 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
                   {/* Filas de Componentes */}
                   {product.components.map((c) => (
                     <tr key={c.id} className="hover:bg-gray-50/50">
-                      <td className="py-2.5 px-3 font-mono font-bold text-black">
+                      <td className="py-2.5 px-3 font-bold text-black">
                         {c.componentCode}
                       </td>
-                      <td className="py-2.5 px-3 text-right font-mono text-black">
+                      <td className="py-2.5 px-3 text-right text-black">
                         {c.quantityPerUnit} un
                       </td>
                       <td className="py-2.5 px-3 font-medium text-black">
                         {c.componentName}
                       </td>
-                      <td className="py-2.5 px-3 text-right font-mono text-gray-800">
+                      <td className="py-2.5 px-3 text-right text-gray-800">
                         {formatArs(c.lineCostArs)}
                       </td>
                     </tr>
@@ -275,24 +275,24 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
             </div>
 
             {/* Fila de Totales según Figma PRODUCTOS-FINALES.png */}
-            <div className="pt-4 mt-2 border-t border-[#D9D9D9] grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-semibold">
+            <div className="pt-4 mt-2 border-t border-steffen-border grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-semibold">
               <div className="flex items-center gap-2">
                 <span className="text-gray-600 font-medium">Subtotal Granel + BOM:</span>
-                <span className="font-mono font-bold text-black">
+                <span className="font-bold text-black">
                   {formatArs(product.cost.subtotalArs)}
                 </span>
               </div>
 
               <div className="flex items-center gap-2">
                 <span className="text-gray-600 font-medium">Costo Extra Variable (2%):</span>
-                <span className="font-mono font-bold text-black">
+                <span className="font-bold text-black">
                   {formatArs(product.cost.extraVariableArs)}
                 </span>
               </div>
 
               <div className="flex items-center gap-2 sm:justify-end">
                 <span className="text-gray-600 font-medium">Costo Total:</span>
-                <span className="font-mono font-bold text-base text-[#0E50A0]">
+                <span className="font-bold text-base text-steffen-blue">
                   {formatArs(product.cost.totalCostArs)}
                 </span>
               </div>
@@ -300,12 +300,12 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
           </div>
 
           {/* Botones de Acción */}
-          <div className="pt-4 border-t border-[#D9D9D9] flex items-center justify-end gap-3">
+          <div className="pt-4 border-t border-steffen-border flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-5 py-2.5 border border-[#D9D9D9] hover:bg-gray-100 text-black text-xs font-bold uppercase rounded-[2px] transition-colors cursor-pointer"
+              className="px-5 py-2.5 border border-steffen-border hover:bg-gray-100 text-black text-xs font-bold uppercase rounded-[5px] transition-colors cursor-pointer"
             >
               Cancelar
             </button>
@@ -313,7 +313,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0E50A0] text-white hover:bg-blue-800 text-xs font-bold uppercase rounded-[2px] transition-colors cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-steffen-blue text-white hover:bg-blue-800 text-xs font-bold uppercase rounded-[5px] transition-colors cursor-pointer disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}

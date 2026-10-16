@@ -261,9 +261,9 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-[5px] border border-[#D9D9D9] w-full max-w-4xl p-6 relative my-8 max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-[10px] border border-steffen-border w-full max-w-4xl p-6 relative my-8 max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex justify-between items-center pb-3 border-b border-[#D9D9D9]">
+        <div className="flex justify-between items-center pb-3 border-b border-steffen-border">
           <h2 className="text-xl font-bold tracking-tight text-black">NUEVO PEDIDO</h2>
           <button
             type="button"
@@ -275,7 +275,7 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
         </div>
 
         {errorMsg && (
-          <div className="mt-3 p-3 bg-red-50 border border-[#DD0000] text-[#DD0000] text-xs font-semibold rounded-[2px] flex items-center gap-2">
+          <div className="mt-3 p-3 bg-red-50 border border-steffen-red text-steffen-red text-xs font-semibold rounded-[5px] flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
@@ -283,7 +283,7 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
 
         <div className="overflow-y-auto flex-1 pr-1 space-y-5 mt-4">
           {/* Fila superior: Cod | Fecha | Origen & Cliente */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center bg-[#FBFBFB] p-3 rounded-[4px] border border-[#D9D9D9]">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center bg-steffen-bg p-3 rounded-[5px] border border-steffen-border">
             <div>
               <span className="text-xs font-bold text-gray-500 block">Cod</span>
               <span className="text-sm font-semibold text-black">Automático (PEDxxxx)</span>
@@ -313,7 +313,7 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
                     setSelectedCustomerId(val.replace('cli_', ''));
                   }
                 }}
-                className="w-full text-xs p-1.5 border border-[#D9D9D9] rounded-[2px] bg-white focus:outline-none focus:border-[#D2AB68]"
+                className="w-full text-xs p-1.5 border border-steffen-border rounded-[5px] bg-white focus:outline-none focus:border-steffen-gold"
               >
                 <optgroup label="Cliente Registrado (Lista Salón)">
                   {customers.map((c) => (
@@ -332,7 +332,7 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
 
           {/* Info del Cliente Registrado */}
           {customerSource === 'REGISTERED_CUSTOMER' && selectedCustomer && (
-            <div className="flex flex-wrap items-center justify-between text-xs p-2.5 bg-blue-50/50 border border-blue-200 rounded-[2px]">
+            <div className="flex flex-wrap items-center justify-between text-xs p-2.5 bg-blue-50/50 border border-blue-200 rounded-[5px]">
               <div>
                 <span className="font-bold text-gray-700">Lista asignada:</span> Lista Salón
                 <span className="mx-2 text-gray-300">|</span>
@@ -344,7 +344,7 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
               </div>
               <div>
                 <span className="font-bold text-gray-700">Saldo actual deudor:</span>{' '}
-                <span className={parseFloat(selectedCustomer.balanceArs) > 0 ? 'text-[#0E50A0] font-bold' : 'text-gray-600'}>
+                <span className={parseFloat(selectedCustomer.balanceArs) > 0 ? 'text-steffen-blue font-bold' : 'text-gray-600'}>
                   {selectedCustomer.formattedBalance}
                 </span>
               </div>
@@ -353,7 +353,7 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
 
           {/* Campos manuales para Consumidor Final */}
           {customerSource === 'CONSUMER_FINAL' && (
-            <div className="p-3 bg-[#FBFBFB] border border-[#D9D9D9] rounded-[4px] space-y-3">
+            <div className="p-3 bg-steffen-bg border border-steffen-border rounded-[5px] space-y-3">
               <span className="text-xs font-bold text-black uppercase block">Datos de Consumidor Final</span>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                 <div>
@@ -363,7 +363,7 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
                     value={recipientName}
                     onChange={(e) => setRecipientName(e.target.value)}
                     placeholder="Ej: Juan Pérez"
-                    className="w-full p-1.5 border border-[#D9D9D9] rounded-[2px] bg-white focus:outline-none focus:border-[#D2AB68]"
+                    className="w-full p-1.5 border border-steffen-border rounded-[5px] bg-white focus:outline-none focus:border-steffen-gold"
                   />
                 </div>
                 <div>
@@ -373,7 +373,7 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="Ej: 11-4455-6677"
-                    className="w-full p-1.5 border border-[#D9D9D9] rounded-[2px] bg-white focus:outline-none focus:border-[#D2AB68]"
+                    className="w-full p-1.5 border border-steffen-border rounded-[5px] bg-white focus:outline-none focus:border-steffen-gold"
                   />
                 </div>
                 <div>
@@ -383,7 +383,7 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
                     value={transportName}
                     onChange={(e) => setTransportName(e.target.value)}
                     placeholder="Ej: Expreso San José"
-                    className="w-full p-1.5 border border-[#D9D9D9] rounded-[2px] bg-white focus:outline-none focus:border-[#D2AB68]"
+                    className="w-full p-1.5 border border-steffen-border rounded-[5px] bg-white focus:outline-none focus:border-steffen-gold"
                   />
                 </div>
                 <div>
@@ -393,7 +393,7 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     placeholder="Ej: Av. San Martín 1234"
-                    className="w-full p-1.5 border border-[#D9D9D9] rounded-[2px] bg-white focus:outline-none focus:border-[#D2AB68]"
+                    className="w-full p-1.5 border border-steffen-border rounded-[5px] bg-white focus:outline-none focus:border-steffen-gold"
                   />
                 </div>
                 <div>
@@ -403,7 +403,7 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
                     value={locality}
                     onChange={(e) => setLocality(e.target.value)}
                     placeholder="Ej: Morón"
-                    className="w-full p-1.5 border border-[#D9D9D9] rounded-[2px] bg-white focus:outline-none focus:border-[#D2AB68]"
+                    className="w-full p-1.5 border border-steffen-border rounded-[5px] bg-white focus:outline-none focus:border-steffen-gold"
                   />
                 </div>
                 <div>
@@ -413,7 +413,7 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
                     value={province}
                     onChange={(e) => setProvince(e.target.value)}
                     placeholder="Ej: Buenos Aires"
-                    className="w-full p-1.5 border border-[#D9D9D9] rounded-[2px] bg-white focus:outline-none focus:border-[#D2AB68]"
+                    className="w-full p-1.5 border border-steffen-border rounded-[5px] bg-white focus:outline-none focus:border-steffen-gold"
                   />
                 </div>
               </div>
@@ -435,7 +435,7 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
                   value={manualDiscount}
                   onChange={(e) => setManualDiscount(e.target.value)}
                   placeholder="0"
-                  className="w-full text-xs p-1.5 border border-[#D9D9D9] rounded-[2px] bg-white focus:outline-none focus:border-[#D2AB68]"
+                  className="w-full text-xs p-1.5 border border-steffen-border rounded-[5px] bg-white focus:outline-none focus:border-steffen-gold"
                 />
               </div>
             )}
@@ -448,13 +448,13 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
                 value={packageCount}
                 onChange={(e) => setPackageCount(e.target.value)}
                 placeholder="Cantidad de bultos"
-                className="w-full text-xs p-1.5 border border-[#D9D9D9] rounded-[2px] bg-white focus:outline-none focus:border-[#D2AB68]"
+                className="w-full text-xs p-1.5 border border-steffen-border rounded-[5px] bg-white focus:outline-none focus:border-steffen-gold"
               />
             </div>
           </div>
 
           {/* Constructor de Renglón (Figma NUEVO-PEDIDO.png) */}
-          <div className="border border-[#D9D9D9] p-3 rounded-[4px] space-y-3">
+          <div className="border border-steffen-border p-3 rounded-[5px] space-y-3">
             <span className="text-xs font-bold text-black uppercase tracking-wider block">Agregar Producto al Pedido</span>
             <div className="flex flex-wrap items-end gap-3 text-xs">
               <div className="w-20">
@@ -465,16 +465,16 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
                   step="1"
                   value={builderQuantity}
                   onChange={(e) => setBuilderQuantity(e.target.value)}
-                  className="w-full p-1.5 border border-[#D9D9D9] rounded-[2px] bg-white text-center font-bold focus:outline-none focus:border-[#D2AB68]"
+                  className="w-full p-1.5 border border-steffen-border rounded-[5px] bg-white text-center font-bold focus:outline-none focus:border-steffen-gold"
                 />
               </div>
 
-              <div className="flex-1 min-w-[200px]">
+              <div className="flex-1 min-w-[150px]">
                 <label className="block text-gray-600 font-medium mb-1">Producto Final</label>
                 <select
                   value={builderProductId}
                   onChange={(e) => setBuilderProductId(e.target.value)}
-                  className="w-full p-1.5 border border-[#D9D9D9] rounded-[2px] bg-white focus:outline-none focus:border-[#D2AB68]"
+                  className="w-full p-1.5 border border-steffen-border rounded-[5px] bg-white focus:outline-none focus:border-steffen-gold"
                 >
                   <option value="">Seleccionar producto...</option>
                   {products.map((p) => {
@@ -512,14 +512,14 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
                   value={builderAgQuantity}
                   onChange={(e) => setBuilderAgQuantity(e.target.value)}
                   placeholder="AG"
-                  className="w-full p-1.5 border border-[#D9D9D9] rounded-[2px] bg-white text-center focus:outline-none focus:border-[#D2AB68]"
+                  className="w-full p-1.5 border border-steffen-border rounded-[5px] bg-white text-center focus:outline-none focus:border-steffen-gold"
                 />
               </div>
 
               <button
                 type="button"
                 onClick={handleAddLine}
-                className="h-[32px] px-3 bg-black hover:bg-gray-800 text-[#D2AB68] font-bold rounded-[2px] flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="h-[24px] px-3 bg-black hover:bg-gray-800 text-steffen-gold font-bold rounded-[5px] flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 <span>Agregar producto</span>
@@ -529,9 +529,9 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
 
           {/* Tabla de Renglones Cargados */}
           {lines.length > 0 && (
-            <div className="border border-[#D9D9D9] rounded-[2px] overflow-hidden">
+            <div className="border border-steffen-border rounded-[5px] overflow-hidden">
               <table className="w-full text-left text-xs border-collapse">
-                <thead className="bg-[#D9D9D9] text-black font-bold uppercase text-[11px]">
+                <thead className="bg-steffen-gray text-black font-bold uppercase text-[11px]">
                   <tr>
                     <th className="py-2 px-3 w-16 text-center">Cant.</th>
                     <th className="py-2 px-3">Producto</th>
@@ -541,7 +541,7 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
                     <th className="py-2 px-3 w-12 text-center">Acción</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#D9D9D9]">
+                <tbody className="divide-y divide-steffen-border">
                   {lines.map((l) => {
                     const linePt = l.unitPriceArs.times(l.requestedQuantity);
                     return (
@@ -560,7 +560,7 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
                             value={l.agQuantity !== null ? l.agQuantity : ''}
                             onChange={(e) => handleUpdateLineAg(l.id, e.target.value)}
                             placeholder={String(l.requestedQuantity)}
-                            className="w-16 p-1 border border-[#D9D9D9] rounded-[2px] text-center text-xs focus:outline-none focus:border-[#D2AB68]"
+                            className="w-16 p-1 border border-steffen-border rounded-[5px] text-center text-xs focus:outline-none focus:border-steffen-gold"
                           />
                         </td>
                         <td className="py-2 px-3 text-center">
@@ -582,7 +582,7 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
           )}
 
           {/* Bloque de Totales alineado a la derecha según Figma PEDIDO.png */}
-          <div className="flex flex-col items-end pt-2 border-t border-[#D9D9D9] space-y-1 text-xs">
+          <div className="flex flex-col items-end pt-2 border-t border-steffen-border space-y-1 text-xs">
             <div className="flex justify-between w-64">
               <span className="font-bold text-gray-700 uppercase">SUBTOTAL</span>
               <span className="font-bold text-black">{formatArs(subtotal)}</span>
@@ -603,7 +603,7 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
             {customerSource === 'REGISTERED_CUSTOMER' && (
               <div className="flex justify-between w-64">
                 <span className="font-bold text-gray-600 uppercase">SALDO ANTERIOR</span>
-                <span className={priorBalance.gt(0) ? 'font-bold text-[#0E50A0]' : 'text-gray-600'}>
+                <span className={priorBalance.gt(0) ? 'font-bold text-steffen-blue' : 'text-gray-600'}>
                   {formatArs(priorBalance)}
                 </span>
               </div>
@@ -611,7 +611,7 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
 
             <div className="flex justify-between w-64 pt-1 border-t border-gray-300">
               <span className="font-extrabold text-black uppercase">TOTAL A COBRAR</span>
-              <span className="font-extrabold text-[#0E50A0] text-sm">{formatArs(totalToCollect)}</span>
+              <span className="font-extrabold text-steffen-blue text-sm">{formatArs(totalToCollect)}</span>
             </div>
 
             <div className="text-[11px] text-gray-500 pt-1">
@@ -621,12 +621,12 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
         </div>
 
         {/* Botones inferiores */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-[#D9D9D9] mt-4">
+        <div className="flex justify-end gap-3 pt-4 border-t border-steffen-border mt-4">
           <button
             type="button"
             onClick={onClose}
             disabled={isPending}
-            className="px-5 py-2 bg-[#DD0000] hover:bg-[#b80000] text-white font-bold text-xs rounded-[2px] transition-colors cursor-pointer"
+            className="px-5 py-2 bg-steffen-red hover:bg-steffen-red-hover text-white font-bold text-xs rounded-[5px] transition-colors cursor-pointer"
           >
             Cancelar
           </button>
@@ -634,7 +634,7 @@ export const NuevoPedidoModal: React.FC<NuevoPedidoModalProps> = ({
             type="button"
             onClick={handleSubmit}
             disabled={isPending || loadingData}
-            className="px-6 py-2 bg-[#0E50A0] hover:bg-[#0c4386] text-white font-bold text-xs rounded-[2px] transition-colors cursor-pointer flex items-center gap-2"
+            className="px-6 py-2 bg-steffen-blue hover:bg-steffen-blue-hover text-white font-bold text-xs rounded-[5px] transition-colors cursor-pointer flex items-center gap-2"
           >
             {isPending ? 'Registrando...' : 'Registrar pedido'}
           </button>

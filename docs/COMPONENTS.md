@@ -33,36 +33,55 @@ como controles visualmente diferentes si todos pueden usar el mismo componente `
 
 # 3. Tokens base
 
+Fuente única de verdad: `DESIGN.md` §4–§7 y el frame de estilo `docs/visual-references/figma/Frame 1.png`. Implementación: variables CSS en `src/app/globals.css` (`--steffen-*`) expuestas como utilidades Tailwind (`bg-steffen-*`, `text-steffen-*`, `border-steffen-*`). Los componentes consumen tokens, no hex sueltos.
+
 ## Colores
 
-- Primary: `#B99D22`
-- Secondary: `#000000`
-- Surface: `#FBFBFB`
-- Border: `#D9D9D9`
-- Tertiary: `#0E50A0`
-- Tertiary Hover: `#6E96C6`
-- Text: `#393939`
-- Green: `#008102`
-- Green Hover: `#015C02`
-- Red: `#DD0000`
-- Red Hover: `#B10000`
+- Primary: `#C38926` — único dorado normativo
+- Secondary: `#000000` — paneles, sidebar
+- Surface: `#FBFBFB` — texto principal sobre dark
+- Fondo (light, reservado): `#EFEFEF`
+- Fondo Dark: `#101010` — fondo de página
+- Border Button: `#D9D9D9`
+- Border Contenedor: `#393939` — también fondo de encabezado de tabla
+- Tertiary (Blue): `#0E50A0` / hover `#6E96C6`
+- Verde: `#008102` / hover `#015C02`
+- Rojo: `#DD0000` / hover `#B10000`
+- Surface Dark Degrade: `linear-gradient(180deg, #121212, #000000)`
+- Derivados: Text Muted `#9A9A9A`, Alert Row `#6B0000`, Button Hover `#393939`
+
+Obsoletos: `#B99D22`, `#D2AB68`.
+
+## Densidad
+
+Escala nativa equivalente a la densidad de Chrome al 75 % (`DESIGN.md` §5.0): sin `zoom` ni `transform`; `width: 100%`; borders 1 px.
 
 ## Tipografía
 
 `Inter`
 
-- H1 — 32 px Bold
-- H2 — 22 px Bold
-- B1 — 16 px Semi-bold
-- B2 — 16 px Regular
-- B3 — 14 px Semi-bold
-- B4 — 14 px Regular
+- H1 — 22 px Bold
+- H2 — 18 px Semi-bold
+- H3 — 14 px Regular
+- Body semibold — 12 px
+- Body regular — 12 px
+- Auxiliar — 11 px
 
 ## Gaps
 
-- 6 px
-- 12 px
-- 20 px
+- 4 px
+- 8 px
+- 15 px
+
+## Superficies
+
+- sin sombras;
+- bordes 1 px;
+- radius: paneles/cards `10 px`; botones/inputs/ítems de lista `5 px`.
+
+## Modo de color
+
+Solo dark (`data-theme="dark"` en `<html>`). El modo light futuro redefine las mismas variables bajo `[data-theme="light"]`; ningún componente debe asumir colores fuera de las variables.
 
 ---
 
@@ -70,90 +89,56 @@ como controles visualmente diferentes si todos pueden usar el mismo componente `
 
 ## 4.1 Variantes
 
-### Principal
+El rediseño cambia la apariencia de cada variante, no su semántica: un botón existente conserva su acción.
 
-Uso:
+Base común: radius `5 px`, borde 1 px, padding horizontal `~15 px`, texto Body semibold 12 px, íconos plateados/cromados (§63).
 
-- confirmar acción principal;
-- crear;
-- registrar;
-- actualizar.
+### PrimaryDark (Secondary / Principal en código)
 
-### Secundario
+Uso: acción principal o alternativa neutra (crear, guardar, cancelar, abrir ventanas).
 
-Uso:
+- Default: fondo `Surface Dark Degrade`, borde `Border Button`, texto `Surface`;
+- Hover / Selected: fondo `Button Hover` `#393939`.
 
-- cancelar;
-- acción alternativa;
-- navegación secundaria.
+### Success (Verde)
 
-### Verde
+- Default: `Verde` sólido (`REGISTRAR PAGO`, `ACTUALIZAR`, `Generar Remito`, `Pago Clientes`);
+- Hover: `Verde Hover`.
 
-Uso:
+### Danger (Rojo)
 
-- acción positiva explícita cuando el diseño lo requiera.
+- Default: `Rojo` sólido (`Borrar pedido`, `RETIRO CAJA`);
+- Hover: `Rojo Hover`.
 
-### Rojo
+### Add (circular)
 
-Uso:
+`+` dentro de colecciones visuales (cards de Pedidos, tiles de granel): círculo `Surface` (~66 px) con `+` oscuro (ícono `boton-mas`). Dispara la misma operación que el botón equivalente del módulo.
 
-- acción destructiva;
-- borrar;
-- desactivar cuando implique confirmación.
+### Icon / IconText
 
----
+PrimaryDark con ícono plateado (± texto). Debe tener label accesible (`aria-label`/tooltip) cuando no muestra texto. Variante **Rojo Foto**: fondo `Rojo` con ícono claro (Retiro caja). El documento PDF usa ícono rojo sobre PrimaryDark.
 
 ## 4.2 Tamaños
 
-### Small
+- Chico: `~30 px` (texto 12 px semibold)
+- Grande: `~50 px` (texto H3 14 px)
 
-Altura:
+## 4.3 Estados
 
-`40 px`
-
-### Large
-
-Altura:
-
-`70 px`
-
----
-
-## 4.3 Padding
-
-Referencia:
-
-- horizontal: `20 px`
-- vertical compacto: `6 px`
-- vertical estándar: `10 px`
-
-La altura definida del botón tiene prioridad.
-
----
-
-## 4.4 Estados
-
-Según variante:
-
-- Default
-- Hover
-- Selected cuando el botón se comporta como selección
-
-No usar Selected en una acción momentánea si no representa estado persistente.
+Default, Hover, Selected (solo si representa estado persistente), Disabled (opacidad reducida, sin interacción).
 
 ---
 
 # 5. MenuButton
 
-Botón de navegación principal.
+Botón de la barra lateral (variante Menu).
 
-Estados:
+- Estructura: ícono (≈21 px) arriba, label 11 px semibold debajo.
+- Default: ícono plateado, label `Text Muted`.
+- Hover / Selected (módulo activo): ícono y label `Primary`.
+- Logout: botón Icon (borde `Border Button`) al pie de la barra, separado de los módulos.
 
-- Default
-- Hover
-- Selected
-
-Selected indica el módulo activo.
+Conserva las rutas funcionales actuales (`DESIGN.md` §9). No se agregan ítems por aparecer en frames viejos.
 
 No usar para acciones de formulario.
 
@@ -161,48 +146,26 @@ No usar para acciones de formulario.
 
 # 6. TabButton
 
-Uso:
-
-- Productos / Materias Primas / Componentes;
-- otras subpestañas.
-
-Estados:
-
-- Default
-- Hover
-- Selected
-
-Solo una pestaña del mismo grupo puede estar Selected.
+Subpestañas (Productos / Materia Prima / Componentes). Patrón Lista (§7) con ícono: Default transparente; Selected con fondo `Surface Dark Degrade`. Solo una Selected por grupo.
 
 ---
 
 # 7. ListSelectorButton
 
-Uso:
+Selector lateral de entidades (Clientes, Proveedores, Fórmulas, Productos Finales) y sub-pestañas.
 
-- selector de Cliente en Cuentas;
-- selector de Proveedor;
-- selector lateral de entidades.
+- Default: transparente, ícono + texto `Surface` (B1);
+- Hover / Selected: fondo `Surface Dark Degrade`, radius `5 px`.
 
-Estados:
+Puede acompañarse por `Ver más`.
 
-- Default
-- Hover
-- Selected
-
-Puede acompañarse por `VER MÁS`.
+**Card de entidad (Pedidos):** card seleccionable con fondo `Surface Dark Degrade`, borde `Border Contenedor`, radius `10 px`; contenido centrado (ícono + código H2, cliente B1, fecha B1, importe). **Selected:** borde `Primary`. Es un selector de entidad, no una Card KPI (§19).
 
 ---
 
 # 8. BackButton
 
-Etiqueta:
-
-`Volver`
-
-Uso exclusivo:
-
-volver a la pantalla anterior.
+`◂ Volver` en `Tertiary` (`#0E50A0`), hover `Blue Hover`. El mismo tratamiento se usa para enlaces de navegación secundaria (`IR A … ▸`, `Ver todas ▸`).
 
 No utilizar como Cancelar dentro de formularios.
 
@@ -228,11 +191,17 @@ Estados visuales mínimos:
 - Disabled
 - Error
 
-MVP:
+Visual (rediseño, input dark):
 
+- Default → fondo `Surface Dark Degrade`, borde `Border Button`, texto `Surface`, placeholder `Text Muted`, radius `5 px`;
 - Focus → borde `Primary`;
-- Disabled → fondo `Surface`, borde `Border`, interacción bloqueada;
+- Disabled → interacción bloqueada, contraste reducido (manteniendo legibilidad);
 - Error → borde `Red` + mensaje B4 `Red`.
+
+Variante de borde claro (frame de estilo):
+
+- fondo `Secondary`;
+- borde `Surface`.
 
 No crear una nueva identidad visual fuera de estos tokens.
 
@@ -363,6 +332,8 @@ Debe admitir contenido compuesto, por ejemplo:
 
 `CLIENTE | SALDO`
 
+Visual: misma familia que los inputs (§9): fondo `Surface Dark Degrade`, borde `Border Button`, flecha ▼ clara, borde `Rojo` en error.
+
 ---
 
 # 18. SearchInput
@@ -394,6 +365,14 @@ Estructura:
 2. valor principal;
 3. contexto secundario opcional.
 
+Variantes KPI (rediseño):
+
+- **Default:** fondo `Secondary`, borde 2 px `Primary`, radius `10 px`;
+- **Con ícono:** Default con ícono (§63) junto al numeral;
+- **Destacada positiva:** fondo `Verde` sólido.
+
+Numerales grandes y labels compactos.
+
 No usar Card para reemplazar una tabla de gestión.
 
 ---
@@ -414,6 +393,26 @@ Debe soportar:
 
 El componente no decide la lógica de orden.
 
+Visual (rediseño):
+
+- compacta, densidad alta;
+- encabezado gris oscuro (`Gray`) con texto blanco (`Surface`);
+- filas sobre fondo oscuro con texto blanco;
+- separadores horizontales finos;
+- alineación numérica consistente;
+- sin zebra striping decorativo salvo que el diseño lo requiera;
+- valores críticos pueden ir en `Red`; valores positivos en `Green`.
+
+Variantes de encabezado (según el Figma):
+
+- **Default:** fondo `Gray`, texto `Surface`;
+- **Destacada:** fondo `Primary`, texto `Surface` (tabla de líneas del Pedido);
+- **Alerta:** fondo `Red`, texto `Surface` (tablas de la sección `BAJO STOCK`).
+
+Una fila `TOTAL` puede cerrar la tabla con el total alineado a su columna y un enlace de navegación secundaria (`IR A …`, `Blue`) en la misma franja.
+
+Se preservan ordenamientos, búsquedas, filtros e interacciones existentes.
+
 ---
 
 # 21. CriticalRow
@@ -428,6 +427,10 @@ Aplicaciones:
 - otras alertas confirmadas.
 
 La fila recibe el estado desde negocio.
+
+Visual: fondo rojo oscuro con texto `Surface`, o valor crítico en `Red` según la pantalla. El rojo oscuro del Figma no está en la paleta: se incorpora como token en `DESIGN.md` §4.1 con su valor exacto; hasta entonces, `Red Hover` `#B10000`.
+
+En el Figma se usa en: filas `URG PARA PEDIDOS`, filas de stock bajo el mínimo y fila `SALDO ACTUALIZADO` con deuda.
 
 No calcula internamente `stock_actual / stock_minimum`.
 
@@ -507,7 +510,9 @@ Footer:
 - Cancelar;
 - Confirmar.
 
-El comportamiento responsive se define en `DESIGN.md` y en la sección Responsive de este documento.
+Visual (rediseño): contenedor dark (`Background`), borde fino, sin sombras, título H2/H3, inputs dark.
+
+El comportamiento responsive final se resuelve en Fase 18 (`DESIGN.md` §3.0); §56–§58 de este documento son pautas preliminares.
 
 ---
 
@@ -889,6 +894,8 @@ Ventas:
 - año;
 - mes.
 
+Selector de período (según el frame Ventas): año + doce meses como fila de botones; el mes seleccionado con fondo `Blue`.
+
 Stock:
 - proveedor;
 - búsqueda.
@@ -953,7 +960,7 @@ Relación visual:
 Estado vacío MVP:
 
 - texto B2/B4 según densidad;
-- color `Text`;
+- color de texto con contraste suficiente sobre fondo oscuro (no `#393939` sobre negro; ver `DESIGN.md` §4.3);
 - sin ilustraciones;
 - sin nuevos colores;
 - mensaje específico al contexto;
@@ -1048,10 +1055,9 @@ El MVP ya define comportamiento suficiente para implementar:
 - Error;
 - Loading;
 - Empty State;
-- responsive;
-- navegación mobile;
-- tablas mobile;
 - PDFs.
+
+Responsive, navegación mobile y tablas mobile se resuelven en Fase 18; §56–§58 son pautas preliminares.
 
 Quedan como refinamiento visual posterior:
 
@@ -1066,6 +1072,8 @@ Estos refinamientos no deben modificar reglas funcionales ni bloquear el MVP.
 ---
 
 # 56. Responsive behavior
+
+> Pautas preliminares, insumo para Fase 18. No son normativas hasta que esa fase las revise contra el nuevo lenguaje visual (`DESIGN.md` §3.0). Desktop es la referencia primaria; los componentes deben construirse sin dimensiones rígidas innecesarias para permitir esta adaptación.
 
 ## Button
 
@@ -1164,7 +1172,7 @@ Mobile:
 
 # 57. MobileFullScreenForm
 
-Variante de contenedor para operaciones complejas en mobile.
+Variante de contenedor para operaciones complejas en mobile (pauta preliminar, Fase 18).
 
 Estructura:
 
@@ -1190,7 +1198,7 @@ Uso:
 
 # 58. PriorityReorderSheet
 
-Alternativa mobile al drag dentro de PlanningMatrix.
+Alternativa mobile al drag dentro de PlanningMatrix (pauta preliminar, Fase 18).
 
 Contenido:
 
@@ -1239,20 +1247,21 @@ Contenido:
 1. valor;
 2. label.
 
-Variantes del MVP:
+Variantes (rediseño; ver Card §19):
 
-### NeutralPrimaryBorder
+### Default (antes NeutralPrimaryBorder)
 
 Uso:
 
 - Ventas del mes;
-- Total facturado.
+- Total facturado;
+- Pedidos abiertos.
 
 Visual:
 
-- fondo `Surface`;
+- fondo negro (`Background`);
 - borde `Primary`;
-- texto `Secondary/Text`.
+- texto `Surface`.
 
 ### Positive
 
@@ -1262,19 +1271,12 @@ Uso:
 
 Visual:
 
-- fondo `Green`;
+- fondo `Green` sólido;
 - texto de alto contraste.
 
-### Dark
+La variante `Dark` anterior (Pedidos abiertos) se integra en Default, como en el bloque `REPORTE MENSUAL` del Dashboard del Figma; puede incluir icono junto al numeral.
 
-Uso:
-
-- Pedidos abiertos.
-
-Visual:
-
-- fondo `Secondary`;
-- texto de alto contraste.
+El Figma rotula la card verde como `MARGEN NETO`: se mantiene el label normativo `GANANCIA`.
 
 Labels exactos:
 
@@ -1284,3 +1286,53 @@ Labels exactos:
 - `PEDIDOS ABIERTOS`
 
 No utilizar `MARGEN NETO`.
+
+---
+
+# 61. SectionHeader
+
+Estructura: `Título ———————— línea`.
+
+- título en `Text Muted` (B1, o H3 en secciones grandes), sin forzar mayúsculas: respeta el texto del frame;
+- línea 1 px `Border Contenedor` que ocupa el ancho restante (en fichas de Cuentas el frame usa línea `Surface`);
+- controles al extremo (`Buscar`, select, `REGISTRAR PAGO`, `Ver todas ▸`).
+
+Variante **alerta:** título y línea `Rojo` (`Bajo stock`).
+
+Solo presenta: contenido y orden siguen `DESIGN.md` y `BUSINESS_RULES.md`.
+
+---
+
+# 62. Panel (contenedor)
+
+- fondo `Secondary`;
+- borde 1 px `Border Contenedor`;
+- radius `10 px`;
+- padding `15 px` lateral, `12 px` vertical;
+- sin sombras.
+
+Variante **alerta:** borde `Rojo`.
+
+Preferir pocos Panels grandes antes que muchas cards fragmentadas.
+
+---
+
+# 63. ErpIcon
+
+Renderiza los íconos base de `docs/visual-references/iconos/` (copiados a `public/icons/`) sin redibujarlos, aplicando el color por máscara CSS sobre la silueta del PNG:
+
+- `chrome` (default): degradé plateado — íconos dentro de botones y navegación inactiva;
+- `gold`: `Primary` — navegación activa, ícono de cards de pedido y KPI;
+- `light`: `Surface`;
+- `red`: `Rojo` (documento PDF);
+- `original`: el PNG sin máscara (tile de granel `tanque`).
+
+Siempre decorativo (`aria-hidden`); el botón que lo contiene aporta el label accesible.
+
+---
+
+# 64. AppShell / PageHeader
+
+- **AppShell:** barra lateral (`Secondary`) con logo, MenuButtons (§5) y logout; contenido sobre `Fondo Dark` con padding `20 px`+.
+- **PageHeader** (pantallas principales): título H1 a la izquierda, chip de sesión `Admin` (PrimaryDark chico, muestra el usuario autenticado; sin acción) a la derecha y línea 1 px `Border Contenedor` debajo.
+- **SecondaryHeader** (pantallas secundarias): `Volver` (§8) a la izquierda, título H3 centrado, acción principal a la derecha.

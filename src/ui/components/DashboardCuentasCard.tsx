@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { formatArs } from '@/lib/format';
 import { RetiroCajaModal } from '@/ui/modals/RetiroCajaModal';
+import { IconTile, Panel } from '@/ui/components/UIComponents';
+import { ErpIcon } from '@/ui/components/ErpIcon';
+import { AccountBalanceCards } from '@/ui/components/AccountBalanceCards';
 
 interface DashboardCuentasCardProps {
   cajaSteffen: string;
@@ -11,74 +13,48 @@ interface DashboardCuentasCardProps {
   deudasClientes: string;
   deudasProveedores: string;
   neto: string;
+  /** Acciones patrimoniales ubicadas junto a Retiro Caja (Figma Dashboard). */
+  actions?: ReactNode;
+  /** Error de carga de saldos: se muestra en lugar de las cards, sin ocultar las acciones. */
+  error?: string | null;
 }
 
+/** CUENTAS del Dashboard (Figma): cards de saldos + acciones de ícono (incluye Retiro caja). */
 export const DashboardCuentasCard: React.FC<DashboardCuentasCardProps> = ({
   cajaSteffen,
   cajaMercadoLibre,
   deudasClientes,
   deudasProveedores,
   neto,
+  actions,
+  error,
 }) => {
   const router = useRouter();
   const [isRetiroOpen, setIsRetiroOpen] = useState(false);
 
   return (
     <>
-      <div className="bg-white rounded-2xl border border-[#D9D9D9] p-4 shadow-xs space-y-4">
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="bg-[#D9D9D9] text-black font-bold uppercase text-left">
-              <th className="py-2 px-3">CUENTA</th>
-              <th className="py-2 px-3 text-right">TOTAL</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 text-xs">
-            <tr>
-              <td className="py-2.5 px-3 font-semibold text-black">CAJA STEFFEN</td>
-              <td className="py-2.5 px-3 text-right font-mono font-bold text-[#008102]">
-                {formatArs(cajaSteffen)}
-              </td>
-            </tr>
-            <tr>
-              <td className="py-2.5 px-3 font-semibold text-black">CAJA MERCADO LIBRE</td>
-              <td className="py-2.5 px-3 text-right font-mono font-bold text-[#008102]">
-                {formatArs(cajaMercadoLibre)}
-              </td>
-            </tr>
-            <tr>
-              <td className="py-2.5 px-3 font-semibold text-black">DEUDAS CLIENTES</td>
-              <td className="py-2.5 px-3 text-right font-mono font-bold text-[#008102]">
-                {formatArs(deudasClientes)}
-              </td>
-            </tr>
-            <tr>
-              <td className="py-2.5 px-3 font-semibold text-black">DEUDAS PROVEEDORES</td>
-              <td className="py-2.5 px-3 text-right font-mono font-bold text-[#DD0000]">
-                {deudasProveedores && deudasProveedores !== '0'
-                  ? `-${formatArs(deudasProveedores)}`
-                  : '$ 0'}
-              </td>
-            </tr>
-            <tr className="border-t-2 border-black font-bold">
-              <td className="py-2.5 px-3 text-black uppercase">NETO</td>
-              <td className="py-2.5 px-3 text-right font-mono text-sm text-black">
-                {formatArs(neto)}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div className="flex justify-end pt-1">
-          <button
-            type="button"
-            onClick={() => setIsRetiroOpen(true)}
-            className="h-[38px] px-4 inline-flex items-center justify-center font-bold rounded-[2px] bg-[#DD0000] hover:bg-[#b00000] text-white border border-[#DD0000] w-36 text-xs uppercase shadow-xs transition-colors cursor-pointer"
-          >
-            RETIRO CAJA
-          </button>
-        </div>
-      </div>
+      <Panel>
+        <AccountBalanceCards
+          cajaSteffen={cajaSteffen}
+          cajaMercadoLibre={cajaMercadoLibre}
+          deudasClientes={deudasClientes}
+          deudasProveedores={deudasProveedores}
+          neto={neto}
+          error={error}
+          actions={
+            <>
+              {actions}
+              <IconTile
+                label="Retiro"
+                title="Retiro caja"
+                onClick={() => setIsRetiroOpen(true)}
+                icon={<ErpIcon name="retiro" className="w-7 h-7" />}
+              />
+            </>
+          }
+        />
+      </Panel>
 
       <RetiroCajaModal
         isOpen={isRetiroOpen}

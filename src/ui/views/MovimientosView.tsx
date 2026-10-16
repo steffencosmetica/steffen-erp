@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Search, Filter } from 'lucide-react';
 import type { PatrimonialMovementDTO } from '@/actions/patrimony.dto';
+import { getPatrimonialMovementsAction } from '@/actions/patrimony.actions';
 import { formatArs } from '@/lib/format';
 
 interface MovimientosViewProps {
@@ -22,9 +23,36 @@ export const MovimientosView: React.FC<MovimientosViewProps> = ({
   const [startDate, setStartDate] = useState<string>(defaultStartDate);
   const [endDate, setEndDate] = useState<string>(defaultEndDate);
 
-  // Filtrado reactivo en cliente (los movimientos de los últimos 90 días o el rango cargado)
+  // Movimientos del rango cargado. Por defecto, los últimos 90 días filtrados en el servidor
+  // por business_date; si el usuario cambia el rango, se vuelve a consultar ese rango.
+  const [movements, setMovements] = useState<PatrimonialMovementDTO[]>(initialMovements);
+  const [loadedRange, setLoadedRange] = useState({ start: defaultStartDate, end: defaultEndDate });
+  const [rangeError, setRangeError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (startDate === loadedRange.start && endDate === loadedRange.end) return;
+    if (!startDate || !endDate || startDate > endDate) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const res = await getPatrimonialMovementsAction({ startDate, endDate });
+      if (cancelled) return;
+      if (res.success && res.data) {
+        setMovements(res.data);
+        setLoadedRange({ start: startDate, end: endDate });
+        setRangeError(null);
+      } else {
+        setRangeError(res.error || 'No se pudieron cargar los movimientos del rango.');
+      }
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [startDate, endDate, loadedRange]);
+
+  // Filtrado reactivo en cliente sobre el rango cargado (tipo, búsqueda y fechas)
   const filteredMovements = useMemo(() => {
-    return initialMovements.filter((m) => {
+    return movements.filter((m) => {
       // Filtro fecha
       if (startDate && m.date && m.date < startDate) return false;
       if (endDate && m.date && m.date > endDate) return false;
@@ -48,7 +76,7 @@ export const MovimientosView: React.FC<MovimientosViewProps> = ({
 
       return true;
     });
-  }, [initialMovements, startDate, endDate, selectedType, searchTerm]);
+  }, [movements, startDate, endDate, selectedType, searchTerm]);
 
   const formatDateDisplay = (dateStr: string) => {
     if (!dateStr) return '—';
@@ -71,6 +99,10 @@ export const MovimientosView: React.FC<MovimientosViewProps> = ({
         return 'GASTO OPERATIVO';
       case 'TRANSFERENCIA_MERCADO_LIBRE':
         return 'TRANSF ML';
+      case 'INGRESO_CAJA':
+        return 'INGRESO CAJA';
+      case 'SALDO_APERTURA':
+        return 'SALDO APERTURA';
       default:
         return type;
     }
@@ -79,18 +111,18 @@ export const MovimientosView: React.FC<MovimientosViewProps> = ({
   const isDefault90Days = startDate === defaultStartDate && endDate === defaultEndDate;
 
   return (
-    <div className="max-w-[1600px] mx-auto pb-16 space-y-4">
+    <div className=" pb-16 space-y-4">
       {/* Subheader superior idéntico a MOVIMIENTOS.png */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 pt-1">
         <div className="flex items-center gap-4">
           <Link
             href="/administracion"
-            className="text-[#0E50A0] font-bold text-sm hover:underline flex items-center gap-1 transition-colors"
+            className="text-steffen-blue hover:text-steffen-blue-hover font-semibold text-sm flex items-center gap-1 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
             <span>Volver</span>
           </Link>
-          <h1 className="font-bold text-base uppercase tracking-wider text-black">
+          <h1 className="text-lg uppercase text-steffen-surface">
             ULTIMOS MOVIMIENTOS {isDefault90Days ? '(90 dias)' : `(${formatDateDisplay(startDate)} - ${formatDateDisplay(endDate)})`}
           </h1>
         </div>
@@ -103,14 +135,14 @@ export const MovimientosView: React.FC<MovimientosViewProps> = ({
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="h-8 px-2 border border-[#D9D9D9] rounded-[5px] text-xs bg-white text-black focus:outline-none focus:border-[#0E50A0]"
+              className="h-8 px-2 border border-steffen-border rounded-[10px] text-xs bg-white text-black focus:outline-none focus:border-steffen-gold"
             />
             <span>Hasta:</span>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="h-8 px-2 border border-[#D9D9D9] rounded-[5px] text-xs bg-white text-black focus:outline-none focus:border-[#0E50A0]"
+              className="h-8 px-2 border border-steffen-border rounded-[10px] text-xs bg-white text-black focus:outline-none focus:border-steffen-gold"
             />
           </div>
 
@@ -120,7 +152,7 @@ export const MovimientosView: React.FC<MovimientosViewProps> = ({
               placeholder="Buscar..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-56 sm:w-64 h-8 pl-3 pr-8 border border-[#D9D9D9] rounded-[5px] text-xs text-black focus:outline-none focus:border-[#0E50A0]"
+              className="w-56 sm:w-64 h-8 pl-3 pr-8 border border-steffen-border rounded-[10px] text-xs text-black focus:outline-none focus:border-steffen-gold"
             />
             <Search className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
@@ -128,11 +160,11 @@ export const MovimientosView: React.FC<MovimientosViewProps> = ({
       </div>
 
       {/* Tabla de Movimientos */}
-      <div className="bg-white border border-[#D9D9D9] rounded-[5px] overflow-hidden shadow-xs">
+      <div className="bg-white border border-steffen-border rounded-[10px] overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="bg-[#D9D9D9] text-black font-bold uppercase text-[11px] border-b border-black">
+              <tr className="bg-steffen-gray text-black font-bold uppercase text-[11px] border-b border-black">
                 <th className="py-2.5 px-3 text-left w-[12%]">FECHA</th>
                 <th className="py-2.5 px-3 text-left w-[16%]">
                   <div className="flex items-center gap-1.5">
@@ -143,6 +175,7 @@ export const MovimientosView: React.FC<MovimientosViewProps> = ({
                       className="bg-transparent text-black font-bold text-[11px] focus:outline-none cursor-pointer"
                     >
                       <option value="TODOS">TODOS</option>
+                      <option value="INGRESO_CAJA">INGRESO CAJA</option>
                       <option value="RETIRO">RETIRO</option>
                       <option value="COMPRA">COMPRA</option>
                       <option value="PAGO_PROV">PAGO PROV</option>
@@ -150,6 +183,7 @@ export const MovimientosView: React.FC<MovimientosViewProps> = ({
                       <option value="GASTO_OPERATIVO">GASTO OPERATIVO</option>
                       <option value="TRANSPORTE">TRANSPORTE</option>
                       <option value="VENTA">VENTA</option>
+                      <option value="SALDO_APERTURA">SALDO APERTURA</option>
                     </select>
                   </div>
                 </th>
@@ -158,7 +192,14 @@ export const MovimientosView: React.FC<MovimientosViewProps> = ({
                 <th className="py-2.5 px-3 text-right w-[20%]">VAR. PAT</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E5E5E5]">
+            <tbody className="divide-y divide-steffen-gray">
+              {rangeError && (
+                <tr>
+                  <td colSpan={6} className="py-3 text-center text-xs text-steffen-red">
+                    {rangeError}
+                  </td>
+                </tr>
+              )}
               {filteredMovements.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-xs text-neutral-400">
@@ -177,10 +218,10 @@ export const MovimientosView: React.FC<MovimientosViewProps> = ({
                     <td className="py-2.5 px-3 text-gray-800 truncate max-w-0">
                       {m.description}
                     </td>
-                    <td className="py-2.5 px-3 text-right font-mono font-bold text-black whitespace-nowrap">
+                    <td className="py-2.5 px-3 text-right font-bold text-black whitespace-nowrap">
                       {formatArs(m.amountArs)}
                     </td>
-                    <td className="py-2.5 px-3 text-right font-mono text-[11px] text-gray-700 whitespace-nowrap">
+                    <td className="py-2.5 px-3 text-right text-[11px] text-gray-700 whitespace-nowrap">
                       {m.patrimonialVariation || '—'}
                     </td>
                   </tr>
