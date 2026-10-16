@@ -205,7 +205,6 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({
               deudasClientes={data.deudasClientesArs}
               deudasProveedores={data.deudasProveedoresArs}
               neto={data.netoArs}
-              actionsPosition="below"
               actions={
                 <IconTile
                   label="Retiro caja"

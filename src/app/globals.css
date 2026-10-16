@@ -514,24 +514,31 @@ pre {
    ========================================================================== */
 
 /* Hijos de grilla y paneles pueden encogerse (evita que una tabla ensanche la página). */
-.erp-dark .grid > * {
-  min-width: 0;
+@layer base {
+  .erp-dark .grid > * {
+    min-width: 0;
+  }
 }
-.ui-panel {
-  min-width: 0;
-  max-width: 100%;
-  overflow-x: auto;
-}
+/* En @layer base: estas protecciones NO deben pisar las utilidades de cada componente
+   (p. ej. los max-w-* de los modales). Fuera de capa ganaban a Tailwind y los modales
+   se estiraban a todo el ancho en desktop. */
+@layer base {
+  .ui-panel {
+    min-width: 0;
+    overflow-x: auto;
+  }
 
-/* Modales / ventanas operativas: siempre dentro del viewport, con scroll interno. */
-.erp-dark .fixed.inset-0 {
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-.erp-dark .fixed.inset-0 > div {
-  max-width: 100%;
-  max-height: calc(100dvh - 2rem);
-  overflow-y: auto;
+  /* Modales / ventanas operativas: siempre dentro del viewport, con scroll interno.
+     El ancho lo define cada modal (max-w-md … max-w-5xl); tope de respaldo 900px. */
+  .erp-dark .fixed.inset-0 {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .erp-dark .fixed.inset-0 > div {
+    max-width: min(100%, 900px);
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+  }
 }
 
 /* Importes / cantidades en tablas: nunca partir "$" del número (la tabla scrollea en su panel). */

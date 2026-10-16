@@ -292,18 +292,22 @@ export default async function ErpHomePage() {
           </div>
 
           {/* Columna derecha: RESUMEN DE PEDIDOS (informativo: no reserva ni genera movimientos) */}
-          <div className="xl:col-span-7 xl:flex xl:flex-col">
-            <SectionHeader title="Resumen de pedidos" />
-            <Panel className="xl:flex-1">
-              <PlanningSummary planning={planning} />
-            </Panel>
+          <div className="xl:col-span-7 xl:relative">
+            {/* En desktop el contenido va en absoluto: la altura de la fila la define el bloque izquierdo
+                y el panel la acompaña exactamente (scroll interno si la planificación es más larga). */}
+            <div className="xl:absolute xl:inset-0 xl:flex xl:flex-col">
+              <SectionHeader title="Resumen de pedidos" />
+              <Panel className="xl:flex-1 xl:min-h-0 xl:overflow-y-auto">
+                <PlanningSummary planning={planning} />
+              </Panel>
+            </div>
           </div>
         </div>
 
         {/* CUENTAS (Figma): fila propia con ancho suficiente para cards 2×2 con importes completos;
             a la derecha el frame reserva "Reporte de ventas" (no implementado). */}
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-          <div className="xl:col-span-7">
+          <div className="xl:col-span-12 w-fit max-w-full">
             <SectionHeader title="Cuentas" />
             <DashboardCuentasCard
               cajaSteffen={patrimonialSummary ? toNumericString(patrimonialSummary.cajaSteffen) : '0'}

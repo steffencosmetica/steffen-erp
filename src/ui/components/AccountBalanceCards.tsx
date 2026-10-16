@@ -46,7 +46,7 @@ export const AccountBalanceCards: React.FC<AccountBalanceCardsProps> = ({
   error,
   actionsPosition = 'side',
 }) => (
-  <div className={`flex flex-col gap-4 ${actionsPosition === 'side' ? 'sm:flex-row' : ''}`}>
+  <div className={`flex flex-col gap-4 ${actionsPosition === 'side' ? 'sm:flex-row sm:flex-wrap' : ''}`}>
     {error ? (
       <p className="flex-1 py-6 text-center text-xs text-steffen-red">{error}</p>
     ) : (
@@ -72,7 +72,7 @@ export const AccountBalanceCards: React.FC<AccountBalanceCardsProps> = ({
     {actions && (
       <div
         className={`flex flex-wrap gap-x-4 gap-y-4 content-start shrink-0 ${
-          actionsPosition === 'side' ? 'sm:grid sm:grid-cols-2' : ''
+          actionsPosition === 'side' ? 'sm:grid sm:grid-cols-[repeat(2,max-content)]' : ''
         }`}
       >
         {actions}
