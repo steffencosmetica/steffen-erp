@@ -69,7 +69,7 @@ export const VentasView: React.FC<VentasViewProps> = ({ year, month, currentYear
             </Link>
           ))}
         </div>
-        <div className="flex flex-wrap items-center gap-1.5 flex-1" aria-label="Mes">
+        <div className="grid grid-cols-6 md:grid-cols-12 gap-1.5 flex-1 min-w-0" aria-label="Mes">
           {MONTH_LABELS.map((label, idx) => {
             const m = idx + 1;
             const selected = m === month;
@@ -78,7 +78,7 @@ export const VentasView: React.FC<VentasViewProps> = ({ year, month, currentYear
                 key={label}
                 href={periodHref(year, m)}
                 aria-current={selected ? 'true' : undefined}
-                className={`flex-1 min-w-[48px] h-[26px] inline-flex items-center justify-center rounded-[5px] border text-xs font-semibold transition-colors ${
+                className={`h-[26px] inline-flex items-center justify-center rounded-[5px] border text-xs font-semibold transition-colors ${
                   selected
                     ? 'bg-steffen-blue border-steffen-blue text-steffen-surface'
                     : 'ui-btn-dark'

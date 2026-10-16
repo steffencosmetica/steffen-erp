@@ -727,6 +727,10 @@ Familia: `Inter` (cargada por la aplicación).
 
 Numerales de KPI: 24 px Bold (display).
 
+| Display ExtraLight | 24 px | ExtraLight (200), tracking -0.02em | importes de las cards de Cuentas/Caja (Caja Steffen, Caja Mercado Libre, Deudas) y Total facturado; NETO usa Bold. Clase `.ui-display-extralight`. Los importes nunca se truncan: las cards crecen con el contenido |
+
+Inter se carga como fuente variable, por lo que el peso 200 está disponible sin recursos adicionales.
+
 ---
 
 # 6. Espaciado

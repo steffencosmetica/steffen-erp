@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { isPublicPath } from '@/auth/public-paths';
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -10,13 +11,8 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Rutas públicas exceptuadas
-  const isPublicRoute =
-    pathname === '/login' ||
-    pathname.startsWith('/api/health') ||
-    pathname.startsWith('/_next') ||
-    pathname.includes('.') ||
-    pathname === '/favicon.ico';
+  // Rutas públicas exceptuadas: solo login, health, internos de Next y recursos estáticos.
+  const isPublicRoute = isPublicPath(pathname);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;

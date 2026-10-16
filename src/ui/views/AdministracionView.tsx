@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FileText, ShieldCheck } from 'lucide-react';
 import { ErpIcon } from '@/ui/components/ErpIcon';
-import { Panel, SectionHeader, Button, tableStyles, forwardLinkClass, ForwardArrow } from '@/ui/components/UIComponents';
+import { Panel, SectionHeader, Button, IconTile, tableStyles, forwardLinkClass, ForwardArrow } from '@/ui/components/UIComponents';
+import { AccountBalanceCards } from '@/ui/components/AccountBalanceCards';
+import { UsdRateCard } from '@/ui/components/UsdRateCard';
 import { DocumentPdfButton } from '@/ui/components/DocumentPdfButton';
 import {
   type AdministracionDashboardDTO,
@@ -60,7 +62,6 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({
   const [selectedMonth, setSelectedMonth] = useState(monthOptionValue(initialYear, initialMonth));
   const [monthlySales, setMonthlySales] = useState<MonthlySaleDTO[]>(initialMonthlySales);
   const [isLoadingSales, setIsLoadingSales] = useState(false);
-  const [usdInput, setUsdInput] = useState(data.currentUsdRate || '1350');
 
   const [isGastoOperativoOpen, setIsGastoOperativoOpen] = useState(false);
   const [isRetiroCajaOpen, setIsRetiroCajaOpen] = useState(false);
@@ -89,8 +90,8 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({
   return (
     <div className=" pb-16 space-y-5">
       {/* 1. Fila superior: VENTAS DEL MES (izq) + acciones, cotización y CUENTAS (der) — Figma Administración */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        <Panel className="lg:col-span-7 h-[330px] flex flex-col">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
+        <Panel className="xl:col-span-7 h-[330px] flex flex-col">
           <SectionHeader
             title="VENTAS DEL MES"
             actions={
@@ -172,9 +173,9 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({
           </div>
         </Panel>
 
-        <div className="lg:col-span-5 space-y-4">
+        <div className="xl:col-span-5 space-y-4">
           {/* Acciones superiores: Gasto Operativo + Lista de Precios */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => setIsGastoOperativoOpen(true)}
@@ -192,74 +193,33 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({
             </Link>
           </div>
 
-          {/* Cotización Dólar */}
-          <Panel className="!py-3 flex items-center justify-between gap-4">
-            <span className="text-sm font-semibold uppercase leading-tight">
-              Cotización
-              <br />
-              dólar
-            </span>
-            <input
-              type="text"
-              value={usdInput}
-              onChange={(e) => setUsdInput(e.target.value)}
-              aria-label="Nueva cotización"
-              className="flex-1 min-w-0 h-8 px-2.5 text-sm text-right tabular-nums border border-steffen-border rounded-[5px]"
-              placeholder="1.350"
-            />
-            <Button variant="verde" onClick={() => alert(`Cotización actualizada: $ ${usdInput}`)}>
-              Actualizar
-            </Button>
-          </Panel>
+          {/* Cotización Dólar (componente compartido con Dashboard) */}
+          <UsdRateCard currentUsdRate={data.currentUsdRate} />
 
-          {/* CUENTAS */}
+          {/* CUENTAS / CAJA: cards; en Administración solo la acción Retiro caja */}
           <Panel>
             <SectionHeader title="CUENTAS" />
-            <table className={`${tableStyles.table} mb-4`}>
-              <thead>
-                <tr className={tableStyles.headRow}>
-                  <th className="py-2 px-3 text-left">CUENTA</th>
-                  <th className="py-2 px-3 text-right">TOTAL</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className={tableStyles.row}>
-                  <td className="py-1.5 px-3">CAJA STEFFEN</td>
-                  <td className="py-1.5 px-3 text-right tabular-nums text-steffen-green">{formatArs(data.cajaSteffenArs)}</td>
-                </tr>
-                <tr className={tableStyles.row}>
-                  <td className="py-1.5 px-3">CAJA MERCADO LIBRE</td>
-                  <td className="py-1.5 px-3 text-right tabular-nums text-steffen-green">{formatArs(data.cajaMercadoLibreArs)}</td>
-                </tr>
-                <tr className={tableStyles.row}>
-                  <td className="py-1.5 px-3">DEUDAS CLIENTES</td>
-                  <td className="py-1.5 px-3 text-right tabular-nums text-steffen-green">{formatArs(data.deudasClientesArs)}</td>
-                </tr>
-                <tr className={tableStyles.row}>
-                  <td className="py-1.5 px-3">DEUDAS PROVEEDORES</td>
-                  <td className="py-1.5 px-3 text-right tabular-nums text-steffen-red">
-                    {data.deudasProveedoresArs && data.deudasProveedoresArs !== '0'
-                      ? `-${formatArs(data.deudasProveedoresArs)}`
-                      : '$ 0'}
-                  </td>
-                </tr>
-                <tr className="font-semibold">
-                  <td className="py-1.5 px-3">NETO</td>
-                  <td className="py-1.5 px-3 text-right tabular-nums">{formatArs(data.netoArs)}</td>
-                </tr>
-              </tbody>
-            </table>
-            <div className="flex justify-end">
-              <Button variant="rojo" onClick={() => setIsRetiroCajaOpen(true)}>
-                Retiro caja
-              </Button>
-            </div>
+            <AccountBalanceCards
+              cajaSteffen={data.cajaSteffenArs}
+              cajaMercadoLibre={data.cajaMercadoLibreArs}
+              deudasClientes={data.deudasClientesArs}
+              deudasProveedores={data.deudasProveedoresArs}
+              neto={data.netoArs}
+              actionsPosition="below"
+              actions={
+                <IconTile
+                  label="Retiro caja"
+                  onClick={() => setIsRetiroCajaOpen(true)}
+                  icon={<ErpIcon name="retiro" className="w-7 h-7" />}
+                />
+              }
+            />
           </Panel>
         </div>
       </div>
 
       {/* 2. Fila media: CUENTAS CLIENTES + DEUDAS PROVEEDORES */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
         <Panel className="h-[270px] flex flex-col">
           <SectionHeader
             title="CUENTAS CLIENTES"

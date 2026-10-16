@@ -49,7 +49,7 @@ export default async function ReportesPage() {
           title={period ? `RESUMEN MENSUAL · ${MONTH_NAMES[period.month - 1].toUpperCase()} ${period.year}` : 'RESUMEN MENSUAL'}
         />
         {!reports && <p className="mb-3 text-xs text-steffen-red">No se pudieron cargar las métricas del mes.</p>}
-        <div className="grid grid-cols-2 gap-4 max-w-[720px]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-[720px]">
           <KpiCard
             className="min-h-[110px]"
             label="Ventas del mes"

@@ -20,40 +20,38 @@ export default async function ErpLayout({
 
   return (
     <div className="min-h-screen bg-steffen-page text-steffen-surface flex font-sans antialiased">
-      {/* Barra lateral: logo, módulos y logout separado al pie (DESIGN.md §9.0) */}
-      <aside className="hidden lg:flex sticky top-0 h-screen w-[78px] shrink-0 bg-steffen-bg flex-col items-center py-8">
-        <Link href="/" className="mb-12 transition-opacity hover:opacity-90" title="Steffen ERP">
+      {/* Desktop (>= 1280): barra lateral con logo, módulos, accesos y logout separado (DESIGN.md §9.0) */}
+      <aside className="hidden xl:flex sticky top-0 h-screen w-[78px] shrink-0 bg-steffen-bg flex-col items-center py-6 overflow-y-auto">
+        <Link href="/" className="mb-8 transition-opacity hover:opacity-90" title="Steffen ERP">
           <SteffenLogoIcon className="w-9 h-12" />
         </Link>
 
         <ErpSidebarNav />
 
-        <form action={logoutAction} className="mt-auto">
+        {/* Cerrar sesión: misma lógica (logoutAction); ítem de menú con caja Border Button + degradé. */}
+        <form action={logoutAction} className="mt-auto pt-6">
           <button
             type="submit"
             title="Cerrar sesión"
-            aria-label="Cerrar sesión"
-            className="ui-btn-dark w-[51px] h-[30px] inline-flex items-center justify-center rounded-[5px] cursor-pointer"
+            className="group ui-nav-item flex flex-col items-center gap-1.5 cursor-pointer"
           >
-            <LogOut className="w-6 h-6 text-steffen-surface/80" />
+            <span className="ui-btn-dark w-[40px] h-[34px] inline-flex items-center justify-center rounded-[5px] transition-colors">
+              <LogOut className="w-5 h-5 text-steffen-silver group-hover:text-steffen-gold transition-colors" />
+            </span>
+            <span className="ui-nav-label text-[11px] font-semibold leading-tight text-center text-steffen-muted">
+              Cerrar
+              <br />
+              sesión
+            </span>
           </button>
         </form>
       </aside>
 
       <div className="flex-1 min-w-0 flex flex-col">
-        <div className="lg:hidden flex items-center justify-between px-4 h-[42px] bg-steffen-bg">
-          <Link href="/" title="Steffen ERP">
-            <SteffenLogoIcon className="w-7 h-9" />
-          </Link>
-          <form action={logoutAction}>
-            <button type="submit" aria-label="Cerrar sesión" className="p-2 text-steffen-surface/80 cursor-pointer">
-              <LogOut className="w-5 h-5" />
-            </button>
-          </form>
-        </div>
-        <ErpNavMobile />
+        {/* Tablet / mobile (< 1280): barra superior + drawer con todos los accesos */}
+        <ErpNavMobile logo={<SteffenLogoIcon className="w-6 h-8" />} logoutAction={logoutAction} />
 
-        <main className="flex-1 w-full px-5 lg:px-14 py-8">
+        <main className="flex-1 w-full min-w-0 px-4 md:px-6 xl:px-14 py-5 xl:py-8">
           <ErpPageHeader sessionLabel="Admin" sessionTitle={user.email} />
           {children}
         </main>

@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { LogOut, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ErpIcon, type ErpIconName } from './ErpIcon';
@@ -122,29 +123,124 @@ export const ErpSidebarNav: React.FC = () => {
   );
 };
 
-/** Navegación compacta para pantallas angostas (responsive final: Fase 18). */
-export const ErpNavMobile: React.FC = () => {
+/**
+ * Navegación tablet/mobile (< 1280 px, DESIGN.md §3.5): barra superior con logo,
+ * módulo actual y botón menú; drawer lateral con TODOS los accesos (5 módulos,
+ * accesos rápidos y logout). No oculta funciones por tamaño.
+ */
+export const ErpNavMobile: React.FC<{ logo: React.ReactNode; logoutAction: () => Promise<void> }> = ({
+  logo,
+  logoutAction,
+}) => {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  // Cerrar al navegar y con Escape.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open]);
+
+  const current =
+    navItems.find((it) => isItemActive(it, pathname))?.pageTitle ??
+    shortcutItems.find((it) => [it.href, ...(it.alsoActiveOn ?? [])].some((h) => pathname.startsWith(h)))?.name ??
+    '';
+
+  const linkClass = (active: boolean) =>
+    `ui-nav-item flex items-center gap-3 px-3 h-[38px] rounded-[5px] text-sm font-semibold ${
+      active ? 'ui-degrade' : ''
+    }`;
 
   return (
-    <div className="lg:hidden flex gap-1 px-4 py-2 border-b border-steffen-gray overflow-x-auto scrollbar-none bg-steffen-bg">
-      {navItems.map((item) => {
-        const isActive = isItemActive(item, pathname);
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            aria-current={isActive ? 'page' : undefined}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap rounded-[5px] ${
-              isActive ? 'text-steffen-gold ui-degrade' : 'text-steffen-muted'
-            }`}
+    <>
+      <div className="xl:hidden sticky top-0 z-40 flex items-center gap-3 px-4 h-[48px] bg-steffen-bg border-b border-steffen-gray">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Abrir menú"
+          aria-expanded={open}
+          aria-controls="erp-mobile-drawer"
+          className="ui-btn-dark w-[36px] h-[30px] inline-flex items-center justify-center rounded-[5px] cursor-pointer"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+        <Link href="/" title="Steffen ERP" className="shrink-0">
+          {logo}
+        </Link>
+        <span className="text-sm font-semibold text-steffen-gold truncate">{current}</span>
+      </div>
+
+      {open && (
+        <div className="xl:hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Menú">
+          <button
+            type="button"
+            aria-label="Cerrar menú"
+            onClick={() => setOpen(false)}
+            className="absolute inset-0 bg-black/70 cursor-default"
+          />
+          <nav
+            id="erp-mobile-drawer"
+            aria-label="Módulos"
+            className="absolute left-0 top-0 h-full w-[260px] max-w-[85vw] bg-steffen-bg border-r border-steffen-gray flex flex-col px-3 py-4 overflow-y-auto"
           >
-            <ErpIcon name={item.icon} tone={isActive ? 'gold' : 'chrome'} className="w-4 h-4" />
-            {item.name}
-          </Link>
-        );
-      })}
-    </div>
+            <div className="flex items-center justify-between mb-4 px-1">
+              <Link href="/" title="Steffen ERP">
+                {logo}
+              </Link>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Cerrar menú"
+                className="p-1 rounded-[5px] text-steffen-surface/70 hover:text-steffen-surface hover:bg-steffen-gray cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              {navItems.map((item) => {
+                const active = isItemActive(item, pathname);
+                return (
+                  <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined} className={linkClass(active)}>
+                    <ErpIcon name={item.icon} tone={active ? 'gold' : 'chrome'} className="w-6 h-6" />
+                    <span className={`ui-nav-label ${active ? 'text-steffen-gold' : 'text-steffen-surface'}`}>{item.pageTitle}</span>
+                  </Link>
+                );
+              })}
+            </div>
+
+            <span aria-hidden className="my-3 h-px bg-steffen-gray" />
+
+            <div className="flex flex-col gap-1">
+              {shortcutItems.map((item) => {
+                const active = [item.href, ...(item.alsoActiveOn ?? [])].some((h) => pathname.startsWith(h));
+                return (
+                  <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined} className={linkClass(active)}>
+                    <ErpIcon name={item.icon} tone={active ? 'gold' : 'chrome'} className="w-6 h-6" />
+                    <span className={`ui-nav-label ${active ? 'text-steffen-gold' : 'text-steffen-surface'}`}>{item.name}</span>
+                  </Link>
+                );
+              })}
+            </div>
+
+            <form action={logoutAction} className="mt-auto pt-4">
+              <button
+                type="submit"
+                className="group ui-btn-dark w-full h-[34px] inline-flex items-center justify-center gap-2 rounded-[5px] text-sm font-semibold cursor-pointer"
+              >
+                <LogOut className="w-4 h-4 text-steffen-silver group-hover:text-steffen-gold transition-colors" />
+                Cerrar sesión
+              </button>
+            </form>
+          </nav>
+        </div>
+      )}
+    </>
   );
 };
 

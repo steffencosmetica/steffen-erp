@@ -212,10 +212,10 @@ export const SectionHeader: React.FC<{
     variant === 'alert' ? 'text-steffen-red' : variant === 'strong' ? 'text-steffen-surface' : 'text-steffen-muted';
   const lineColor = variant === 'alert' ? 'bg-steffen-red' : variant === 'strong' ? 'bg-steffen-surface' : 'bg-steffen-gray';
   return (
-    <div className={`flex items-center gap-5 mb-3 ${className}`}>
+    <div className={`flex flex-wrap items-center gap-x-5 gap-y-2 mb-3 ${className}`}>
       <h2 className={`text-[12px] font-semibold whitespace-nowrap ${titleColor}`}>{title}</h2>
-      <span aria-hidden className={`flex-1 h-px ${lineColor}`} />
-      {actions && <div className="flex items-center gap-3 shrink-0">{actions}</div>}
+      <span aria-hidden className={`flex-1 min-w-[24px] h-px ${lineColor}`} />
+      {actions && <div className="flex flex-wrap items-center gap-3 max-w-full">{actions}</div>}
     </div>
   );
 };
@@ -236,7 +236,9 @@ export const KpiCard: React.FC<{
   variant?: 'default' | 'inverted' | 'positive';
   icon?: ReactNode;
   className?: string;
-}> = ({ label, value, variant = 'default', icon, className = '' }) => {
+  /** Estilo opcional del label (p. ej. dorado en Total facturado, Figma Dashboard). */
+  labelClassName?: string;
+}> = ({ label, value, variant = 'default', icon, className = '', labelClassName = '' }) => {
   const variantClasses =
     variant === 'positive'
       ? 'bg-steffen-green border-steffen-green text-steffen-surface'
@@ -249,7 +251,7 @@ export const KpiCard: React.FC<{
         {icon}
         <span className="text-[24px] leading-none font-bold tabular-nums">{value}</span>
       </div>
-      <span className="mt-2 text-xs font-semibold uppercase">{label}</span>
+      <span className={`mt-2 text-xs font-semibold uppercase ${labelClassName}`}>{label}</span>
     </div>
   );
 };
@@ -380,3 +382,35 @@ export const tableStyles = {
   cell: 'px-5 py-1.5',
   numericCell: 'px-5 py-1.5 text-right tabular-nums',
 } as const;
+
+// IconTile: acción compacta de ícono con label debajo (Figma Dashboard: Acceso rápido / Cuentas).
+// Ícono plateado por defecto; hover en dorado cromado como la navegación.
+export const IconTile: React.FC<{
+  icon: ReactNode;
+  label: string;
+  title?: string;
+  onClick?: () => void;
+  href?: string;
+  className?: string;
+}> = ({ icon, label, title, onClick, href, className = '' }) => {
+  const box = (
+    <span className="ui-btn-dark w-[50px] h-[50px] inline-flex items-center justify-center rounded-[5px] transition-colors">
+      {icon}
+    </span>
+  );
+  const caption = (
+    <span className="ui-nav-label text-[11px] leading-tight text-center text-steffen-surface/85 max-w-[64px]">{label}</span>
+  );
+  const classes = `group ui-nav-item inline-flex flex-col items-center gap-1.5 cursor-pointer ${className}`;
+  return href ? (
+    <Link href={href} title={title ?? label} className={classes}>
+      {box}
+      {caption}
+    </Link>
+  ) : (
+    <button type="button" onClick={onClick} title={title ?? label} className={classes}>
+      {box}
+      {caption}
+    </button>
+  );
+};

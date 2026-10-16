@@ -2,7 +2,9 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { HandCoins } from 'lucide-react';
 import { ErpIcon } from './ErpIcon';
+import { IconTile } from './UIComponents';
 import { RegistrarCompraModal, type SupplierOption } from '@/ui/modals/RegistrarCompraModal';
 import { RegistrarFabricacionModal, type BaseProductOption } from '@/ui/modals/RegistrarFabricacionModal';
 import { RegistrarEnvasadoModal, type PackagingProductOption } from '@/ui/modals/RegistrarEnvasadoModal';
@@ -151,11 +153,24 @@ const ACTION_ICON: Partial<Record<DashboardAction, ReactNode>> = {
   manufacturing: <ErpIcon name="formula" className="w-8 h-8" />,
   packaging: <ErpIcon name="envase" className="w-8 h-8" />,
   expense: <ErpIcon name="gasto" className="w-8 h-8" />,
+  // Sin ícono de referencia para pagos: ícono lineal neutro en plateado (DESIGN.md §4.4).
+  'supplier-payment': <HandCoins className="w-7 h-7 text-steffen-silver group-hover:text-steffen-gold transition-colors" strokeWidth={1.6} />,
+  'customer-payment': <HandCoins className="w-7 h-7 text-steffen-silver group-hover:text-steffen-gold transition-colors" strokeWidth={1.6} />,
+};
+
+/** Etiquetas cortas bajo los íconos (Figma Dashboard). */
+const TILE_LABEL: Partial<Record<DashboardAction, string>> = {
+  purchase: 'Compras',
+  manufacturing: 'Fabricación',
+  packaging: 'Envasado',
+  'supplier-payment': 'Pago Proveedor',
+  'customer-payment': 'Pago Cliente',
+  expense: 'Gasto Operativo',
 };
 
 interface DashboardActionButtonProps {
   action: DashboardAction;
-  appearance: 'icon' | 'secondary' | 'secondary-large' | 'success-large';
+  appearance: 'icon' | 'tile' | 'secondary' | 'secondary-large' | 'success-large';
   className?: string;
 }
 
@@ -163,6 +178,18 @@ interface DashboardActionButtonProps {
 export const DashboardActionButton: React.FC<DashboardActionButtonProps> = ({ action, appearance, className = '' }) => {
   const open = useDashboardAction();
   const { label, title } = ACTION_META[action];
+
+  if (appearance === 'tile') {
+    return (
+      <IconTile
+        label={TILE_LABEL[action] ?? label}
+        title={title}
+        onClick={() => open(action)}
+        icon={ACTION_ICON[action]}
+        className={className}
+      />
+    );
+  }
 
   if (appearance === 'icon') {
     return (

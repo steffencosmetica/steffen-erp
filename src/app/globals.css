@@ -35,6 +35,7 @@
   --steffen-button-hover: #393939;    /* Button Hover */
   --steffen-text-soft: rgb(251 251 251 / 0.8);
   --steffen-chrome: linear-gradient(180deg, #FFFFFF 0%, #C9C9C9 45%, #8E8E8E 70%, #E6E6E6 100%); /* íconos cromados */
+  --steffen-silver: #C9C9C9;          /* plateado para íconos lineales (SVG) sin máscara */
   --steffen-gold-chrome: linear-gradient(180deg, #F5DCA0 0%, #C38926 45%, #8C5F14 70%, #E8C177 100%); /* dorado cromado (hover de navegación) */
 
   /* Tintes (tokens con alfa) para estados de fondo heredados */
@@ -83,6 +84,7 @@
   --color-steffen-red-hover: var(--steffen-red-hover);
   --color-steffen-muted: var(--steffen-text-muted);
   --color-steffen-alert: var(--steffen-alert);
+  --color-steffen-silver: var(--steffen-silver);
   --font-sans: var(--font-inter), "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -503,4 +505,45 @@ pre {
 .erp-dark tbody > tr:not(.font-semibold):not(.font-bold):not(.font-extrabold) > td:not(.text-steffen-red):not(.text-steffen-green),
 .erp-dark tbody > tr:not(.font-semibold):not(.font-bold):not(.font-extrabold) > td :is(span, div, a, button, p, strong, b, label):not(.text-steffen-red):not(.text-steffen-green):not([class*="bg-"]) {
   font-weight: 400;
+}
+
+/* ==========================================================================
+   Responsive (DESIGN.md §3, Fase 18): desktop >= 1280 (xl) conserva la composición;
+   tablet 768–1279 reduce columnas; mobile < 768 apila. Nunca scroll horizontal
+   global: el contenido ancho (tablas, matrices) scrollea dentro de su contenedor.
+   ========================================================================== */
+
+/* Hijos de grilla y paneles pueden encogerse (evita que una tabla ensanche la página). */
+.erp-dark .grid > * {
+  min-width: 0;
+}
+.ui-panel {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Modales / ventanas operativas: siempre dentro del viewport, con scroll interno. */
+.erp-dark .fixed.inset-0 {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.erp-dark .fixed.inset-0 > div {
+  max-width: 100%;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+}
+
+/* Importes / cantidades en tablas: nunca partir "$" del número (la tabla scrollea en su panel). */
+.erp-dark td.tabular-nums,
+.erp-dark td .tabular-nums {
+  white-space: nowrap;
+}
+
+/* Display ExtraLight (DESIGN.md §5.1): importes grandes de cards de Cuentas/Caja y Total facturado.
+   Inter 200 con tracking levemente negativo; solo para este token, no global. */
+.ui-display-extralight {
+  font-weight: 200;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
 }

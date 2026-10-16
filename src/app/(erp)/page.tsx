@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { getAuthenticatedUser, isUserAuthorized } from '@/auth/guard';
 import {
   getSupplierService,
+  getSupplierItemRepository,
   getMasterItemService,
   getFormulaService,
   getProductService,
@@ -27,7 +28,8 @@ import type { PackagingProductOption } from '@/ui/modals/RegistrarEnvasadoModal'
 import { DashboardActionsProvider, DashboardActionButton } from '@/ui/components/DashboardQuickAccess';
 import { DashboardCuentasCard } from '@/ui/components/DashboardCuentasCard';
 import { PlanningMatrixTable } from '@/ui/components/PlanningMatrixTable';
-import { SectionHeader, KpiCard, Panel } from '@/ui/components/UIComponents';
+import { SectionHeader, KpiCard, Panel, IconTile } from '@/ui/components/UIComponents';
+import { UsdRateCard } from '@/ui/components/UsdRateCard';
 import { ErpIcon } from '@/ui/components/ErpIcon';
 import { formatArs } from '@/lib/format';
 
@@ -44,6 +46,11 @@ const LOW_STOCK_LIMIT = 5;
 /** Importes de KPI: misma escala tipográfica compacta, sin desbordar la card. */
 const MoneyValue: React.FC<{ value: string }> = ({ value }) => (
   <span className="text-[19px] whitespace-nowrap">{value}</span>
+);
+
+/** Total facturado: Display ExtraLight (Inter 200), como las cards de caja (DESIGN.md §5.1). */
+const LightMoneyValue: React.FC<{ value: string }> = ({ value }) => (
+  <span className="text-[22px] ui-display-extralight whitespace-nowrap">{value}</span>
 );
 
 /* ==========================================================================
@@ -65,7 +72,7 @@ function MonthlyKpisGrid({
 }) {
   return (
     <>
-      <div className="grid grid-cols-[1fr_1fr_1.35fr] gap-x-4 gap-y-3 items-stretch">
+      <div className="grid grid-cols-2 md:grid-cols-[1fr_1fr_1.35fr] gap-x-4 gap-y-3 items-stretch">
         <KpiCard
           className="min-h-[109px]"
           label="Pedidos abiertos"
@@ -78,8 +85,8 @@ function MonthlyKpisGrid({
           value={sales}
           icon={<ErpIcon name="ingresos" tone="chrome" className="w-10 h-10" />}
         />
-        <div className="row-span-2 flex flex-col gap-3">
-          <KpiCard className="flex-1" label="Total facturado" value={billed} />
+        <div className="col-span-2 md:col-span-1 md:row-span-2 flex flex-col gap-3">
+          <KpiCard className="flex-1" label="Total facturado" value={billed} labelClassName="text-steffen-gold" />
           <KpiCard className="flex-1" label="Ganancia" value={gain} variant="positive" />
         </div>
         <DashboardActionButton action="order" appearance="secondary" className="w-full" />
@@ -103,7 +110,7 @@ async function MonthlyKpis() {
       <MonthlyKpisGrid
         openOrders={reports.openOrders}
         sales={reports.salesCurrentMonth}
-        billed={<MoneyValue value={formatArs(reports.billedCurrentMonthArs)} />}
+        billed={<LightMoneyValue value={formatArs(reports.billedCurrentMonthArs)} />}
         gain={<MoneyValue value={formatArs(reports.gainCurrentMonthArs)} />}
       />
     );
@@ -189,8 +196,11 @@ export default async function ErpHomePage() {
   }
 
   // Datos de las operaciones rápidas y de CUENTAS (fuentes reales).
-  const [suppliers, baseProductRecords, productRecords, openLotsRecords, patrimonialSummary, planningMatrix] = await Promise.all([
+  const [suppliers, usdRate, baseProductRecords, productRecords, openLotsRecords, patrimonialSummary, planningMatrix] = await Promise.all([
     getSupplierService().listSuppliers().catch(() => []),
+    getSupplierItemRepository()
+      .getCurrentUsdExchangeRate()
+      .catch(() => null),
     getFormulaService().listBaseProducts(true).catch(() => []),
     getProductService().listProducts(false).catch(() => []),
     getFactoryService().listOpenBulkLots().catch(() => []),
@@ -202,6 +212,8 @@ export default async function ErpHomePage() {
       .getPlanningMatrix()
       .catch(() => null),
   ]);
+
+  const currentUsdRate = usdRate ? toNumericString(usdRate) : null;
 
   const supplierOptions = suppliers.map((s) => ({
     id: s.id,
@@ -246,9 +258,9 @@ export default async function ErpHomePage() {
       packagingProducts={productsForPackaging}
     >
       <div className="space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Columna izquierda (Figma Dashboard): REPORTE MENSUAL → ACCESO RÁPIDO → CUENTAS */}
-          <div className="lg:col-span-5 space-y-6">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start xl:items-stretch">
+          {/* Columna izquierda (Figma Dashboard): REPORTE MENSUAL → ACCESO RÁPIDO + COTIZACIÓN */}
+          <div className="xl:col-span-5 space-y-6">
             <div>
               <SectionHeader title="Reporte mensual" />
               <Suspense
@@ -258,48 +270,56 @@ export default async function ErpHomePage() {
               </Suspense>
             </div>
 
-            <div>
-              <SectionHeader title="Acceso rápido" />
-              <div className="flex flex-wrap items-center gap-3">
-                <DashboardActionButton action="purchase" appearance="icon" />
-                <DashboardActionButton action="manufacturing" appearance="icon" />
-                <DashboardActionButton action="packaging" appearance="icon" />
-                <Link
-                  href="/precios"
-                  className="ui-btn-dark h-[50px] px-5 inline-flex items-center gap-3 rounded-[5px] text-lg transition-colors"
-                >
-                  <ErpIcon name="lista-precios" className="w-7 h-7" />
-                  Listas de precios
-                </Link>
+            <div className="grid grid-cols-1 sm:grid-cols-[auto_minmax(0,1fr)] gap-x-6 gap-y-4 items-start">
+              <div>
+                <SectionHeader title="Acceso rápido" />
+                <div className="flex flex-wrap items-start gap-3">
+                  <DashboardActionButton action="purchase" appearance="tile" />
+                  <DashboardActionButton action="manufacturing" appearance="tile" />
+                  <DashboardActionButton action="packaging" appearance="tile" />
+                  <IconTile
+                    href="/precios"
+                    label="Precios"
+                    title="Listas de precios"
+                    icon={<ErpIcon name="lista-precios" className="w-7 h-7" />}
+                  />
+                </div>
               </div>
+              {/* Cotización dólar: misma implementación que Administración (componente compartido). */}
+              <UsdRateCard currentUsdRate={currentUsdRate} layout="stacked" className="sm:mt-6" />
             </div>
 
-            <div>
-              <SectionHeader title="Cuentas" />
-              <DashboardCuentasCard
-                cajaSteffen={patrimonialSummary ? toNumericString(patrimonialSummary.cajaSteffen) : '0'}
-                cajaMercadoLibre={patrimonialSummary ? toNumericString(patrimonialSummary.cajaMercadoLibre) : '0'}
-                deudasClientes={patrimonialSummary ? toNumericString(patrimonialSummary.deudasClientes) : '0'}
-                deudasProveedores={patrimonialSummary ? toNumericString(patrimonialSummary.deudasProveedores) : '0'}
-                neto={patrimonialSummary ? toNumericString(patrimonialSummary.neto) : '0'}
-                error={patrimonialSummary ? null : 'No se pudieron cargar los saldos de cuentas.'}
-                actions={
-                  <>
-                    <DashboardActionButton action="supplier-payment" appearance="secondary-large" />
-                    <DashboardActionButton action="customer-payment" appearance="success-large" />
-                    <DashboardActionButton action="expense" appearance="icon" />
-                  </>
-                }
-              />
-            </div>
           </div>
 
           {/* Columna derecha: RESUMEN DE PEDIDOS (informativo: no reserva ni genera movimientos) */}
-          <div className="lg:col-span-7">
+          <div className="xl:col-span-7 xl:flex xl:flex-col">
             <SectionHeader title="Resumen de pedidos" />
-            <Panel>
+            <Panel className="xl:flex-1">
               <PlanningSummary planning={planning} />
             </Panel>
+          </div>
+        </div>
+
+        {/* CUENTAS (Figma): fila propia con ancho suficiente para cards 2×2 con importes completos;
+            a la derecha el frame reserva "Reporte de ventas" (no implementado). */}
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+          <div className="xl:col-span-7">
+            <SectionHeader title="Cuentas" />
+            <DashboardCuentasCard
+              cajaSteffen={patrimonialSummary ? toNumericString(patrimonialSummary.cajaSteffen) : '0'}
+              cajaMercadoLibre={patrimonialSummary ? toNumericString(patrimonialSummary.cajaMercadoLibre) : '0'}
+              deudasClientes={patrimonialSummary ? toNumericString(patrimonialSummary.deudasClientes) : '0'}
+              deudasProveedores={patrimonialSummary ? toNumericString(patrimonialSummary.deudasProveedores) : '0'}
+              neto={patrimonialSummary ? toNumericString(patrimonialSummary.neto) : '0'}
+              error={patrimonialSummary ? null : 'No se pudieron cargar los saldos de cuentas.'}
+              actions={
+                <>
+                  <DashboardActionButton action="supplier-payment" appearance="tile" />
+                  <DashboardActionButton action="customer-payment" appearance="tile" />
+                  <DashboardActionButton action="expense" appearance="tile" />
+                </>
+              }
+            />
           </div>
         </div>
 
