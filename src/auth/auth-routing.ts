@@ -7,7 +7,7 @@ export interface AuthRoutingInput {
   pathname: string;
   /** Hay una sesión Supabase válida (auth.getUser()). */
   isAuthenticated: boolean;
-  /** El usuario de esa sesión es STEFFEN_AUTHORIZED_USER_ID. */
+  /** El usuario de esa sesión está en la allowlist (STEFFEN_AUTHORIZED_USER_IDS). */
   isAuthorized: boolean;
 }
 

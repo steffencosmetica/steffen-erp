@@ -14,6 +14,7 @@ import assert from 'node:assert';
 
 const AUTHORIZED_ID = '00000000-0000-4000-8000-0000000000aa';
 const OTHER_ID = '00000000-0000-4000-8000-0000000000bb';
+delete process.env.STEFFEN_AUTHORIZED_USER_IDS; // aislar de .env.local: se usa el fallback de un UUID
 process.env.STEFFEN_AUTHORIZED_USER_ID = AUTHORIZED_ID;
 
 let sessionUser: { id: string; email: string } | null = null;

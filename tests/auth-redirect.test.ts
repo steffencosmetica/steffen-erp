@@ -10,6 +10,7 @@ import assert from 'node:assert';
 const AUTHORIZED_ID = '00000000-0000-4000-8000-0000000000aa';
 const OTHER_ID = '00000000-0000-4000-8000-0000000000bb';
 const AUTH_COOKIE = 'sb-testref-auth-token';
+delete process.env.STEFFEN_AUTHORIZED_USER_IDS; // aislar de .env.local: se usa el fallback de un UUID
 process.env.STEFFEN_AUTHORIZED_USER_ID = AUTHORIZED_ID;
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://mock-project.supabase.co';
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'mock-anon-key';
@@ -248,6 +249,21 @@ test('Auth — sin loop de redirección para usuario autenticado no autorizado',
       });
     }
     signOutShouldFail = false;
+  });
+
+  await t.test('5b. middleware con STEFFEN_AUTHORIZED_USER_IDS: varios operadores entran, otros no', async () => {
+    const SECOND_ID = '00000000-0000-4000-8000-0000000000cc';
+    process.env.STEFFEN_AUTHORIZED_USER_IDS = ` ${AUTHORIZED_ID} , ${SECOND_ID} `;
+    try {
+      assert.deepStrictEqual(await hit('/', login(SECOND_ID)), { status: 200, location: null, clearsSession: false });
+      assert.deepStrictEqual(await hit('/login', login(SECOND_ID)), { status: 307, location: '/', clearsSession: false });
+      assert.deepStrictEqual(await hit('/', login(AUTHORIZED_ID)), { status: 200, location: null, clearsSession: false });
+      const other = await hit('/', login(OTHER_ID));
+      assert.strictEqual(other.location, '/login?error=unauthorized');
+      assert.ok(other.clearsSession);
+    } finally {
+      delete process.env.STEFFEN_AUTHORIZED_USER_IDS;
+    }
   });
 
   await t.test('6. /login sigue siendo ruta pública', () => {

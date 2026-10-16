@@ -106,7 +106,7 @@ export async function getAuthenticatedUser(explicitToken?: string): Promise<Auth
   }
 }
 
-/** Allowlist de usuario único (STEFFEN_AUTHORIZED_USER_ID); ver `./authorization`. */
+/** Allowlist de operadores (STEFFEN_AUTHORIZED_USER_IDS, fallback STEFFEN_AUTHORIZED_USER_ID); ver `./authorization`. */
 export { isUserAuthorized };
 
 /**
@@ -118,7 +118,7 @@ export { isUserAuthorized };
  *
  * Valida:
  * 1. Que exista una sesión válida (arroja UnauthorizedError 401 si no).
- * 2. Que el user.id coincida con STEFFEN_AUTHORIZED_USER_ID (arroja ForbiddenError 403 si pertenece a otro usuario).
+ * 2. Que el user.id esté en la allowlist de operadores (arroja ForbiddenError 403 si no lo está).
  */
 export async function requireAuthenticatedUser(
   explicitToken?: string,
