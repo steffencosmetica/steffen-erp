@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/database/types';
 import { UnauthorizedError, ForbiddenError } from './errors';
+import { isUserAuthorized } from './authorization';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-project.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
@@ -105,17 +106,8 @@ export async function getAuthenticatedUser(explicitToken?: string): Promise<Auth
   }
 }
 
-/**
- * Verifica si el usuario coincide con la allowlist de usuario único configurada en el servidor.
- */
-export function isUserAuthorized(user: AuthenticatedUser, expectedUserId?: string): boolean {
-  const authorizedId = expectedUserId || process.env.STEFFEN_AUTHORIZED_USER_ID;
-  if (!authorizedId) {
-    // Si no está configurada la variable en el entorno, por seguridad se deniega el acceso
-    return false;
-  }
-  return user.id === authorizedId;
-}
+/** Allowlist de usuario único (STEFFEN_AUTHORIZED_USER_ID); ver `./authorization`. */
+export { isUserAuthorized };
 
 /**
  * Guard central obligatorio para cualquier operación server-side que acceda a:

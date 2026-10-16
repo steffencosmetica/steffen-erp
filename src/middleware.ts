@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { isPublicPath } from '@/auth/public-paths';
+import { isUserAuthorized } from '@/auth/authorization';
+import { decideAuthRouting, isSupabaseAuthCookie } from '@/auth/auth-routing';
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -11,8 +13,10 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Rutas públicas exceptuadas: solo login, health, internos de Next y recursos estáticos.
-  const isPublicRoute = isPublicPath(pathname);
+  // Recursos públicos que no son /login (health, internos de Next, estáticos): sin sesión.
+  if (pathname !== '/login' && isPublicPath(pathname)) {
+    return response;
+  }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -43,33 +47,47 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Si está autenticado y visita /login, redirigir al ERP principal
-  if (user && pathname === '/login') {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = '/';
-    return NextResponse.redirect(redirectUrl);
-  }
+  const decision = decideAuthRouting({
+    pathname,
+    isAuthenticated: Boolean(user),
+    isAuthorized: user ? isUserAuthorized(user) : false,
+  });
 
-  // Si es ruta pública, permitir el paso
-  if (isPublicRoute) {
-    return response;
-  }
-
-  // Si no está autenticado y es ruta protegida
-  if (!user) {
-    if (pathname.startsWith('/api/')) {
-      return NextResponse.json(
-        { error: 'Unauthorized: Se requiere una sesión autenticada activa.' },
-        { status: 401 }
-      );
+  if (decision.clearSession) {
+    // Sesión válida pero NO autorizada: se cierra (local) y se expiran sus cookies
+    // en esta misma respuesta, aunque la llamada remota falle.
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch {
+      // La expiración explícita de cookies de abajo garantiza el cierre igualmente.
     }
-
-    const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = '/login';
-    return NextResponse.redirect(loginUrl);
   }
 
-  return response;
+  let result: NextResponse;
+  if (decision.kind === 'next') {
+    result = response;
+  } else if (decision.kind === 'json') {
+    result = NextResponse.json({ error: decision.error }, { status: decision.status });
+  } else {
+    const url = request.nextUrl.clone();
+    url.pathname = decision.pathname;
+    url.search = decision.error ? `?error=${decision.error}` : '';
+    result = NextResponse.redirect(url);
+  }
+
+  if (result !== response) {
+    // Conservar en redirects / JSON las cookies que Supabase haya escrito (refresh o signOut).
+    response.cookies.getAll().forEach((cookie) => result.cookies.set(cookie));
+  }
+
+  if (decision.clearSession) {
+    request.cookies
+      .getAll()
+      .filter((cookie) => isSupabaseAuthCookie(cookie.name))
+      .forEach((cookie) => result.cookies.set(cookie.name, '', { path: '/', maxAge: 0 }));
+  }
+
+  return result;
 }
 
 export const config = {

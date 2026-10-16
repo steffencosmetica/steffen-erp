@@ -1,16 +1,37 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/database/client';
+import { UNAUTHORIZED_LOGIN_ERROR } from '@/auth/auth-routing';
 import { Lock, Mail, AlertCircle, Loader2, Sparkles } from 'lucide-react';
 
+const UNAUTHORIZED_USER_MESSAGE = 'Usuario no autorizado.';
+
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // La sesión no autorizada ya fue cerrada por el middleware: solo se informa.
+  const unauthorized = searchParams.get('error') === UNAUTHORIZED_LOGIN_ERROR;
+  useEffect(() => {
+    if (unauthorized) {
+      setErrorMessage(UNAUTHORIZED_USER_MESSAGE);
+      setLoading(false);
+    }
+  }, [unauthorized]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

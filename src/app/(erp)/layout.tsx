@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getAuthenticatedUser, isUserAuthorized } from '@/auth/guard';
+import { UNAUTHORIZED_LOGIN_ERROR } from '@/auth/auth-routing';
 import { logoutAction } from '@/actions/auth.actions';
 import { LogOut } from 'lucide-react';
 import { SteffenLogoIcon } from '@/ui/components/SteffenLogo';
@@ -14,8 +15,12 @@ export default async function ErpLayout({
 }) {
   const user = await getAuthenticatedUser();
 
-  if (!user || !isUserAuthorized(user)) {
+  if (!user) {
     redirect('/login');
+  }
+  // Sesión de otro usuario: /login la cierra y queda estable (nunca rebota a /).
+  if (!isUserAuthorized(user)) {
+    redirect(`/login?error=${UNAUTHORIZED_LOGIN_ERROR}`);
   }
 
   return (

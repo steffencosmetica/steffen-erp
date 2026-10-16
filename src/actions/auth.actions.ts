@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { requireAuthenticatedUser, getUserServerSupabaseClient } from '@/auth/guard';
+import { isSupabaseAuthCookie } from '@/auth/auth-routing';
 import { StockDomainService } from '@/services/stock.service';
 import { StockRepository } from '@/repositories/stock.repository';
 import { serverSupabase } from '@/database/server';
@@ -16,6 +17,19 @@ export async function logoutAction() {
     await supabase.auth.signOut();
   } catch {
     // Continuar con la redirección incluso si la llamada remota falla
+  }
+
+  // Si signOut falló (p. ej. red), la sesión local seguiría viva y /login devolvería a /:
+  // se expiran explícitamente las cookies de sesión SSR para que /login quede accesible.
+  try {
+    const { cookies } = await import('next/headers');
+    const cookieStore = await cookies();
+    cookieStore
+      .getAll()
+      .filter((cookie) => isSupabaseAuthCookie(cookie.name))
+      .forEach((cookie) => cookieStore.delete(cookie.name));
+  } catch {
+    // Fuera del contexto de request no hay cookies que limpiar.
   }
 
   redirect('/login');
