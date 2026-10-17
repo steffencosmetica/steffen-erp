@@ -123,9 +123,12 @@ REPORTES R — Reportes analíticos (IMPLEMENTATION_PLAN §22.2)
 
 Rama: feat/reportes-analytics
 
-- R1 auditoría: cerrada.
-- R2 documentación funcional: en curso / pendiente de aprobación.
-- R3 backend, R4 especificación visual, R5 UI: pendientes.
+- R1 Auditoría: COMPLETADA.
+- R2 Contrato funcional: COMPLETADA.
+- R2.1 Documentación funcional (docs/REPORTES.md): COMPLETADA.
+- R3.1 Desktop / R3.2 Interacciones / R3.3 Responsive: APROBADOS.
+- R3.4 Documentación UX (DESIGN §35, COMPONENTS §60.1, REPORTES §17): COMPLETADA.
+- Siguiente: R4 Backend analítico. Después: R5 UI.
 
 Reglas: BUSINESS_RULES §36 + docs/REPORTES.md (la antigua definición de "cuatro cards" de Reportes está derogada; esas métricas siguen en el Dashboard, §35.5).
 

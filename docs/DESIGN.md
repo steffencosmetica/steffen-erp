@@ -112,21 +112,31 @@ El responsive adapta la interfaz, pero no recorta funcionalidades.
 
 ## 3.2 Breakpoints
 
+Regla general del ERP, alineada con la navegación real existente:
+
+| Rango | Ancho | Navegación |
+|---|---|---|
+| Mobile | `< 768 px` | topbar / drawer (§3.5) |
+| Tablet / responsive intermedio | `768 px – 1279 px` | topbar / drawer (§3.5) |
+| Desktop | `>= 1280 px` | layout desktop con barra lateral (sidebar) |
+
 ### Mobile
 
-`360 px – 767 px`
+`< 768 px` (`360 px – 767 px`).
 
 Ancho mínimo soportado:
 
 `360 px`
 
-### Tablet
+### Tablet / responsive intermedio
 
-`768 px – 1023 px`
+`768 px – 1279 px`
 
 ### Desktop
 
-`1024 px+`
+`>= 1280 px`
+
+Desde `1280 px` el ERP usa el layout desktop con barra lateral. Por debajo de `1280 px` usa el comportamiento responsive existente con topbar/drawer.
 
 La implementación debe ser fluida dentro de cada rango.
 
@@ -182,12 +192,7 @@ Mantener la barra lateral completa con los módulos de §9:
 
 ### Tablet
 
-Mantener la barra lateral mientras entre correctamente.
-
-Si deja de entrar sin compresión excesiva:
-
-- utilizar navegación compacta;
-- o menú desplegable.
+Por debajo de `1280 px` (§3.2) la barra lateral no se muestra: se usa la misma navegación responsive que en mobile (barra superior + drawer / menú desplegable).
 
 ### Mobile
 
@@ -572,7 +577,7 @@ La selección masiva debe seguir siendo utilizable con touch.
 
 ## 3.21 Reportes responsive
 
-Pendiente. El diseño visual definitivo y comportamiento responsive de Reportes se especificará en una fase posterior antes de implementar la UI (§35). La pauta anterior de grilla de cuatro cards queda derogada.
+Definido en §35.2 y §35.9–§35.10 (tablet aprox. 768–1279 px con dos columnas cuando entren; mobile en una sola columna con orden Facturación → Productos → Clientes; scroll horizontal solo interno de áreas gráficas y tabs). La pauta anterior de grilla de cuatro cards queda derogada.
 
 ---
 
@@ -1882,57 +1887,202 @@ Debe visualizar claramente:
 
 > **Derogación.** La definición visual anterior ("pantalla compuesta por cuatro cards", "no contiene tablas ni inputs", grilla 2×2 con Ventas del mes / Total facturado / Ganancia / Pedidos abiertos) queda **derogada**. Esas cuatro métricas se conservan en el bloque `REPORTE MENSUAL` del Dashboard (§15.1; `BUSINESS_RULES.md` §35.5).
 
-Reglas funcionales: `BUSINESS_RULES.md` §36.
+Reglas funcionales: `BUSINESS_RULES.md` §36. Contrato consolidado: `REPORTES.md`.
 
-**El diseño visual definitivo y comportamiento responsive de Reportes se especificará en una fase posterior antes de implementar la UI.**
+Esta sección define **jerarquía, composición, proporciones conceptuales, controles, interacción, responsive, comportamiento de gráficos y estados de carga/vacío** (aprobados en R3.1 Desktop, R3.2 Interacciones y R3.3 Responsive).
 
-Esta sección solo define composición de información, tipo conceptual de visualización, controles y comportamiento de datos. No fija colores específicos, dimensiones, grids, gaps, alturas ni responsive exacto. Hasta esa fase aplican los lineamientos generales de este documento y `COMPONENTS.md`.
+**No define todavía** colores nuevos, tamaños en px, alturas exactas, gaps exactos, tipografías nuevas ni estilos gráficos definitivos. La implementación reutiliza el sistema visual existente del ERP (tokens, `Panel`, `SectionHeader`, inputs/selects, tabs, tablas, empty states).
 
 Motor gráfico previsto: Recharts (todavía no instalado).
 
-## 35.1 Controles globales
+## 35.1 Estructura general
 
-- Título de pantalla `REPORTES` dentro del shell general del ERP.
-- **Selector global de año**: controla toda la página.
+```
+REPORTES                                   [Año global ▼]
 
-## 35.2 Sección FACTURACIÓN
+FACTURACIÓN
+  [Resumen anual — KPIs]
+  [Evolución mensual ~60%] [Facturación y Ganancia por año ~40%]
 
-| Bloque | Información | Visualización conceptual |
+PRODUCTOS
+  [Ranking de productos ~60%] [Participación por producto ~40%]
+
+CLIENTES
+  [Mayores compradores ~60%]  [Concentración ~40%]
+  [Análisis individual ~60%]  [Evolución de la concentración ~40%]
+```
+
+- El **selector global de año** se ubica en el encabezado general de Reportes, **no** dentro de Facturación. Controla toda la página.
+- Tres macrosecciones con **títulos visibles**: `FACTURACIÓN`, `PRODUCTOS`, `CLIENTES`.
+- Cada gráfico, ranking o bloque analítico vive en **su propio Panel**. No se usa un único mega-panel por sección.
+- Las proporciones son conceptuales (aprox.); no se fijan píxeles.
+
+## 35.2 Breakpoints de Reportes
+
+Se mantiene el criterio responsive existente del ERP (navegación §3.5):
+
+| Rango | Navegación | Layout de Reportes |
 |---|---|---|
-| Resumen anual | `FACTURACIÓN`, `GANANCIA`, `GASTOS OPERATIVOS`, `TRANSPORTE`, `MARGEN %`, `VENTAS` | KPIs |
-| Evolución mensual | Facturación, Ganancia y Gastos operativos, enero–diciembre | Serie temporal mensual (12 meses siempre visibles) |
-| Facturación y Ganancia por año | Año seleccionado + 2 anteriores | Comparación por año |
+| Desktop `>= 1280 px` | barra lateral visible | §35.3–§35.5 |
+| Tablet aprox. `768 px – 1279 px` | topbar / drawer existente | §35.9 |
+| Mobile (ancho chico, `< 768 px`) | topbar / drawer existente | §35.10 |
 
-Comportamiento de datos:
+No se crea un breakpoint exclusivo para Reportes salvo necesidad técnica posterior demostrada.
 
-- `TRANSPORTE` se presenta como informativo (ya descontado de Ganancia).
-- `MARGEN %` sin facturación → `—`.
-- Meses futuros del año corriente se muestran sin dato (no como cero); meses transcurridos sin operaciones, como cero.
+## 35.3 FACTURACIÓN — desktop
 
-## 35.3 Sección PRODUCTOS
+Orden:
 
-| Bloque | Información | Controles | Visualización conceptual |
-|---|---|---|---|
-| Ranking | Más vendidos / Mayor facturación / Mayor contribución | Pestañas (3) + selector `Top 5` / `Top 10` | Ranking |
-| Participación | Top 4 + "Otros productos" | Selector `Unidades` / `Facturación` / `Contribución` | Partes de un total (dona) **solo** si todos los valores son `>= 0`; si hay Contribución negativa, barras |
+1. **Resumen anual**: KPIs `FACTURACIÓN`, `GANANCIA`, `GASTOS OPERATIVOS`, `TRANSPORTE`, `VENTAS`, `MARGEN %`, distribuidos a lo ancho disponible.
+2. Segunda fila, relación aprox. **60/40**:
+   - **Evolución mensual** (~60%): necesita mayor ancho (12 meses × 3 series: Facturación, Ganancia, Gastos operativos).
+   - **Facturación y Ganancia por año** (~40%): **barras agrupadas** (no líneas); año seleccionado + 2 anteriores.
 
-Terminología: `CONTRIBUCIÓN`, nunca "Ganancia por producto".
+## 35.4 PRODUCTOS — desktop
 
-## 35.4 Sección CLIENTES
+Dos paneles en una fila, relación aprox. **60/40**.
 
-Entidades analíticas: clientes registrados, `Mercado Libre` y `Consumidor Final`.
+### Ranking de productos (~60%)
 
-| Bloque | Información | Controles | Visualización conceptual |
-|---|---|---|---|
-| Mayores compradores | Nombre, Total facturado, Promedio mensual, Última compra, Frecuencia | Selector `Top 5` / `Top 10` | Ranking / tabla |
-| Análisis individual | `TOTAL ANUAL`, `PROMEDIO MENSUAL`, `TICKET PROMEDIO`, `COMPRAS / VENTAS`, `FRECUENCIA`, `ÚLTIMA COMPRA` + evolución mensual enero–diciembre | Selector de entidad analítica (usa el año global) | KPIs + serie mensual |
-| Historial | Código RTO, Fecha, Total | "Ver historial" (expandible) | Lista / tabla; puede enlazar al detalle de RTO si la navegación existente lo permite |
-| Concentración | Posiciones 1–5, 6–10, resto (suman 100%) + indicadores acumulados `TOP 5`, `TOP 10`, `RESTO` | — | Partes de un total sin superposición; año sin facturación → `Sin datos` e indicadores en `—` (nunca 0%) |
-| Evolución de la concentración | Top 5 / Top 10 / Resto: año seleccionado vs año anterior | — | Comparación por año; año sin facturación → `Sin datos` |
+- Tabs: `Más vendidos` / `Mayor facturación` / `Mayor contribución`. Una sola tab activa por vez.
+- Selector local `Top 5` / `Top 10`: afecta **solo** este ranking.
+- Cada fila: nombre del producto, barra proporcional y valor.
 
-## 35.5 Empty states
+### Participación por producto (~40%)
 
-Sin ventas en el período los KPIs económicos se muestran con valores en cero, `MARGEN %` en `—`, Concentración en `Sin datos` con `TOP 5` / `TOP 10` / `RESTO` en `—` (`BUSINESS_RULES.md` §36.9.2.1), rankings vacíos con mensaje específico (COMPONENTS §51) y series de 12 meses (cero en meses transcurridos, sin dato en meses futuros). Nunca se requieren datos ficticios.
+- Selector **independiente** `Unidades` / `Facturación` / `Contribución`; no depende de la tab activa del Ranking.
+- Unidades → dona.
+- Facturación → dona.
+- Contribución → dona si todos los valores representados son `>= 0`; si existe al menos una contribución negativa, cambia **automáticamente** a barras, sin pedir confirmación.
+
+## 35.5 CLIENTES — desktop
+
+| Fila | ~60% | ~40% |
+|---|---|---|
+| 1 | Mayores compradores | Concentración |
+| 2 | Análisis individual | Evolución de la concentración |
+
+- No se fuerzan alturas iguales entre paneles.
+- Si Análisis individual crece al expandir el historial, solo ese panel aumenta su altura; la columna derecha **no** se estira para igualarlo.
+
+### Mayores compradores
+
+- Selector local `Top 5` / `Top 10`.
+- Orden: facturación total descendente.
+- Visualización: ranking tipo tabla con **barras proporcionales integradas**.
+- Columnas: Nombre, Total comprado/facturado, Promedio mensual, Última compra, Frecuencia.
+- Frecuencia como valor simple (ej.: `24 días`). **No** se generan estados interpretativos ("atrasado", "en fecha", "debería comprar"): no existe regla normativa de tolerancia.
+
+### Análisis individual
+
+- Selector de entidad analítica **buscable por nombre** (cliente registrado, `Mercado Libre`, `Consumidor Final`, según `BUSINESS_RULES.md` §36.8).
+- Al cambiar la entidad se actualizan inmediatamente KPIs, gráfico mensual e historial. Sin botón Aplicar.
+- KPIs: Total anual, Promedio mensual, Ticket promedio, Compras/Ventas, Frecuencia, Última compra.
+- Evolución mensual: gráfico enero–diciembre.
+- Historial: **cerrado por defecto**; control `Ver historial`. Al expandirse muestra como mínimo RTO, Fecha y Total. Si existe una ruta válida al detalle de RTO, la fila permite navegar; no se inventa una ruta nueva.
+
+### Concentración
+
+- Panel con **dona** (posiciones 1–5 / 6–10 / resto) e **indicadores acumulados debajo** (`TOP 5`, `TOP 10`, `RESTO`).
+- Sin facturación válida: se mantiene el panel y se muestra `Sin datos`, con `TOP 5: —`, `TOP 10: —`, `RESTO: —` (`BUSINESS_RULES.md` §36.9.2.1).
+
+### Evolución de la concentración
+
+- **Barras horizontales agrupadas**: año seleccionado vs año seleccionado − 1, métricas Top 5 / Top 10 / Resto.
+- Si el año anterior no tiene datos: se mantiene el gráfico/panel y esa serie se representa como `Sin datos`. No se oculta toda la comparación.
+
+## 35.6 Interacciones generales
+
+- **Selector global de año:** al seleccionar otro año se actualiza toda la página inmediatamente. Sin botón Aplicar.
+- **Tooltips (desktop):** hover sobre punto, barra o segmento muestra categoría/mes y valor exacto formateado.
+- **Evolución mensual:** las tres series visibles inicialmente; la **leyenda es interactiva** y permite ocultar/mostrar individualmente Facturación, Ganancia y Gastos operativos.
+- **Facturación y Ganancia por año:** barras agrupadas, no líneas.
+- **Selectores locales** (`Top 5`/`Top 10`, tabs, métrica de participación, entidad): actualizan solo su bloque, sin botón Aplicar.
+
+## 35.7 Touch
+
+- Tap sobre punto, barra o segmento muestra el tooltip.
+- Otro tap / cambio de elemento reemplaza el tooltip anterior.
+- La leyenda de series sigue siendo interactiva: tocar una leyenda activa/desactiva la serie correspondiente.
+- Touch targets según §3.22.
+
+## 35.8 Loading, empty states y alturas
+
+- **Loading:** no se usa spinner general de página. Cada panel mantiene su estructura y muestra skeleton/loading interno en su bloque.
+- **Empty states:** nunca se oculta completamente un panel por falta de datos. Se mantienen título, controles relevantes y estructura, y se muestra un empty state interno (COMPONENTS §51). Valores de empty state: `REPORTES.md` §12.
+- **Alturas:** cada tipo de gráfico puede tener su altura natural. No se impone una altura uniforme. Se prioriza legibilidad, labels completos y buena relación con el contenido.
+
+## 35.9 Tablet (aprox. 768 px – 1279 px)
+
+- Conservar **dos columnas** cuando el contenido entre de forma legible. No se obliga a una sola columna desde 1279 px.
+- Las proporciones 60/40 pueden transformarse en 50/50 o distribución equivalente según el espacio disponible.
+- Resumen anual: **3 KPIs por fila** cuando el ancho lo permita.
+- No se fijan píxeles.
+
+## 35.10 Mobile
+
+### General
+
+- **Una sola columna.**
+- Orden obligatorio de macrosecciones: 1. FACTURACIÓN, 2. PRODUCTOS, 3. CLIENTES. No se reordenan.
+- Encabezado: `REPORTES` y, debajo, el selector global de año a ancho completo o prácticamente completo.
+- Ningún panel provoca scroll horizontal de toda la página.
+
+### Resumen anual
+
+- KPIs en grilla de **2 columnas**.
+- Si queda una última card impar, puede ocupar el ancho disponible según convenga al layout.
+- No se usa carrusel horizontal de KPIs.
+
+### Gráficos mensuales (Evolución mensual general e individual)
+
+- Se preservan los 12 meses.
+- Si no entran legiblemente: **scroll horizontal interno del área gráfica**. No se comprimen excesivamente los labels para forzar que entre todo.
+- Solo el área gráfica se desplaza horizontalmente; el panel no provoca scroll horizontal de la página.
+
+### Facturación y Ganancia por año
+
+- Se mantienen las barras agrupadas (3 años); se adapta el ancho. No cambia el tipo de gráfico por ser mobile.
+
+### Productos
+
+- Tabs `Más vendidos` / `Mayor facturación` / `Mayor contribución`: se mantienen; si no entran, scroll horizontal interno de tabs. **No** se convierten en select.
+- Selector `Top 5` / `Top 10`: visible; no se esconde en un menú.
+- Ranking: cada fila mantiene nombre del producto, barra proporcional y valor. Solo se reduce información secundaria si es necesario. **No** se transforma cada producto en una card independiente.
+- Participación: dona/barras ocupan el ancho disponible; la leyenda pasa debajo del gráfico.
+
+### Mayores compradores
+
+- **No** se usa tabla horizontal con scroll.
+- Cada entidad es una fila/card compacta de dos niveles:
+  - nivel superior: Nombre + Total;
+  - nivel secundario: Promedio/mes · Última compra · Frecuencia;
+  - al pie: barra proporcional.
+- Se mantiene el selector `Top 5` / `Top 10`.
+
+### Análisis individual
+
+- Selector buscable de entidad a ancho completo.
+- KPIs en grilla de 2 columnas.
+- Evolución mensual con scroll horizontal interno si hace falta.
+- Historial expandido como filas/cards compactas (RTO, Fecha, Total); se evita tabla horizontal. Tocar la fila puede abrir el detalle de RTO si existe ruta válida.
+
+### Concentración
+
+- Dona primero; debajo `TOP 5`, `TOP 10`, `RESTO`, en 3 columnas si el ancho lo permite; si no, adaptar/apilar sin comprometer legibilidad.
+- Evolución de la concentración: se mantienen barras **horizontales**; no se convierten a verticales.
+
+### Empty states en mobile
+
+- Se mantiene el panel con título y controles si aplican, y un empty state compacto dentro. No se reduce el bloque a una simple línea externa.
+
+## 35.11 Pendientes exclusivamente visuales
+
+Quedan para la implementación, reutilizando el sistema visual existente y sin efecto sobre reglas ni comportamiento:
+
+- colores de series (dentro de la paleta vigente; sin colores nuevos);
+- tamaños en px, alturas exactas y gaps exactos;
+- estilo definitivo de tooltips, leyendas, skeletons y barras proporcionales.
 
 ---
 

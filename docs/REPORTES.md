@@ -1,8 +1,9 @@
 # REPORTES — Contrato funcional
 
 Estado funcional: APROBADO
-Diseño visual definitivo: PENDIENTE
-Implementación: PENDIENTE
+Estructura, UX y responsive: APROBADO (§17)
+Detalles visuales finos (colores, px, alturas, gaps): PENDIENTE — se resuelven en la implementación reutilizando el sistema visual existente (§18)
+Implementación: PENDIENTE — siguiente fase: R4 Backend analítico
 
 Rama de trabajo:
 feat/reportes-analytics
@@ -638,34 +639,38 @@ Decisión aprobada, todavía **no implementada**:
 
 Motor gráfico: **Recharts** (todavía no instalado).
 
-Secuencia (`IMPLEMENTATION_PLAN.md` §22.2):
+Secuencia y estado (`IMPLEMENTATION_PLAN.md` §22.2):
 
-- R1 — Auditoría READ-ONLY: cerrada.
-- R2 — Documentación funcional: cerrada con este documento (pendiente de aprobación del usuario).
-- R3 — Backend: migración 36, Repository, Service, DTO, tests.
-- R4 — Especificación visual definitiva.
-- R5 — UI con Recharts y smoke manual.
+| Subfase | Estado |
+|---|---|
+| R1 — Auditoría READ-ONLY | COMPLETADA |
+| R2 — Contrato funcional | COMPLETADA |
+| R2.1 — Documentación funcional (este documento) | COMPLETADA |
+| R3.1 — Desktop | APROBADO |
+| R3.2 — Interacciones | APROBADO |
+| R3.3 — Responsive | APROBADO |
+| R3.4 — Documentación UX | COMPLETADA |
+| **R4 — Backend analítico** | **SIGUIENTE**: migración 36, Repository, Service, DTO, tests |
+| R5 — UI | PENDIENTE: Recharts + `ReportesView` según §16–§17 y `DESIGN.md` §35; smoke manual |
 
-Tests (R3) deben cubrir como mínimo: atribución y residuo por RTO, unión agregada RTO/RTM por producto, productos repetidos en un RTO, entidades ML/CF, promedio mensual, frecuencia, concentración (incluido < 10 entidades), semántica mensual, corte de fechas futuras, selector de años y empty state. Sin fixtures persistentes.
+Tests (R4) deben cubrir como mínimo: atribución y residuo por RTO, unión agregada RTO/RTM por producto, productos repetidos en un RTO, entidades ML/CF, promedio mensual, frecuencia, concentración (incluido < 10 entidades y sin facturación), semántica mensual, corte de fechas futuras, selector de años y empty state. Sin fixtures persistentes.
 
 ---
 
 ## 16. Decisiones de visualización funcional
 
-Solo tipo conceptual de visualización, controles y comportamiento de datos.
-
-| Sección | Bloque | Controles | Visualización conceptual |
+| Sección | Bloque | Controles | Visualización |
 |---|---|---|---|
-| Global | — | Selector de año | — |
+| Global | Encabezado `REPORTES` | Selector global de año | — |
 | Facturación | Resumen anual | — | KPIs |
-| Facturación | Evolución mensual | — | Serie mensual enero–diciembre (Facturación, Ganancia, Gastos operativos) |
-| Facturación | Facturación y Ganancia por año | — | Comparación de 3 años |
-| Productos | Ranking | 3 pestañas + `Top 5` / `Top 10` | Ranking |
-| Productos | Participación | `Unidades` / `Facturación` / `Contribución` | Dona si todo `>= 0`; barras si hay Contribución negativa |
-| Clientes | Mayores compradores | `Top 5` / `Top 10` | Ranking / tabla |
-| Clientes | Análisis individual | Selector de entidad | KPIs + serie mensual + historial expandible |
-| Clientes | Concentración | — | Dona 1–5 / 6–10 / resto + indicadores acumulados Top 5 / Top 10 / Resto |
-| Clientes | Comparación de concentración | — | Año seleccionado vs año − 1 |
+| Facturación | Evolución mensual | Leyenda interactiva (ocultar/mostrar series) | Serie mensual enero–diciembre (Facturación, Ganancia, Gastos operativos) |
+| Facturación | Facturación y Ganancia por año | — | Barras agrupadas (no líneas), 3 años |
+| Productos | Ranking | 3 tabs (una activa) + `Top 5` / `Top 10` local | Filas con nombre + barra proporcional + valor |
+| Productos | Participación | `Unidades` / `Facturación` / `Contribución` (independiente del Ranking) | Dona; barras automáticamente si hay Contribución negativa |
+| Clientes | Mayores compradores | `Top 5` / `Top 10` local | Ranking tipo tabla con barras proporcionales integradas |
+| Clientes | Análisis individual | Selector de entidad buscable por nombre; `Ver historial` | KPIs + serie mensual + historial expandible |
+| Clientes | Concentración | — | Dona 1–5 / 6–10 / resto + indicadores acumulados debajo |
+| Clientes | Evolución de la concentración | — | Barras horizontales agrupadas, año vs año − 1 |
 
 Reglas de visualización con efecto funcional:
 
@@ -673,24 +678,74 @@ Reglas de visualización con efecto funcional:
 - nunca forzar valores negativos en un gráfico de partes de un total;
 - `—` para valores `null`;
 - `Sin datos` para concentración de un año sin facturación, con Top 5 / Top 10 / Resto en `—` (nunca 0%), tanto en la dona del año seleccionado (§10.4) como en la comparación interanual (§11);
+- Frecuencia como valor simple (ej.: `24 días`), sin estados interpretativos ("atrasado", "en fecha", "debería comprar"): no existe regla normativa de tolerancia;
 - terminología: `CONTRIBUCIÓN` (no "Ganancia por producto"), `GANANCIA` (no "Margen neto"), `VENTAS`.
 
-Composición normativa: `DESIGN.md` §35. Componentes conceptuales: `COMPONENTS.md` §60.1.
+Fuente normativa de estructura, interacción y responsive: `DESIGN.md` §35. Componentes: `COMPONENTS.md` §60.1.
 
 ---
 
-## 17. Pendientes exclusivamente visuales
+## 17. UX, interacciones y responsive
 
-**El diseño visual definitivo y comportamiento responsive de Reportes se especificará en una fase posterior antes de implementar la UI.**
+Resumen consolidado de `DESIGN.md` §35 (aprobado en R3.1–R3.3). Ante discrepancia prevalece `DESIGN.md`.
 
-Quedan pendientes, sin efecto sobre las reglas de este documento:
+### 17.1 Estructura
 
-- colores de series y gráficos;
-- medidas, alturas, grids y gaps;
-- tipografías y jerarquía visual;
-- responsive definitivo;
-- estilo del historial expandible;
-- detalles estéticos de tabs, selectores, tooltips y leyendas.
+- Encabezado: `REPORTES` + selector global de año (en el encabezado general, no dentro de Facturación).
+- Tres macrosecciones con títulos visibles: `FACTURACIÓN`, `PRODUCTOS`, `CLIENTES`.
+- Cada gráfico, ranking o bloque analítico en **su propio Panel**; no mega-paneles por sección.
+
+### 17.2 Desktop (`>= 1280 px`, sidebar visible)
+
+- **Facturación:** Resumen anual (6 KPIs a lo ancho) → fila ~60/40: Evolución mensual / Facturación y Ganancia por año.
+- **Productos:** fila ~60/40: Ranking de productos / Participación por producto.
+- **Clientes:** fila 1 ~60/40: Mayores compradores / Concentración; fila 2 ~60/40: Análisis individual / Evolución de la concentración.
+- No se fuerzan alturas iguales: si Análisis individual crece al expandir historial, solo ese panel crece; la columna derecha no se estira.
+- Proporciones conceptuales; no se fijan píxeles.
+
+### 17.3 Interacciones
+
+- Selector global de año, selectores locales y selector de entidad: actualizan inmediatamente, sin botón Aplicar. El año actualiza toda la página; los locales, solo su bloque.
+- `Top 5` / `Top 10` del Ranking de productos afecta solo ese ranking; el de Mayores compradores, solo ese ranking.
+- Participación tiene selector propio, independiente de la tab activa del Ranking. Cambio a barras automático, sin confirmación.
+- Análisis individual: al cambiar la entidad se actualizan KPIs, gráfico mensual e historial. Historial cerrado por defecto (`Ver historial`); enlace al detalle de RTO solo si existe una ruta válida (no se inventa ruta).
+- Tooltips: hover (desktop) / tap (touch) sobre punto, barra o segmento → categoría/mes + valor exacto formateado; un nuevo tap reemplaza el anterior.
+- Evolución mensual: tres series visibles al inicio; leyenda interactiva (también en touch) para ocultar/mostrar cada serie.
+- Evolución de la concentración: si el año anterior no tiene datos, esa serie se muestra como `Sin datos`; no se oculta la comparación.
+
+### 17.4 Loading, empty states y alturas
+
+- Sin spinner general de página: skeleton/loading interno por panel, conservando su estructura.
+- Ningún panel se oculta por falta de datos: se mantienen título, controles relevantes y estructura, con empty state interno (también compacto en mobile, nunca reducido a una línea externa).
+- Cada tipo de gráfico tiene su altura natural; no se impone altura uniforme.
+
+### 17.5 Tablet (aprox. 768–1279 px, topbar/drawer existente)
+
+- Dos columnas cuando el contenido entre legible; 60/40 puede pasar a 50/50 o equivalente. No se obliga a una columna desde 1279 px.
+- Resumen anual: 3 KPIs por fila cuando el ancho lo permita.
+
+### 17.6 Mobile (una sola columna)
+
+- Orden obligatorio: FACTURACIÓN → PRODUCTOS → CLIENTES.
+- Selector global de año a ancho completo debajo de `REPORTES`.
+- KPIs (Resumen anual y Análisis individual) en grilla de 2 columnas; última card impar puede ocupar el ancho; sin carrusel.
+- Gráficos mensuales (general e individual): 12 meses preservados; scroll horizontal **interno** del área gráfica si no entran; labels no comprimidos en exceso. Nunca scroll horizontal de la página.
+- Facturación y Ganancia por año: barras agrupadas, ancho adaptado; no cambia el tipo.
+- Productos: tabs con scroll horizontal interno si no entran (nunca select); `Top 5`/`Top 10` visible; filas nombre + barra + valor (solo se reduce información secundaria; no cards por producto); Participación a ancho completo con leyenda debajo.
+- Mayores compradores: sin tabla horizontal; fila/card compacta de dos niveles (Nombre + Total / Promedio/mes · Última compra · Frecuencia) con barra proporcional al pie; `Top 5`/`Top 10` visible.
+- Análisis individual: selector buscable a ancho completo; evolución mensual con scroll interno si hace falta; historial como filas/cards compactas (RTO, Fecha, Total), tap abre detalle de RTO solo si existe ruta válida.
+- Concentración: dona primero; debajo Top 5 / Top 10 / Resto en 3 columnas si entra, si no adaptar/apilar. Evolución de la concentración: barras horizontales (no verticales).
+
+---
+
+## 18. Pendientes exclusivamente visuales
+
+Estructura, interacciones y responsive están aprobados (§17). Quedan para la implementación, reutilizando el sistema visual existente del ERP y sin efecto sobre reglas ni comportamiento:
+
+- colores de series y gráficos (dentro de la paleta vigente; sin colores nuevos);
+- tamaños en px, alturas exactas y gaps exactos;
+- tipografías (sin tipografías nuevas);
+- estilo definitivo de tooltips, leyendas, skeletons, barras proporcionales e historial expandible.
 
 ### Deuda documental menor (corregir en la fase de implementación)
 

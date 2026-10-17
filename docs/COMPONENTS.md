@@ -1293,18 +1293,24 @@ No utilizar `MARGEN NETO`.
 
 Reglas funcionales: `BUSINESS_RULES.md` §36. Composición: `DESIGN.md` §35.
 
-El diseño visual definitivo y comportamiento responsive de Reportes se especificará en una fase posterior antes de implementar la UI. Esta lista solo fija responsabilidades; no fija apariencia. Reutilizar primero los componentes existentes (§2): `Panel`, `SectionHeader`, `Select`, `Tabs`, `DataTable`, `EmptyState`, `MoneyDisplay`.
+Estructura, interacción y responsive: `DESIGN.md` §35 (aprobados en R3.1–R3.3). Esta lista fija responsabilidades y comportamiento; no fija colores, px, alturas ni gaps. Reutilizar primero los componentes existentes (§2): `Panel`, `SectionHeader`, `Select`, `Tabs`, `DataTable`, `EmptyState`, `MoneyDisplay`.
 
-| Componente conceptual | Responsabilidad |
+| Componente conceptual | Responsabilidad y comportamiento |
 |---|---|
-| YearSelector | Selector global de año; controla toda la página |
-| ReportKpi | Valor + label de un KPI (`FACTURACIÓN`, `GANANCIA`, `GASTOS OPERATIVOS`, `TRANSPORTE`, `MARGEN %`, `VENTAS`, KPIs de análisis individual); muestra `—` para `null` |
-| MonthlySeriesChart | Serie enero–diciembre; distingue mes futuro (sin dato) de mes transcurrido con cero |
-| YearComparisonChart | Facturación y Ganancia del año seleccionado y los 2 anteriores; también comparación de concentración año vs año − 1 |
-| RankingPanel | Ranking con pestañas (productos) y selector `Top 5` / `Top 10` |
-| ShareChart | Partes de un total (Top 4 + Otros; concentración 1–5 / 6–10 / resto). Cambia a barras si hay valores negativos |
-| AnalyticEntitySelector | Selector de cliente registrado / `Mercado Libre` / `Consumidor Final` |
-| SalesHistoryList | "Ver historial" expandible: Código RTO, Fecha, Total |
+| YearSelector | Selector global de año en el encabezado de Reportes (no dentro de Facturación); controla toda la página; actualiza al seleccionar, sin botón Aplicar. Mobile: ancho completo bajo el título |
+| ReportKpi | Valor + label de un KPI (`FACTURACIÓN`, `GANANCIA`, `GASTOS OPERATIVOS`, `TRANSPORTE`, `VENTAS`, `MARGEN %`, KPIs de análisis individual); muestra `—` para `null`. Grilla: a lo ancho en desktop, 3 por fila en tablet si entra, 2 columnas en mobile (sin carrusel) |
+| MonthlySeriesChart | Serie enero–diciembre; distingue mes futuro (sin dato) de mes transcurrido con cero; leyenda interactiva para ocultar/mostrar series (también en touch); en mobile, scroll horizontal interno del área gráfica preservando los 12 meses |
+| YearComparisonChart | Barras agrupadas (no líneas) de Facturación y Ganancia: año seleccionado + 2 anteriores; mismo tipo en mobile |
+| ConcentrationComparisonChart | Barras horizontales agrupadas Top 5 / Top 10 / Resto: año seleccionado vs año − 1; serie sin datos se muestra como `Sin datos` sin ocultar la comparación; horizontales también en mobile |
+| RankingPanel | Ranking con filas nombre + barra proporcional + valor; tabs (productos; una activa; scroll horizontal interno en mobile, nunca select) y selector local `Top 5` / `Top 10` siempre visible |
+| ShareChart | Partes de un total (Top 4 + Otros; concentración 1–5 / 6–10 / resto). Cambia automáticamente a barras si hay valores negativos, sin confirmación. Mobile: ancho disponible, leyenda debajo |
+| TopBuyersList | Ranking tipo tabla con barras proporcionales integradas (desktop/tablet); en mobile filas/cards compactas de dos niveles (Nombre + Total / Promedio·Última compra·Frecuencia) con barra al pie, sin tabla horizontal. Frecuencia como valor simple, sin estados interpretativos |
+| AnalyticEntitySelector | Selector **buscable por nombre** de cliente registrado / `Mercado Libre` / `Consumidor Final`; actualiza KPIs, gráfico e historial inmediatamente |
+| SalesHistoryList | "Ver historial" expandible, cerrado por defecto: RTO, Fecha, Total; enlaza al detalle de RTO solo si existe una ruta válida; en mobile filas/cards compactas |
+| ChartTooltip | Hover (desktop) / tap (touch) sobre punto, barra o segmento: categoría/mes y valor exacto formateado; un nuevo tap reemplaza el anterior |
+| PanelSkeleton | Loading interno por panel conservando su estructura; no hay spinner general de página |
+
+Todos los paneles mantienen título, controles y estructura en estado vacío y muestran un empty state interno (§51), también en mobile.
 
 Motor gráfico previsto: Recharts (todavía no instalado). Ningún componente de Reportes ejecuta acciones ni modifica datos.
 

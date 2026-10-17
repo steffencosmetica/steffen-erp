@@ -745,11 +745,16 @@ Restricciones de toda la fase:
 
 Subfases:
 
-- **R1 — Auditoría READ-ONLY.** Cerrada.
-- **R2 — Documentación funcional definitiva.** Esta actualización documental.
-- **R3 — Backend.** Migración aditiva `36` con funciones PostgreSQL `STABLE` exclusivamente READ-ONLY (solo `service_role`, NUMERIC exactos, sin escrituras); regenerar tipos Supabase oficialmente; `ReportingRepository`, `ReportingService`, `reporting.dto`; tests de reglas (atribución y residuo por RTO, unión agregada RTO/RTM por producto, entidades ML/CF, promedio mensual, frecuencia, concentración, semántica mensual, empty state).
-- **R4 — Especificación visual.** Diseño visual definitivo y responsive de Reportes en `DESIGN.md` / `COMPONENTS.md` antes de implementar la UI.
-- **R5 — UI.** Instalar Recharts; implementar `ReportesView` según R4; smoke manual.
+- **R1 — Auditoría READ-ONLY.** COMPLETADA.
+- **R2 — Contrato funcional.** COMPLETADA.
+- **R2.1 — Documentación funcional** (`REPORTES.md`). COMPLETADA.
+- **R3 — UX, interacciones y responsive** (`DESIGN.md` §35, `COMPONENTS.md` §60.1, `REPORTES.md` §17):
+  - R3.1 Desktop: APROBADO;
+  - R3.2 Interacciones: APROBADO;
+  - R3.3 Responsive: APROBADO;
+  - R3.4 Documentación UX: COMPLETADA.
+- **R4 — Backend analítico.** SIGUIENTE. Migración aditiva `36` con funciones PostgreSQL `STABLE` exclusivamente READ-ONLY (solo `service_role`, NUMERIC exactos, sin escrituras); regenerar tipos Supabase oficialmente; `ReportingRepository`, `ReportingService`, `reporting.dto`; tests de reglas (atribución y residuo por RTO, unión agregada RTO/RTM por producto, entidades ML/CF, promedio mensual, frecuencia, concentración, semántica mensual, corte de fechas futuras, selector de años, empty state).
+- **R5 — UI.** PENDIENTE. Instalar Recharts; implementar `ReportesView` según `DESIGN.md` §35; smoke manual.
 
 ---
 
