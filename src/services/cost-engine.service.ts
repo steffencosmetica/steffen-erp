@@ -13,6 +13,34 @@ import {
   ProductNotFoundError,
 } from '@/domain/errors';
 
+export interface CurrentItemCostArs {
+  /** P.U $: precio neto vigente en ARS (USD × cotización GLOBAL vigente). */
+  netArs: Decimal;
+  /** P.U + IVA: netArs × 1,21. */
+  grossArs: Decimal;
+}
+
+/**
+ * Regla única del costo teórico ACTUAL de un MPR/COM (Stock, Fórmulas, PRO):
+ * - ARS: neto = precio vigente del proveedor;
+ * - USD: neto = precio USD vigente × cotización GLOBAL vigente del ERP;
+ * - bruto = neto × 1,21.
+ * La cotización particular de una CMP (purchases.exchange_rate_used) nunca entra acá.
+ * Proveedor USD sin cotización global vigente → null (costo no disponible, nunca 1:1).
+ */
+export function computeCurrentItemCostArs(
+  quotedUnitPriceNet: Decimal,
+  supplierCurrency: 'ARS' | 'USD',
+  globalUsdRate: Decimal | null
+): CurrentItemCostArs | null {
+  let netArs = quotedUnitPriceNet;
+  if (supplierCurrency === 'USD') {
+    if (!globalUsdRate || globalUsdRate.lte(0)) return null;
+    netArs = quotedUnitPriceNet.times(globalUsdRate);
+  }
+  return { netArs, grossArs: netArs.times(VAT_MULTIPLIER_DECIMAL) };
+}
+
 export interface FormulaCostResult {
   totalKg: Decimal;
   totalBulkCost: Decimal;
@@ -54,20 +82,17 @@ export class CostEngineService implements ICostEngineService {
       throw new NoActiveSupplierItemCostError(stockItemId);
     }
 
-    let fxRate = new Decimal(1);
-    if (latestItem.supplierCurrency === 'USD') {
-      const usdRate = await this.supplierItemRepo.getCurrentUsdExchangeRate();
-      if (!usdRate || usdRate.lte(0)) {
-        throw new InvalidExchangeRateError(
-          `No existe una cotización vigente para la conversión de USD a ARS requerida por el ítem ${stockItemId}.`
-        );
-      }
-      fxRate = usdRate;
-    }
+    const usdRate =
+      latestItem.supplierCurrency === 'USD' ? await this.supplierItemRepo.getCurrentUsdExchangeRate() : null;
 
-    // Costo teórico bruto con IVA 21%: precio neto * cotización * 1.21
-    const unitCostGrossArs = latestItem.quotedUnitPriceNet.times(fxRate).times(VAT_MULTIPLIER_DECIMAL);
-    return unitCostGrossArs;
+    // Costo teórico bruto con IVA 21%: precio neto * cotización global * 1.21
+    const cost = computeCurrentItemCostArs(latestItem.quotedUnitPriceNet, latestItem.supplierCurrency, usdRate);
+    if (!cost) {
+      throw new InvalidExchangeRateError(
+        `No existe una cotización vigente para la conversión de USD a ARS requerida por el ítem ${stockItemId}.`
+      );
+    }
+    return cost.grossArs;
   }
 
   /**

@@ -17,6 +17,9 @@ export interface RawMaterialDTO {
   supplierName: string | null;
   supplierCurrency: 'ARS' | 'USD' | null;
   quotedPriceNet: string | null;
+  /** P.U $ actual en ARS (USD × cotización global vigente). */
+  theoreticalCostNetArs: string | null;
+  /** P.U + IVA actual en ARS. */
   theoreticalCostGrossArs: string | null;
   priceUpdatedAt: string | null;
   createdDate: string;
@@ -38,6 +41,9 @@ export interface ComponentDTO {
   supplierName: string | null;
   supplierCurrency: 'ARS' | 'USD' | null;
   quotedPriceNet: string | null;
+  /** P.U $ actual en ARS (USD × cotización global vigente). */
+  theoreticalCostNetArs: string | null;
+  /** P.U + IVA actual en ARS. */
   theoreticalCostGrossArs: string | null;
   priceUpdatedAt: string | null;
   createdDate: string;
@@ -73,6 +79,9 @@ export function serializeRawMaterial(item: MasterItemWithCostAndBalance): RawMat
     supplierName: item.referenceSupplierName || null,
     supplierCurrency: item.referenceCurrency || null,
     quotedPriceNet: item.referencePriceNet ? toNumericString(item.referencePriceNet) : null,
+    theoreticalCostNetArs: item.currentTheoreticalCostNetArs
+      ? toNumericString(item.currentTheoreticalCostNetArs)
+      : null,
     theoreticalCostGrossArs: item.currentTheoreticalCostGrossArs
       ? toNumericString(item.currentTheoreticalCostGrossArs)
       : null,
@@ -120,6 +129,9 @@ export function serializeComponent(item: MasterItemWithCostAndBalance): Componen
     supplierName: item.referenceSupplierName || null,
     supplierCurrency: item.referenceCurrency || null,
     quotedPriceNet: item.referencePriceNet ? toNumericString(item.referencePriceNet) : null,
+    theoreticalCostNetArs: item.currentTheoreticalCostNetArs
+      ? toNumericString(item.currentTheoreticalCostNetArs)
+      : null,
     theoreticalCostGrossArs: item.currentTheoreticalCostGrossArs
       ? toNumericString(item.currentTheoreticalCostGrossArs)
       : null,

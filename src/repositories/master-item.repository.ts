@@ -46,7 +46,6 @@ export interface BatchItemCostRecord {
   supplierCurrency: 'ARS' | 'USD';
   quotedUnitPriceNet: Decimal;
   priceUpdatedAt: string;
-  unitCostGrossArs: Decimal;
 }
 
 export interface UpdateMasterItemInput {
@@ -71,10 +70,15 @@ interface MasterItemRowLike {
 }
 
 export class MasterItemRepository extends BaseSupabaseRepository {
+  /**
+   * Proveedor de referencia vigente por ítem (precio neto en moneda de origen, exacto).
+   * La conversión a ARS no se toma de la vista (que asume 1:1 sin cotización): la
+   * resuelve `computeCurrentItemCostArs` con la cotización global vigente.
+   */
   async getBatchItemCosts(): Promise<Map<string, BatchItemCostRecord>> {
     const { data, error } = await this.client
       .from('v_current_item_cost')
-      .select('stock_item_id, supplier_id, supplier_name, supplier_currency, quoted_unit_price_net, price_updated_at, unit_cost_gross_ars');
+      .select('stock_item_id, supplier_id, supplier_name, supplier_currency, quoted_unit_price_net::text, price_updated_at');
 
     if (error) {
       throw new DomainError(`Error consultando costos consolidados de insumos: ${error.message}`);
@@ -88,9 +92,8 @@ export class MasterItemRepository extends BaseSupabaseRepository {
           supplierId: row.supplier_id,
           supplierName: row.supplier_name || '',
           supplierCurrency: (row.supplier_currency as 'ARS' | 'USD') || 'ARS',
-          quotedUnitPriceNet: new Decimal(String(row.quoted_unit_price_net || 0)),
+          quotedUnitPriceNet: new Decimal(row.quoted_unit_price_net || '0'),
           priceUpdatedAt: row.price_updated_at || '',
-          unitCostGrossArs: new Decimal(String(row.unit_cost_gross_ars || 0)),
         });
       }
     }

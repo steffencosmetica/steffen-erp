@@ -3,7 +3,7 @@ import { SupplierRepository } from '@/repositories/supplier.repository';
 import { SupplierItemRepository, ISupplierItemRepository } from '@/repositories/supplier-item.repository';
 import { CodeSequenceService } from './code-sequence.service';
 import { StockDomainService } from './stock.service';
-import { CostEngineService } from './cost-engine.service';
+import { CostEngineService, computeCurrentItemCostArs } from './cost-engine.service';
 import { DomainError } from '@/domain/errors';
 import { Decimal, toNumericString } from '@/domain/decimal';
 
@@ -28,6 +28,9 @@ export interface CreateComponentDto {
 
 export interface MasterItemWithCostAndBalance extends MasterItemRecord {
   balance: Decimal;
+  /** P.U $ actual: neto en ARS (USD × cotización global vigente). Null si USD sin cotización. */
+  currentTheoreticalCostNetArs: Decimal | null;
+  /** P.U + IVA actual: neto ARS × 1,21. Null si USD sin cotización. */
   currentTheoreticalCostGrossArs: Decimal | null;
   referenceSupplierId: string | null;
   referenceSupplierCode: string | null;
@@ -186,10 +189,12 @@ export class MasterItemDomainService {
   ): Promise<MasterItemWithCostAndBalance[]> {
     const items = await this.masterItemRepo.listAll(itemType, includeInactive);
 
-    const [balancesMap, costsMap, suppliers] = await Promise.all([
+    const [balancesMap, costsMap, suppliers, globalUsdRate] = await Promise.all([
       this.stockDomainService.getBatchBalances(),
       this.masterItemRepo.getBatchItemCosts(),
       this.supplierRepo.listAll(),
+      // Cotización GLOBAL vigente (nunca la de una CMP): misma fuente que el cost engine.
+      this.supplierItemRepo.getCurrentUsdExchangeRate(),
     ]);
 
     const supplierCodeMap = new Map<string, string>(suppliers.map((s) => [s.id, s.code]));
@@ -197,11 +202,15 @@ export class MasterItemDomainService {
     return items.map((item) => {
       const balance = balancesMap.get(item.id) ?? new Decimal(0);
       const costInfo = costsMap.get(item.id);
+      const cost = costInfo
+        ? computeCurrentItemCostArs(costInfo.quotedUnitPriceNet, costInfo.supplierCurrency, globalUsdRate)
+        : null;
 
       return {
         ...item,
         balance,
-        currentTheoreticalCostGrossArs: costInfo ? costInfo.unitCostGrossArs : null,
+        currentTheoreticalCostNetArs: cost ? cost.netArs : null,
+        currentTheoreticalCostGrossArs: cost ? cost.grossArs : null,
         referenceSupplierId: costInfo ? costInfo.supplierId : null,
         referenceSupplierCode: costInfo ? (supplierCodeMap.get(costInfo.supplierId) ?? null) : null,
         referenceSupplierName: costInfo ? costInfo.supplierName : null,

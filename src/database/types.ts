@@ -2810,6 +2810,10 @@ export type Database = {
         }
         Returns: Json
       }
+      set_current_exchange_rate_atomic: {
+        Args: { p_currency_code: string; p_rate_to_ars: number }
+        Returns: Json
+      }
       set_product_price: {
         Args: {
           p_price_ars: number

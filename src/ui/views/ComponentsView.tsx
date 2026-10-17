@@ -8,7 +8,7 @@ import { EditComponentModal } from '../modals/EditComponentModal';
 import { toggleComponentActiveAction } from '@/actions/master-item.actions';
 import type { ComponentDTO, SupplierOptionDTO } from '@/actions/master-item.dto';
 import { Edit3, Power } from 'lucide-react';
-import { formatArs } from '@/lib/format';
+import { itemPriceDisplays } from '@/lib/item-price-display';
 
 interface ComponentsViewProps {
   components: ComponentDTO[];
@@ -70,30 +70,7 @@ export const ComponentsView: React.FC<ComponentsViewProps> = ({
   };
 
   // Precios para columnas de Figma: P.U. USD, P.U $, P.U+ IVA (resuelto por backend)
-  const getPriceDisplays = (c: ComponentDTO) => {
-    if (!c.quotedPriceNet || !c.supplierCurrency) {
-      return { usd: '-', ars: '-', grossArs: '-' };
-    }
-    const num = parseFloat(c.quotedPriceNet) || 0;
-    if (c.supplierCurrency === 'USD') {
-      const usdStr = `usd ${num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-      return {
-        usd: usdStr,
-        ars: '-',
-        grossArs: c.theoreticalCostGrossArs ? formatArs(c.theoreticalCostGrossArs) : '-',
-      };
-    }
-
-    const netArs = formatArs(num);
-    const grossArs = c.theoreticalCostGrossArs
-      ? formatArs(c.theoreticalCostGrossArs)
-      : formatArs(num * 1.21);
-    return {
-      usd: '-',
-      ars: netArs,
-      grossArs,
-    };
-  };
+  const getPriceDisplays = (c: ComponentDTO) => itemPriceDisplays(c);
 
   return (
     <>

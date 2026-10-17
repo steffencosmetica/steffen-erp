@@ -56,6 +56,7 @@ test('Bloque UI-4 Componentes (COM) — Integración, DTOs, reglas enteras y con
       createdAt: '2026-10-07T00:00:00Z',
       updatedAt: '2026-10-07T00:00:00Z',
       balance: new Decimal('25.000'),
+      currentTheoreticalCostNetArs: new Decimal('100.00'),
       currentTheoreticalCostGrossArs: new Decimal('121.00'),
       referenceSupplierId: 'sup-1',
       referenceSupplierCode: 'PRV0001',

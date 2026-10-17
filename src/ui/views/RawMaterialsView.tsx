@@ -26,7 +26,8 @@ import { ProductsView } from './ProductsView';
 import { NewProductModal } from '../modals/NewProductModal';
 import { StockAdjustmentModal, type StockAdjustableItem } from '../modals/StockAdjustmentModal';
 import type { StockMovementDTO } from '@/actions/stock.dto';
-import { formatArs, formatKg } from '@/lib/format';
+import { formatKg } from '@/lib/format';
+import { itemPriceDisplays } from '@/lib/item-price-display';
 import { Edit3, Power, RefreshCw } from 'lucide-react';
 import { ErpIcon } from '../components/ErpIcon';
 
@@ -148,29 +149,8 @@ export const RawMaterialsView: React.FC<RawMaterialsViewProps> = ({
     });
   };
 
-  // Precios para columnas de Figma: P.U. USD, P.U $, P.U+ IVA
-  const getPriceDisplays = (m: RawMaterialDTO) => {
-    if (!m.quotedPriceNet || !m.supplierCurrency) {
-      return { usd: '-', ars: '-', grossArs: '-' };
-    }
-    const num = parseFloat(m.quotedPriceNet) || 0;
-    if (m.supplierCurrency === 'USD') {
-      const usdStr = `usd ${num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-      return {
-        usd: usdStr,
-        ars: '-',
-        grossArs: '-',
-      };
-    }
-
-    const netArs = formatArs(num);
-    const grossArs = formatArs(num * 1.21);
-    return {
-      usd: '-',
-      ars: netArs,
-      grossArs,
-    };
-  };
+  // Precios para columnas de Figma: P.U. USD, P.U $, P.U+ IVA (importes ARS resueltos por backend)
+  const getPriceDisplays = (m: RawMaterialDTO) => itemPriceDisplays(m);
 
   const stockTabs: { key: 'PRO' | 'MPR' | 'COM'; label: string; icon: React.ReactNode }[] = [
     { key: 'PRO', label: 'Productos', icon: <ErpIcon name="productos" className="w-6 h-6" /> },

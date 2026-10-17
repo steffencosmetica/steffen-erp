@@ -2,6 +2,7 @@ import { BaseSupabaseRepository } from './base.repository';
 import type { CurrencyCode } from '@/database/domain-types';
 import { DomainError } from '@/domain/errors';
 import { Decimal } from '@/domain/decimal';
+import { ExchangeRateRepository } from './exchange-rate.repository';
 
 export interface LatestSupplierItemResult {
   supplierItemId: string;
@@ -80,24 +81,10 @@ export class SupplierItemRepository extends BaseSupabaseRepository implements IS
     };
   }
 
+  /** Cotización GLOBAL vigente USD → ARS: delega en la lectura canónica de ExchangeRateRepository. */
   async getCurrentUsdExchangeRate(): Promise<Decimal | null> {
-    const { data, error } = await this.client
-      .from('exchange_rates')
-      .select('rate_to_ars')
-      .eq('currency_code', 'USD')
-      .eq('is_current', true)
-      .order('effective_at', { ascending: false })
-      .limit(1);
-
-    if (error) {
-      throw new DomainError(`Error consultando cotización USD vigente: ${error.message}`);
-    }
-
-    if (!data || data.length === 0) {
-      return null;
-    }
-
-    return new Decimal((data as any)[0].rate_to_ars);
+    const current = await new ExchangeRateRepository(this.client).getCurrentUsdRate();
+    return current ? current.rateToArs : null;
   }
 
   async listBySupplier(supplierId: string): Promise<SupplierItemSummary[]> {

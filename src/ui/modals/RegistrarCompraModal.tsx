@@ -133,7 +133,8 @@ export const RegistrarCompraModal: React.FC<RegistrarCompraModalProps> = ({
           setCatalogItems(res.data.items);
           setSupplierCurrency(res.data.supplierCurrency);
           if (!purchaseToEdit && res.data.supplierCurrency === 'USD') {
-            setExchangeRate(res.data.currentUsdRate || '1420.00');
+            // Sugerencia: cotización GLOBAL vigente (editable solo para esta CMP); sin global, vacío.
+            setExchangeRate(res.data.currentUsdRate || '');
           }
           // Si estamos en modo nuevo y no hay líneas, agregar una vacía
           if (!purchaseToEdit && lines.length === 0 && res.data.items.length > 0) {

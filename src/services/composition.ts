@@ -35,6 +35,8 @@ import { PlanningDomainService } from '@/services/planning.service';
 import { ReportRepository } from '@/repositories/report.repository';
 import { ReportDomainService } from '@/services/report.service';
 import { RemittanceRepository } from '@/repositories/remittance.repository';
+import { ExchangeRateRepository } from '@/repositories/exchange-rate.repository';
+import { ExchangeRateDomainService } from '@/services/exchange-rate.service';
 import { RemittanceDomainService } from '@/services/remittance.service';
 import { MarginRemittanceRepository } from '@/repositories/margin-remittance.repository';
 import { DocumentRepository } from '@/repositories/document.repository';
@@ -174,6 +176,16 @@ export function getSupplierItemRepository(): SupplierItemRepository {
     supplierItemRepoInstance = new SupplierItemRepository(serverSupabase);
   }
   return supplierItemRepoInstance;
+}
+
+let exchangeRateServiceInstance: ExchangeRateDomainService | null = null;
+
+/** Cotización global USD → ARS (lectura canónica + actualización atómica). */
+export function getExchangeRateService(): ExchangeRateDomainService {
+  if (!exchangeRateServiceInstance) {
+    exchangeRateServiceInstance = new ExchangeRateDomainService(new ExchangeRateRepository(serverSupabase));
+  }
+  return exchangeRateServiceInstance;
 }
 
 let patrimonyRepoInstance: PatrimonyRepository | null = null;
