@@ -198,16 +198,15 @@ Incluye:
 
 ### Reportes
 
-Incluye cuatro cards de información en tiempo real:
+Módulo analítico READ-ONLY con selector global de año y tres secciones:
 
-- Ventas del mes;
-- Total facturado;
-- Ganancia;
-- Pedidos abiertos.
+- Facturación (resumen anual, evolución mensual, comparación interanual);
+- Productos (más vendidos, mayor facturación, mayor contribución, participación);
+- Clientes (mayores compradores, análisis individual, concentración), incluyendo Mercado Libre y Consumidor Final como entidades analíticas.
 
-Las tres primeras usan el mes calendario corriente. Pedidos abiertos cuenta todos los `PED` en estado `OPEN`, sin importar en qué mes fueron creados.
+No persiste resultados: todo se deriva de RTO `COMPLETED`, RTM y gastos operativos existentes. Reglas en `BUSINESS_RULES.md` §36; composición en `DESIGN.md` §35; contrato funcional consolidado en `REPORTES.md`.
 
-El contenido visual exacto se define en `DESIGN.md`.
+La antigua definición de cuatro cards (Ventas del mes, Total facturado, Ganancia, Pedidos abiertos) queda derogada para Reportes; esas métricas se conservan en el bloque `REPORTE MENSUAL` del Dashboard.
 
 ---
 

@@ -572,11 +572,7 @@ La selección masiva debe seguir siendo utilizable con touch.
 
 ## 3.21 Reportes responsive
 
-Cards:
-
-- desktop → grilla;
-- tablet → 2 columnas;
-- mobile → 1 columna o 2 para KPI muy pequeños.
+Pendiente. El diseño visual definitivo y comportamiento responsive de Reportes se especificará en una fase posterior antes de implementar la UI (§35). La pauta anterior de grilla de cuatro cards queda derogada.
 
 ---
 
@@ -1884,109 +1880,59 @@ Debe visualizar claramente:
 
 # 35. Reportes
 
-Pantalla compuesta por **cuatro cards**.
+> **Derogación.** La definición visual anterior ("pantalla compuesta por cuatro cards", "no contiene tablas ni inputs", grilla 2×2 con Ventas del mes / Total facturado / Ganancia / Pedidos abiertos) queda **derogada**. Esas cuatro métricas se conservan en el bloque `REPORTE MENSUAL` del Dashboard (§15.1; `BUSINESS_RULES.md` §35.5).
 
-No contiene tablas ni inputs.
+Reglas funcionales: `BUSINESS_RULES.md` §36.
 
-## 35.1 Layout desktop
+**El diseño visual definitivo y comportamiento responsive de Reportes se especificará en una fase posterior antes de implementar la UI.**
 
-Distribución:
+Esta sección solo define composición de información, tipo conceptual de visualización, controles y comportamiento de datos. No fija colores específicos, dimensiones, grids, gaps, alturas ni responsive exacto. Hasta esa fase aplican los lineamientos generales de este documento y `COMPONENTS.md`.
 
-`2 columnas × 2 filas`
+Motor gráfico previsto: Recharts (todavía no instalado).
 
-Orden:
+## 35.1 Controles globales
 
-1. Ventas del mes
-2. Total facturado
-3. Ganancia
-4. Pedidos abiertos
+- Título de pantalla `REPORTES` dentro del shell general del ERP.
+- **Selector global de año**: controla toda la página.
 
-Tomar como referencia visual la composición entregada:
+## 35.2 Sección FACTURACIÓN
 
-- título `REPORTES`;
-- línea horizontal Primary;
-- cards de igual jerarquía y dimensiones;
-- valor numérico/monetario como elemento principal;
-- label en mayúsculas.
+| Bloque | Información | Visualización conceptual |
+|---|---|---|
+| Resumen anual | `FACTURACIÓN`, `GANANCIA`, `GASTOS OPERATIVOS`, `TRANSPORTE`, `MARGEN %`, `VENTAS` | KPIs |
+| Evolución mensual | Facturación, Ganancia y Gastos operativos, enero–diciembre | Serie temporal mensual (12 meses siempre visibles) |
+| Facturación y Ganancia por año | Año seleccionado + 2 anteriores | Comparación por año |
 
-## 35.2 Cards
+Comportamiento de datos:
 
-### Ventas del mes
+- `TRANSPORTE` se presenta como informativo (ya descontado de Ganancia).
+- `MARGEN %` sin facturación → `—`.
+- Meses futuros del año corriente se muestran sin dato (no como cero); meses transcurridos sin operaciones, como cero.
 
-Valor:
+## 35.3 Sección PRODUCTOS
 
-cantidad de RTO `COMPLETED` del mes corriente.
+| Bloque | Información | Controles | Visualización conceptual |
+|---|---|---|---|
+| Ranking | Más vendidos / Mayor facturación / Mayor contribución | Pestañas (3) + selector `Top 5` / `Top 10` | Ranking |
+| Participación | Top 4 + "Otros productos" | Selector `Unidades` / `Facturación` / `Contribución` | Partes de un total (dona) **solo** si todos los valores son `>= 0`; si hay Contribución negativa, barras |
 
-Label:
+Terminología: `CONTRIBUCIÓN`, nunca "Ganancia por producto".
 
-`VENTAS DEL MES`
+## 35.4 Sección CLIENTES
 
-Tratamiento visual (rediseño): KPI Default (§15.2):
+Entidades analíticas: clientes registrados, `Mercado Libre` y `Consumidor Final`.
 
-- fondo negro;
-- borde Primary.
+| Bloque | Información | Controles | Visualización conceptual |
+|---|---|---|---|
+| Mayores compradores | Nombre, Total facturado, Promedio mensual, Última compra, Frecuencia | Selector `Top 5` / `Top 10` | Ranking / tabla |
+| Análisis individual | `TOTAL ANUAL`, `PROMEDIO MENSUAL`, `TICKET PROMEDIO`, `COMPRAS / VENTAS`, `FRECUENCIA`, `ÚLTIMA COMPRA` + evolución mensual enero–diciembre | Selector de entidad analítica (usa el año global) | KPIs + serie mensual |
+| Historial | Código RTO, Fecha, Total | "Ver historial" (expandible) | Lista / tabla; puede enlazar al detalle de RTO si la navegación existente lo permite |
+| Concentración | Posiciones 1–5, 6–10, resto (suman 100%) + indicadores acumulados `TOP 5`, `TOP 10`, `RESTO` | — | Partes de un total sin superposición; año sin facturación → `Sin datos` e indicadores en `—` (nunca 0%) |
+| Evolución de la concentración | Top 5 / Top 10 / Resto: año seleccionado vs año anterior | — | Comparación por año; año sin facturación → `Sin datos` |
 
-### Total facturado
+## 35.5 Empty states
 
-Valor monetario:
-
-suma de Total Pedido de RTO `COMPLETED` del mes corriente.
-
-Label:
-
-`TOTAL FACTURADO`
-
-Tratamiento visual (rediseño): KPI Default (§15.2):
-
-- fondo negro;
-- borde Primary.
-
-### Ganancia
-
-Valor monetario:
-
-Ganancia total asociada a RTO `COMPLETED` del mes corriente.
-
-Label:
-
-`GANANCIA`
-
-No utilizar:
-
-`MARGEN NETO`
-
-Tratamiento visual (rediseño): KPI destacada positiva (§15.2):
-
-- fondo Green sólido;
-- texto claro/contraste alto.
-
-### Pedidos abiertos
-
-Valor:
-
-cantidad total de PED `OPEN`, sin filtro mensual.
-
-Label:
-
-`PEDIDOS ABIERTOS`
-
-Tratamiento visual (rediseño): KPI Default (§15.2), igual que en el bloque `REPORTE MENSUAL` del Dashboard del Figma:
-
-- fondo negro;
-- borde Primary.
-
-## 35.3 Responsive
-
-Desktop/tablet:
-
-- preferir grilla de 2 columnas mientras cada card conserve ancho legible.
-
-Mobile:
-
-- 2 columnas si el viewport útil lo permite;
-- pasar a 1 columna si el contenido se comprime o pierde legibilidad.
-
-No cambiar el orden de las cuatro métricas.
+Sin ventas en el período los KPIs económicos se muestran con valores en cero, `MARGEN %` en `—`, Concentración en `Sin datos` con `TOP 5` / `TOP 10` / `RESTO` en `—` (`BUSINESS_RULES.md` §36.9.2.1), rankings vacíos con mensaje específico (COMPONENTS §51) y series de 12 meses (cero en meses transcurridos, sin dato en meses futuros). Nunca se requieren datos ficticios.
 
 ---
 

@@ -504,12 +504,11 @@ No bloquear un Pago porque el Cliente/Proveedor fue inactivado.
 
 # 32. Reportes
 
-Implementar exactamente:
+Implementar exactamente lo definido en `BUSINESS_RULES.md` §36 (Facturación, Productos, Clientes), como módulo READ-ONLY aislado (`ReportingRepository` → `ReportingService` → `reporting.dto` → `page.tsx` → `ReportesView`).
 
-- Ventas del mes
-- Total facturado
-- Ganancia
-- Pedidos abiertos
+La antigua lista de cuatro cards (Ventas del mes, Total facturado, Ganancia, Pedidos abiertos) queda derogada para Reportes y se conserva solo en el Dashboard (`BUSINESS_RULES.md` §35.5). No modificar `ReportDomainService`, `ReportRepository` ni `v_current_reports`.
+
+Para cualquier trabajo sobre Reportes, leer `docs/REPORTES.md` (contrato funcional consolidado) junto con las fuentes normativas generales; no las reemplaza.
 
 No agregar métricas extra por iniciativa propia.
 

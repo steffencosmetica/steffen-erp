@@ -672,24 +672,11 @@ Debe mostrar:
 
 ---
 
-# 20. FASE 17 — Reportes
+# 20. FASE 17 — Reportes (histórica, reemplazada)
 
-Exactamente cuatro cards:
+La Fase 17 implementó Reportes como cuatro cards (Ventas del mes, Total facturado, Ganancia, Pedidos abiertos). Esa definición de la pantalla Reportes queda **derogada** y se reemplaza por la Fase Reportes R (§22.2).
 
-- Ventas del mes
-- Total facturado
-- Ganancia
-- Pedidos abiertos
-
-## Regla temporal
-
-Las primeras tres:
-
-mes calendario corriente.
-
-Pedidos abiertos:
-
-todos los PED OPEN, sin filtro mensual.
+Las cuatro métricas se conservan sin cambios en el bloque `REPORTE MENSUAL` del Dashboard (`BUSINESS_RULES.md` §35.5, `v_current_reports`).
 
 ---
 
@@ -739,6 +726,30 @@ Preparación para el arranque con base limpia (Cajas en `0`; sin apertura de caj
 - tests: `opening-balance`, `cash-deposit`, `phase19-1-permissions`, `amount-input`.
 
 La base limpia se levanta aplicando las 34 migraciones.
+
+---
+
+## 22.2 FASE REPORTES R — Reportes analíticos
+
+Rama: `feat/reportes-analytics`.
+
+Reemplaza por completo el contenido de `/reportes` (se conservan la ruta y el shell del ERP). Reglas: `BUSINESS_RULES.md` §36; datos: `DATA_MODEL.md` §65; composición: `DESIGN.md` §35; componentes: `COMPONENTS.md` §60.1. Contrato funcional consolidado: `REPORTES.md` (leer antes de cualquier subfase; no reemplaza las fuentes normativas).
+
+Restricciones de toda la fase:
+
+- módulo 100% READ-ONLY: no modifica Pedidos, RTO, RTM, Clientes, Compras, Patrimonio, Fábrica ni Stock;
+- se mantienen intactos `ReportDomainService`, `ReportRepository` y `v_current_reports` (alimentan el Dashboard y otras pantallas);
+- módulo nuevo e independiente: `ReportingRepository` → `ReportingService` → `reporting.dto` → Server Component (`page.tsx`) → `ReportesView`;
+- tests contra DB compartida sin fixtures persistentes;
+- no avanzar de subfase sin aprobación / smoke manual del usuario.
+
+Subfases:
+
+- **R1 — Auditoría READ-ONLY.** Cerrada.
+- **R2 — Documentación funcional definitiva.** Esta actualización documental.
+- **R3 — Backend.** Migración aditiva `36` con funciones PostgreSQL `STABLE` exclusivamente READ-ONLY (solo `service_role`, NUMERIC exactos, sin escrituras); regenerar tipos Supabase oficialmente; `ReportingRepository`, `ReportingService`, `reporting.dto`; tests de reglas (atribución y residuo por RTO, unión agregada RTO/RTM por producto, entidades ML/CF, promedio mensual, frecuencia, concentración, semántica mensual, empty state).
+- **R4 — Especificación visual.** Diseño visual definitivo y responsive de Reportes en `DESIGN.md` / `COMPONENTS.md` antes de implementar la UI.
+- **R5 — UI.** Instalar Recharts; implementar `ReportesView` según R4; smoke manual.
 
 ---
 

@@ -1928,13 +1928,13 @@ Se aplica cuando el stock actual del Producto Final es menor que su stock mínim
 
 ---
 
-# 36. REPORTES
+## 35.5 Reporte mensual del Dashboard
 
-Reportes forma parte del MVP.
+El Dashboard muestra un bloque `REPORTE MENSUAL` con cuatro métricas derivadas en tiempo real (fuente: `v_current_reports`).
 
-La pantalla contiene exactamente cuatro cards en tiempo real:
+Estas cuatro métricas pertenecen al Dashboard. Ya no definen la pantalla Reportes, que se rige por §36.
 
-## 36.1 Ventas del mes
+### 35.5.1 Ventas del mes
 
 Cantidad de RTO cerrados/completados cuya `Fecha` pertenece al mes calendario corriente.
 
@@ -1946,9 +1946,7 @@ Un RTO en `RTM_PENDING` todavía no se cuenta como venta cerrada.
 
 No importa cuándo fue creado el PED original.
 
----
-
-## 36.2 Total facturado
+### 35.5.2 Total facturado
 
 Suma de `Total pedido` de todos los RTO `COMPLETED` cuya Fecha pertenece al mes calendario corriente.
 
@@ -1963,9 +1961,7 @@ No incluye:
 - Pedidos abiertos;
 - RTO pendientes de RTM.
 
----
-
-## 36.3 Ganancia
+### 35.5.3 Ganancia
 
 Suma de la Ganancia histórica de los RTM asociados a los RTO `COMPLETED` del mes calendario corriente.
 
@@ -1981,9 +1977,7 @@ El nombre visible es:
 
 No utilizar `MARGEN NETO`.
 
----
-
-## 36.4 Pedidos abiertos
+### 35.5.4 Pedidos abiertos
 
 Cantidad total de `PED` con:
 
@@ -1997,13 +1991,366 @@ Fórmula:
 
 `Pedidos abiertos = COUNT(orders WHERE status = OPEN)`
 
+### 35.5.5 Fuente de datos
+
+Las métricas son consultas derivadas en tiempo real.
+
+No requieren tablas propias ni valores duplicados persistidos.
+
 ---
 
-## 36.5 Fuente de datos
+# 36. REPORTES
 
-Las cards son consultas derivadas en tiempo real.
+> **Derogación.** La definición anterior de Reportes ("exactamente cuatro cards": Ventas del mes, Total facturado, Ganancia, Pedidos abiertos) queda **derogada** para la pantalla Reportes. Esas cuatro métricas se conservan sin cambios en el bloque `REPORTE MENSUAL` del Dashboard (§35.5).
 
-No requieren tablas de Reportes ni valores duplicados persistidos.
+## 36.1 Principio general
+
+Reportes es un módulo analítico **100% READ-ONLY**.
+
+- Sus resultados **no se persisten**.
+- No tiene tablas propias.
+- No existen triggers, eventos ni procesos de "recalcular reportes".
+- Todos los valores se derivan dinámicamente de las operaciones fuente vigentes al momento de consultar.
+- Cualquier modificación válida en las operaciones fuente queda reflejada automáticamente en la siguiente consulta.
+
+Reportes **no modifica** el comportamiento de Pedidos, RTO, RTM, Clientes, Compras, Patrimonio, Fábrica ni Stock. Solo lee sus datos.
+
+## 36.2 Estructura
+
+La pantalla tiene tres secciones:
+
+1. **FACTURACIÓN** (§36.4);
+2. **PRODUCTOS** (§36.5);
+3. **CLIENTES** (§36.6–§36.9).
+
+Existe un **selector global de año**. El año seleccionado controla toda la página.
+
+### 36.2.1 Selector global de año
+
+- Año por defecto: el año de la fecha comercial vigente (`v_current_business_date`).
+- Opciones: desde el primer año con información relevante para Reportes hasta el año actual.
+- Orden: descendente.
+- Se incluyen los años intermedios sin actividad.
+- Nunca se ofrecen años futuros.
+
+Información relevante para determinar el primer año: operaciones que pueden alimentar Reportes, como mínimo RTO `COMPLETED` (por `business_date` de la operación del RTO) y Gastos operativos (por `business_date` de su operación).
+
+Si no existe ninguna operación relevante, la única opción es el año actual.
+
+## 36.3 Regla general de ventas
+
+Toda métrica basada en ventas considera exclusivamente:
+
+`remittances.status = 'COMPLETED'`
+
+Nunca considera:
+
+- PED `OPEN`;
+- RTO `RTM_PENDING`.
+
+La **fecha analítica** de una venta es la `business_operations.business_date` de la operación del RTO (`remittances.operation_id`), nunca la fecha del RTM ni `created_at`.
+
+Facturación, Ganancia y Transporte de una venta se imputan todos a esa fecha.
+
+### Año corriente y años cerrados
+
+El año corriente y la fecha actual se determinan por la fecha comercial vigente (`v_current_business_date`), igual que el resto del ERP.
+
+- Año corriente: acumulado de enero a la fecha actual.
+- Año cerrado: acumulado de enero a diciembre completos.
+
+### Fechas futuras dentro del año corriente
+
+Para el año corriente solo se incluyen operaciones con:
+
+`business_date <= fecha comercial vigente`
+
+Se excluyen las operaciones fechadas en el futuro aunque pertenezcan al mismo año.
+
+Aplica a ventas, ganancias, transporte, gastos operativos, rankings, análisis individual y concentración.
+
+Para años cerrados no se aplica corte: se consideran enero–diciembre completos.
+
+### Semántica mensual (todas las series enero–diciembre)
+
+- Mes ya transcurrido sin operaciones: valor `0`.
+- Mes actual del año corriente: valor parcial acumulado hasta la fecha actual.
+- Mes futuro del año corriente: `null` / sin dato.
+
+Los doce meses permanecen siempre visibles en el eje enero–diciembre. Un mes futuro nunca se representa como un mes transcurrido con valor cero.
+
+## 36.4 Sección FACTURACIÓN
+
+### 36.4.1 Resumen anual
+
+Acumulado del año seleccionado (§36.3).
+
+| KPI | Regla |
+|---|---|
+| `FACTURACIÓN` | `SUM(remittances.total_order_ars)` |
+| `GANANCIA` | `SUM(margin_remittances.gain_ars)` |
+| `GASTOS OPERATIVOS` | `SUM(operating_expenses.amount_ars)` según la `business_date` de su `business_operation` |
+| `TRANSPORTE` | `SUM(margin_remittances.transport_cost_ars)` |
+| `MARGEN %` | `Ganancia / Facturación × 100` |
+| `VENTAS` | `COUNT(RTO COMPLETED)` |
+
+Reglas:
+
+- Facturación no incluye Saldo anterior ni Total a cobrar (§15).
+- Gastos operativos incluye todos los tipos: `LUZ`, `ALQUILER`, `COMISIÓN`, `OTRO`. La comisión de Mercado Libre se incluye porque ya constituye un Gasto Operativo `COMISIÓN` (§25, §27.3).
+- Transporte **no** forma parte de Gastos operativos.
+- Transporte es **informativo**: la Ganancia RTM ya lo descuenta (§17.4). No se vuelve a descontar.
+- Margen %: si Facturación = 0 → `null` / `—`.
+- `VENTAS` es el nombre visible; técnicamente es la cantidad de RTO `COMPLETED`.
+
+### 36.4.2 Evolución mensual
+
+Serie enero–diciembre del año seleccionado con:
+
+- Facturación;
+- Ganancia;
+- Gastos operativos.
+
+Aplica la semántica mensual de §36.3.
+
+### 36.4.3 Facturación y Ganancia por año
+
+Comparación interanual del año seleccionado y los **2 años anteriores** (ej.: seleccionado 2026 → 2024, 2025, 2026).
+
+Métricas: Facturación y Ganancia.
+
+No incluye Gastos operativos ni Transporte.
+
+## 36.5 Sección PRODUCTOS
+
+### 36.5.1 Ranking
+
+Una única visualización con tres pestañas:
+
+- Más vendidos;
+- Mayor facturación;
+- Mayor contribución.
+
+Selector: `Top 5` / `Top 10`.
+
+### 36.5.2 Más vendidos
+
+`SUM(remittance_items.quantity_sent)` por `product_id`.
+
+Solo cantidades efectivamente remitidas. Nunca cantidad pedida.
+
+### 36.5.3 Facturación atribuida por producto
+
+`remittance_items.line_total_ars` es importe **bruto pre-descuento**. Los descuentos viven a nivel del RTO.
+
+Para cada RTO `COMPLETED`:
+
+1. Agrupar primero las líneas por `remittance_id + product_id` (obligatorio: el modelo no impide que un mismo producto aparezca más de una vez dentro de un PED/RTO).
+2. Para cada producto del RTO:
+
+`factor = total_order_ars / subtotal_ars`
+
+`facturación_atribuida = subtotal_bruto_producto × factor`
+
+donde `subtotal_bruto_producto = Σ line_total_ars` del producto en ese RTO.
+
+Así se atribuyen proporcionalmente los descuentos efectivos del RTO.
+
+### 36.5.4 Redondeo de facturación atribuida
+
+- Cálculo interno con NUMERIC/Decimal exacto.
+- La atribución operativa se mantiene a **6 decimales**.
+- Dentro de cada RTO:
+  1. calcular las atribuciones a 6 decimales;
+  2. comparar `SUM(atribuciones)` contra `total_order_ars`;
+  3. si existe residuo exclusivamente de redondeo, asignarlo al producto con **mayor subtotal bruto** del RTO;
+  4. en empate, desempatar determinísticamente por `product_id`.
+
+Debe cumplirse exactamente:
+
+`SUM(facturación_atribuida de los productos del RTO) = remittances.total_order_ars`
+
+No se redondea cada producto a pesos enteros para realizar esta distribución.
+
+El formateo visual es independiente del cálculo interno.
+
+### 36.5.5 Mayor facturación
+
+Ranking anual por `SUM(facturación_atribuida)` por `product_id`.
+
+### 36.5.6 Mayor contribución
+
+Terminología normativa: **CONTRIBUCIÓN**. No utilizar "Ganancia por producto".
+
+`contribución = facturación_atribuida − total_cost_snapshot_ars`
+
+Reglas:
+
+- El costo es exclusivamente `margin_remittance_items.total_cost_snapshot_ars`: costo histórico congelado en el RTM. Nunca costo teórico actual.
+- El Transporte **no** se distribuye entre productos.
+- Contribución = resultado del producto **antes** de transporte.
+- Ganancia RTM = resultado final de la venta **después** de transporte.
+- No se exige `SUM(contribuciones) = Ganancia RTM`; la diferencia corresponde principalmente al Transporte, por diseño.
+- El snapshot de costo puede ser `0` si el RTM se completó sin costo disponible. Reportes usa ese snapshot histórico literalmente. No se agrega ninguna regla nueva de costo obligatorio.
+- La Contribución puede ser negativa.
+
+### 36.5.7 Unión RTO / RTM por producto
+
+`margin_remittance_items` no tiene `remittance_item_id`. Para evitar multiplicaciones:
+
+1. agregar `remittance_items` por `remittance_id + product_id`;
+2. agregar `margin_remittance_items` por `remittance_id + product_id` (vía `margin_remittances.remittance_id`);
+3. recién después realizar el JOIN.
+
+Nunca hacer JOIN directo línea-a-línea por `product_id`.
+
+### 36.5.8 Participación por producto
+
+Selector: `Unidades` / `Facturación` / `Contribución`.
+
+Para la métrica seleccionada: **Top 4 productos + "Otros productos"**.
+
+- El Top 4 se recalcula según la métrica seleccionada.
+- "Otros productos" agrupa todo lo que queda fuera de los cuatro primeros.
+- Si todos los valores representados son `>= 0`, puede usarse dona.
+- Si existe algún valor de Contribución negativo, se usan barras en lugar de dona.
+- Nunca se fuerzan valores negativos dentro de un gráfico de partes de un total.
+
+### 36.5.9 Identidad y etiqueta del producto
+
+- La identidad analítica de un producto es siempre `product_id`. Todo agrupamiento es por `product_id`; nunca depende del nombre.
+- No se usa `product_name_snapshot` como clave de agrupación.
+- La etiqueta visible es el nombre **actual** del producto en el maestro. Un cambio de nombre no divide históricamente un producto en dos rankings.
+- Los snapshots históricos siguen siendo la fuente de precio, costo, cantidades y valores económicos históricos.
+
+## 36.6 Entidad analítica (Clientes / canales)
+
+Reportes trabaja con una entidad analítica común derivada de `remittances.customer_source`, que queda congelado históricamente en el RTO.
+
+| `customer_source` | Clave analítica | Etiqueta |
+|---|---|---|
+| `REGISTERED_CUSTOMER` | `"CLI:" + customer_id` | `customers.name` |
+| `MERCADO_LIBRE` | `"ML"` | `Mercado Libre` |
+| `CONSUMER_FINAL` | `"CF"` | `Consumidor Final` |
+
+Reglas:
+
+- No se usa `recipient_name_snapshot` como discriminador.
+- Mercado Libre y Consumidor Final participan como entidades analíticas independientes, **no** se convierten en registros de `customers`, **no** requieren `customer_id` y **no** modifican lógica operativa.
+- Un cliente actualmente inactivo permanece incluido en el análisis histórico si tuvo RTO `COMPLETED` en el período. La desactivación no borra ni excluye ventas históricas (§37.3).
+
+### 36.6.1 Métricas por entidad
+
+| Métrica | Regla |
+|---|---|
+| Total facturado | `SUM(total_order_ars)` de sus RTO `COMPLETED` del período |
+| Compras / Ventas | `COUNT(RTO COMPLETED)` |
+| Ticket promedio | `Total facturado / COUNT(RTO COMPLETED)`; sin compras → `null` / `—` |
+| Promedio mensual | Año corriente: total de enero al mes actual / cantidad de meses transcurridos (ej.: octubre → 10). Año cerrado: total anual / 12. Los meses sin compras cuentan como cero. |
+| Última compra | `MAX(business_date)` de sus RTO `COMPLETED` |
+| Frecuencia | Ver abajo |
+
+**Frecuencia.** Cada RTO `COMPLETED` cuenta como una compra/venta. Con las fechas ordenadas y `n >= 2`:
+
+`(última fecha − primera fecha) / (n − 1)` (equivalente al promedio de los intervalos consecutivos, en días).
+
+Dos RTO el mismo día: intervalo de 0 días; ambos cuentan.
+
+`n < 2` → `null` / `—`.
+
+## 36.7 Mayores compradores
+
+Ranking por Facturación total descendente.
+
+Incluye clientes registrados, Mercado Libre y Consumidor Final.
+
+Selector: `Top 5` / `Top 10`.
+
+Por entidad: Nombre, Total facturado, Promedio mensual, Última compra, Frecuencia (§36.6.1).
+
+## 36.8 Análisis individual
+
+Usa el mismo selector global de año.
+
+Selector de entidad analítica: para el año seleccionado, muestra **únicamente** las entidades con al menos un RTO `COMPLETED` en ese año (respetando el corte de fecha de §36.3). Incluye:
+
+- clientes registrados activos;
+- clientes registrados actualmente inactivos, si tuvieron ventas ese año;
+- Mercado Libre, si tuvo ventas ese año;
+- Consumidor Final, si tuvo ventas ese año.
+
+No se muestran entidades sin ninguna venta `COMPLETED` en el período seleccionado.
+
+KPIs: `TOTAL ANUAL`, `PROMEDIO MENSUAL`, `TICKET PROMEDIO`, `COMPRAS / VENTAS`, `FRECUENCIA`, `ÚLTIMA COMPRA` (reglas de §36.6.1).
+
+**Evolución mensual:** facturación mensual de la entidad, siempre enero–diciembre, con la semántica mensual de §36.3.
+
+**Historial expandible ("Ver historial"):** como mínimo Código RTO, Fecha y Total. Si la navegación existente permite abrir el detalle de RTO, la UI podrá enlazarlo.
+
+## 36.9 Concentración
+
+Objetivo: medir qué porcentaje de la facturación depende de pocas entidades comerciales.
+
+Universo: clientes registrados, Mercado Libre y Consumidor Final. El denominador coincide con la Facturación total reportada del período.
+
+Todas las entidades se ordenan automáticamente por facturación descendente. Nunca se configura manualmente quién pertenece al Top 5 / Top 10.
+
+### 36.9.1 Grupos de la dona
+
+Porciones sin superposición, que suman 100%:
+
+- posiciones 1–5;
+- posiciones 6–10;
+- resto.
+
+### 36.9.2 Indicadores acumulados
+
+- `TOP 5` = participación acumulada de las posiciones 1–5.
+- `TOP 10` = participación acumulada de las posiciones 1–10.
+- `RESTO` = 100% − Top 10.
+
+Ejemplo: Top 5 = 43%, Top 10 = 67%, Resto = 33%; la dona representa 1–5 = 43%, 6–10 = 24%, Resto = 33%.
+
+Con menos de 10 entidades (ej.: 7): Top 5 = primeras cinco; Top 10 = las siete = 100%; Resto = 0%. La métrica no se oculta.
+
+### 36.9.2.1 Concentración sin facturación
+
+Si para el año seleccionado la facturación total del universo de entidades analíticas es 0 (no existen RTO `COMPLETED`, o el universo resulta sin facturación válida):
+
+- la dona de Concentración muestra el estado `Sin datos`;
+- `TOP 5` = sin dato / `—`;
+- `TOP 10` = sin dato / `—`;
+- `RESTO` = sin dato / `—`.
+
+No se representan como 0%, porque el denominador es 0.
+
+### 36.9.3 Evolución de la concentración
+
+Comparación del año seleccionado contra el año seleccionado − 1.
+
+- Cada año calcula su propio ranking, independientemente. No se siguen los mismos clientes entre años.
+- Se comparan Top 5, Top 10 y Resto.
+- Si un año no tiene facturación: `Sin datos`. La ausencia de universo no se interpreta como concentración 0%.
+
+## 36.10 Empty states
+
+Sin ventas en el período:
+
+- Facturación = 0; Ganancia = 0; Gastos operativos = 0; Transporte = 0; Ventas = 0;
+- Margen % = `null`;
+- rankings = `[]`; entidades = `[]`;
+- series enero–diciembre: meses transcurridos = 0, meses futuros del año corriente = `null`;
+- Concentración: `Sin datos`; Top 5 / Top 10 / Resto = `—` (§36.9.2.1), nunca 0%.
+
+La pantalla nunca requiere datos ficticios para funcionar.
+
+## 36.11 Fuente de datos
+
+Todas las métricas son consultas derivadas sobre RTO `COMPLETED`, RTM, `operating_expenses` y `business_operations` existentes.
+
+No requieren tablas de Reportes ni valores duplicados persistidos (ver `DATA_MODEL.md` §65).
+
+Contrato funcional consolidado del módulo: `REPORTES.md` (debe mantenerse consistente con esta sección).
 
 ---
 
@@ -2060,11 +2407,12 @@ La auditoría cruzada y la revisión final dejaron cerradas las decisiones funci
 Queda definido que:
 
 - la moneda del Proveedor se fija al crear la ficha y no cambia;
-- Reportes contiene exactamente:
+- el bloque `REPORTE MENSUAL` del Dashboard contiene exactamente (§35.5):
   - Ventas del mes;
   - Total facturado;
   - Ganancia;
-  - Pedidos abiertos.
+  - Pedidos abiertos;
+- Reportes es un módulo analítico READ-ONLY con secciones Facturación, Productos y Clientes, definido en §36 (reemplaza la definición anterior de "exactamente cuatro cards").
 
 No quedan decisiones funcionales pendientes conocidas para iniciar la implementación del MVP.
 

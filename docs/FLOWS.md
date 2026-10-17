@@ -1880,39 +1880,30 @@ Cambiar de renderer no debe exigir cambios en:
 
 # 49. REPORTES
 
+> **Derogación.** El flujo anterior ("renderizar las cuatro cards" de Ventas del mes, Total facturado, Ganancia y Pedidos abiertos) ya no corresponde a la pantalla Reportes. Esas cuatro métricas siguen calculándose para el bloque `REPORTE MENSUAL` del Dashboard (`BUSINESS_RULES.md` §35.5, `v_current_reports`).
+
+Reglas: `BUSINESS_RULES.md` §36.
+
 ## 49.1 Carga
 
 Al abrir Reportes:
 
-1. obtener fecha actual del sistema;
-2. determinar mes calendario corriente;
-3. consultar RTO `COMPLETED` cuya fecha funcional pertenece a ese mes;
-4. calcular:
-   - cantidad de Ventas;
-   - Total facturado;
-   - Ganancia;
-5. contar todos los PED `OPEN` sin filtro mensual;
-6. renderizar las cuatro cards.
+1. obtener la fecha comercial vigente (`v_current_business_date`);
+2. tomar el año del selector global (controla toda la página; por defecto el año de la fecha comercial vigente; opciones desde el primer año con RTO `COMPLETED` o Gastos operativos hasta el año actual, en orden descendente, sin años futuros — `BUSINESS_RULES.md` §36.2.1);
+3. consultar, solo lectura, RTO `COMPLETED` del año por `business_date` de la operación del RTO, sus RTM, ítems y `operating_expenses` del año; en el año corriente, solo `business_date <= fecha comercial vigente`;
+4. calcular dinámicamente:
+   - Facturación (resumen anual, evolución mensual, comparación con los 2 años anteriores);
+   - Productos (rankings, facturación atribuida, contribución, participación);
+   - Clientes / entidades analíticas (mayores compradores, análisis individual, concentración y su evolución vs año anterior);
+5. renderizar las tres secciones, incluyendo empty states sin datos ficticios.
 
-## 49.2 Ventas del mes
+## 49.2 Cambio de año o de selector
 
-`COUNT(RTO COMPLETED del mes corriente)`
+Cambiar el año, la pestaña, el Top 5/10, la métrica de participación o la entidad analítica solo vuelve a consultar / recalcular en memoria de la consulta. No persiste nada.
 
-## 49.3 Total facturado
+## 49.3 Efectos
 
-`SUM(Total pedido de RTO COMPLETED del mes corriente)`
-
-## 49.4 Ganancia
-
-`SUM(Ganancia RTM de los RTO COMPLETED del mes corriente)`
-
-## 49.5 Pedidos abiertos
-
-`COUNT(PED OPEN)`
-
-Sin filtro por mes.
-
-No genera movimientos ni persiste resultados de Reportes.
+Reportes no genera movimientos, no modifica operaciones fuente y no persiste resultados. No existen procesos de recalculado: toda modificación válida de las operaciones fuente se refleja en la siguiente consulta.
 
 ---
 

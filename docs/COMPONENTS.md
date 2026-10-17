@@ -1240,7 +1240,9 @@ Si el Proveedor usa USD, `PurchaseFxOverride` permite modificar únicamente la c
 
 # 60. ReportMetricCard
 
-Card específica de la pestaña Reportes.
+> **Alcance actualizado.** Esta card ya no define la pantalla Reportes (la definición de "cuatro cards" de Reportes queda derogada; ver `BUSINESS_RULES.md` §36). Se conserva para el bloque `REPORTE MENSUAL` del Dashboard (`BUSINESS_RULES.md` §35.5, `DESIGN.md` §15.1). Los componentes de la pantalla Reportes se listan en §60.1.
+
+Card del bloque `REPORTE MENSUAL` del Dashboard.
 
 Contenido:
 
@@ -1286,6 +1288,25 @@ Labels exactos:
 - `PEDIDOS ABIERTOS`
 
 No utilizar `MARGEN NETO`.
+
+## 60.1 Componentes de Reportes (conceptual)
+
+Reglas funcionales: `BUSINESS_RULES.md` §36. Composición: `DESIGN.md` §35.
+
+El diseño visual definitivo y comportamiento responsive de Reportes se especificará en una fase posterior antes de implementar la UI. Esta lista solo fija responsabilidades; no fija apariencia. Reutilizar primero los componentes existentes (§2): `Panel`, `SectionHeader`, `Select`, `Tabs`, `DataTable`, `EmptyState`, `MoneyDisplay`.
+
+| Componente conceptual | Responsabilidad |
+|---|---|
+| YearSelector | Selector global de año; controla toda la página |
+| ReportKpi | Valor + label de un KPI (`FACTURACIÓN`, `GANANCIA`, `GASTOS OPERATIVOS`, `TRANSPORTE`, `MARGEN %`, `VENTAS`, KPIs de análisis individual); muestra `—` para `null` |
+| MonthlySeriesChart | Serie enero–diciembre; distingue mes futuro (sin dato) de mes transcurrido con cero |
+| YearComparisonChart | Facturación y Ganancia del año seleccionado y los 2 anteriores; también comparación de concentración año vs año − 1 |
+| RankingPanel | Ranking con pestañas (productos) y selector `Top 5` / `Top 10` |
+| ShareChart | Partes de un total (Top 4 + Otros; concentración 1–5 / 6–10 / resto). Cambia a barras si hay valores negativos |
+| AnalyticEntitySelector | Selector de cliente registrado / `Mercado Libre` / `Consumidor Final` |
+| SalesHistoryList | "Ver historial" expandible: Código RTO, Fecha, Total |
+
+Motor gráfico previsto: Recharts (todavía no instalado). Ningún componente de Reportes ejecuta acciones ni modifica datos.
 
 ---
 

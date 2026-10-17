@@ -644,6 +644,14 @@ Una lista nueva nace sin precios cargados.
 
 # 27. Reportes
 
+> **⚠️ DEROGADA / SUPERADA.** La definición de esta sección (cuatro cards) ya no define la página `/reportes`. Se conserva solo como registro histórico.
+>
+> Documentación vigente de Reportes:
+> - `docs/BUSINESS_RULES.md` §36
+> - `docs/REPORTES.md`
+>
+> Las cuatro métricas de abajo (Ventas del mes, Total facturado, Ganancia, Pedidos abiertos) pertenecen actualmente al bloque `REPORTE MENSUAL` del Dashboard (`docs/BUSINESS_RULES.md` §35.5) y **no** definen la página `/reportes`.
+
 Implementar exactamente cuatro cards:
 
 ## VENTAS DEL MES

@@ -18,6 +18,9 @@ Antes de implementar cualquier fase o cambio, leer:
 Para PDFs:
 - docs/PDFS.md
 
+Para Reportes:
+- docs/REPORTES.md (contrato funcional consolidado; leer junto con las fuentes normativas, no las reemplaza)
+
 Jerarquía funcional:
 1. BUSINESS_RULES.md
 2. DATA_MODEL.md
@@ -113,15 +116,19 @@ Seguir Figma antes de inventar UI.
 
 ## Estado actual
 
-Fases 0–11 cerradas y aprobadas por smoke manual.
+ERP base (Fases 0–19.1 del IMPLEMENTATION_PLAN) integrado en main (release de producción).
 
 Fase actual:
-12 — RTO
+REPORTES R — Reportes analíticos (IMPLEMENTATION_PLAN §22.2)
 
-Existe implementación parcial guardada en:
-wip/fase-12-rto
+Rama: feat/reportes-analytics
 
-NO asumir que Fase 12 está completa.
-Auditar lo existente antes de continuar.
+- R1 auditoría: cerrada.
+- R2 documentación funcional: en curso / pendiente de aprobación.
+- R3 backend, R4 especificación visual, R5 UI: pendientes.
 
-NO avanzar a Fase 13.
+Reglas: BUSINESS_RULES §36 + docs/REPORTES.md (la antigua definición de "cuatro cards" de Reportes está derogada; esas métricas siguen en el Dashboard, §35.5).
+
+Reportes es 100% READ-ONLY: no modificar Pedidos, RTO, RTM, Clientes, Compras, Patrimonio, Fábrica ni Stock. Mantener intactos ReportDomainService, ReportRepository y v_current_reports.
+
+NO avanzar de subfase sin smoke/aprobación manual del usuario.

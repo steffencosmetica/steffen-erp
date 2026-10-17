@@ -2151,7 +2151,9 @@ Devuelve:
 
 ## `v_current_reports`
 
-Consulta derivada para las cuatro cards de Reportes.
+Consulta derivada para las cuatro métricas del bloque `REPORTE MENSUAL` del Dashboard (`BUSINESS_RULES.md` §35.5).
+
+No alimenta la pantalla Reportes analítica (§65), que tiene sus propias consultas READ-ONLY. Se conserva sin cambios.
 
 Devuelve:
 
@@ -2260,20 +2262,73 @@ No guardar el texto como estado fijo porque cambia con pedidos/stock en tiempo r
 
 # 65. Reportes
 
-No crear tablas duplicadas de reporte.
+Reglas funcionales: `BUSINESS_RULES.md` §36.
 
-Las cards deben calcularse a partir de:
+## 65.1 Principio
 
-- RTO/RTM;
-- MOV/financial_entries;
-- stock;
-- GRA;
-- Pedidos;
-- Compras.
+Reportes es 100% READ-ONLY:
 
-Si una métrica necesita optimización futura:
+- no tiene tablas propias ni tablas duplicadas de reporte;
+- no persiste resultados;
+- no usa triggers, vistas materializadas, cachés persistidas ni procesos de recalculado;
+- nunca es una segunda fuente de verdad.
 
-usar vista materializada/caché, nunca una segunda fuente de verdad.
+Todos los valores se derivan en cada consulta de las tablas operativas vigentes.
+
+## 65.2 Fuentes
+
+| Dato | Tabla / columna |
+|---|---|
+| Venta (filtro) | `remittances.status = 'COMPLETED'` |
+| Fecha analítica | `business_operations.business_date` vía `remittances.operation_id` (nunca la operación `SALE_RTM` ni `created_at`) |
+| Facturación | `remittances.total_order_ars` |
+| Subtotal bruto | `remittances.subtotal_ars` |
+| Ganancia | `margin_remittances.gain_ars` (1:1 por `remittance_id` UNIQUE) |
+| Transporte | `margin_remittances.transport_cost_ars` |
+| Gastos operativos | `operating_expenses.amount_ars` + `business_operations.business_date` vía `operating_expenses.operation_id` |
+| Unidades / bruto por producto | `remittance_items.quantity_sent`, `remittance_items.line_total_ars`, `remittance_items.product_id` |
+| Costo histórico por producto | `margin_remittance_items.total_cost_snapshot_ars` (snapshot congelado del RTM) |
+| Etiqueta de producto | nombre actual del maestro (`stock_items.name` vía `product_id = stock_items.id`); agrupación siempre por `product_id`, nunca por `product_name_snapshot` |
+| Fecha comercial vigente | `v_current_business_date` (año por defecto, corte `business_date <= fecha vigente` en el año corriente) |
+| Entidad analítica | `remittances.customer_source`, `remittances.customer_id`, `customers.name` |
+
+Transporte no se registra en `operating_expenses` (genera MOV `TRANSPORTE`), por lo que Gastos operativos y Transporte no se superponen.
+
+## 65.3 Entidad analítica
+
+`remittances.customer_source` (CHECK: `REGISTERED_CUSTOMER`, `MERCADO_LIBRE`, `CONSUMER_FINAL`) se copia del PED al confirmar el RTO y queda congelado por el trigger de inmutabilidad de `remittances`.
+
+Clave analítica:
+
+- `REGISTERED_CUSTOMER` → `'CLI:' || customer_id`;
+- `MERCADO_LIBRE` → `'ML'`;
+- `CONSUMER_FINAL` → `'CF'`.
+
+Mercado Libre y Consumidor Final no tienen `customer_id` y no se crean como `customers`. `recipient_name_snapshot` no se usa como discriminador.
+
+## 65.4 Agregación por producto
+
+`margin_remittance_items` no tiene `remittance_item_id` y `order_items` no impide productos repetidos dentro de un PED. Por lo tanto:
+
+1. agregar `remittance_items` por `(remittance_id, product_id)`;
+2. agregar `margin_remittance_items` por `(margin_remittances.remittance_id, product_id)`;
+3. unir ambos agregados recién después.
+
+`Σ remittance_items.line_total_ars = remittances.subtotal_ars` exactamente (mismas líneas `ag_quantity > 0`), y `subtotal_ars > 0` siempre (precio unitario > 0 y al menos una línea enviada), por lo que el factor `total_order_ars / subtotal_ars` nunca divide por cero.
+
+Atribución y redondeo: `BUSINESS_RULES.md` §36.5.3–§36.5.4 (6 decimales; residuo al producto con mayor subtotal bruto del RTO; desempate por `product_id`; la suma por RTO cuadra exactamente con `total_order_ars`).
+
+## 65.5 Implementación prevista
+
+Decisión de arquitectura (no implementada todavía):
+
+- una migración aditiva futura (`36`) con funciones PostgreSQL `STABLE`, exclusivamente READ-ONLY, para las agregaciones;
+- `EXECUTE` solo para `service_role`, mismo patrón que `get_customer_last_activity()`;
+- sin `INSERT` / `UPDATE` / `DELETE` sobre tablas operativas;
+- NUMERIC exactos devueltos sin pérdida de precisión (como texto hacia la app);
+- evitar traer todos los RTO a Next para agregarlos en memoria.
+
+Las consultas deben devolver correctamente el caso vacío (sumas en 0, rankings vacíos, 12 meses presentes).
 
 ---
 
@@ -2522,6 +2577,6 @@ Este modelo cubre las reglas funcionales definidas para el MVP y deja separadas:
 
 La moneda del Proveedor es inmutable una vez creada su ficha.
 
-Las cuatro métricas de Reportes quedaron definidas y no requieren tablas propias.
+Las métricas de Reportes (§65) y del Reporte mensual del Dashboard (`v_current_reports`) son derivadas y no requieren tablas propias.
 
 No quedan dependencias funcionales conocidas pendientes para comenzar la implementación.
