@@ -3,7 +3,7 @@
 Estado funcional: APROBADO
 Estructura, UX y responsive: APROBADO (§17)
 Detalles visuales finos (colores, px, alturas, gaps): PENDIENTE — se resuelven en la implementación reutilizando el sistema visual existente (§18)
-Implementación: PENDIENTE — siguiente fase: R4 Backend analítico
+Implementación: backend COMPLETADO (R4, migración 36 aplicada solo en DEV); UI PENDIENTE — siguiente fase: R5 UI de Reportes
 
 Rama de trabajo:
 feat/reportes-analytics
@@ -625,21 +625,42 @@ Referencia normativa: `DATA_MODEL.md` §65.
 
 ---
 
-## 15. Arquitectura técnica futura
+## 15. Arquitectura técnica
 
-Decisión aprobada, todavía **no implementada**:
+Backend **implementado y validado en DEV** (R4). La migración 36 está aplicada **solo en DEV** (`vhvvomwysxmeumlzrhdk`); **todavía NO está aplicada en producción**. La UI nueva de `/reportes` **todavía NO está implementada** (R5).
 
-- una migración aditiva futura (`36`) con funciones PostgreSQL `STABLE`, exclusivamente READ-ONLY, para realizar las agregaciones;
-- `EXECUTE` solo para `service_role` (mismo patrón que `get_customer_last_activity()`);
-- sin `INSERT` / `UPDATE` / `DELETE` sobre tablas operativas;
-- NUMERIC exactos, devueltos sin pérdida de precisión;
-- evitar traer todos los RTO a Next para agregarlos en memoria;
-- regenerar los tipos Supabase oficialmente tras la migración (no editar `database/types.ts` a mano);
-- las consultas devuelven correctamente el caso vacío (§12).
+### 15.1 Capas
 
-Motor gráfico: **Recharts** (todavía no instalado).
+```
+Server Component (/reportes, R5) ─┐
+Server Action (análisis individual) ┴→ ReportingService → ReportingRepository → RPC READ-ONLY → PostgreSQL
+```
 
-Secuencia y estado (`IMPLEMENTATION_PLAN.md` §22.2):
+| Capa | Archivo | Responsabilidad |
+|---|---|---|
+| SQL | `supabase/migrations/20261002000036_reporting_read_only_functions.sql` | 5 funciones `LANGUAGE sql`, `STABLE`, `SECURITY INVOKER`, `search_path = public, pg_temp`, `EXECUTE` solo `service_role`; NUMERIC monetario devuelto como `text`; atribución, redondeo HALF-UP exacto a 6 decimales y residuo por RTO |
+| Dominio puro | `src/domain/reporting.ts` | años disponibles, meses (pasado / actual / futuro), series de 12 meses, margen, promedio mensual, ticket, frecuencia, `entityKey` / etiquetas, rankings (métrica DESC, clave ASC), Top 4 + Otros, concentración |
+| Repository | `src/repositories/reporting.repository.ts` | RPC → validación → `Decimal` / tipos raw; nulabilidad real (el generador de tipos la declara no nula) encapsulada aquí |
+| Service | `src/services/reporting.service.ts` | `resolveYears`, `getBilling`, `getProducts`, `getCustomers`, `getEntityAnalysis`; la fecha comercial se lee una sola vez desde `ReportRepository.getCurrentBusinessDate()` |
+| DTO | `src/actions/reporting.dto.ts` | objetos planos serializables: ARS, porcentajes y días como texto decimal exacto (notación normal), sin `Decimal` |
+| Action | `src/actions/reporting.actions.ts` | `getReportingEntityAnalysisAction(year, entityKey)`: operador autorizado (`requireAuthenticatedUser`), fecha comercial resuelta en servidor |
+| Composición | `src/services/composition.ts` | `getReportingService()` |
+
+Funciones SQL: `get_reporting_first_year`, `get_reporting_billing_months`, `get_reporting_products`, `get_reporting_entities`, `get_reporting_entity_sales`. Índices: `idx_remittance_items_remittance`, `idx_margin_remittance_items_margin_remittance`. Tipos Supabase regenerados oficialmente.
+
+`ReportDomainService`, `ReportRepository` y `v_current_reports` (Dashboard) no se modificaron.
+
+### 15.2 Tests
+
+| Archivo | Alcance |
+|---|---|
+| `tests/reporting.test.ts` | dominio puro |
+| `tests/reporting-db.test.ts` | 5 RPC + Repository contra DEV (años artificiales, `p_as_of_date` explícito, limpieza verificada, sin RTO `RTM_PENDING`); permisos anon / authenticated / service_role |
+| `tests/reporting-service.test.ts` | Service, DTOs y autorización de la Server Action (sin DB) |
+
+Motor gráfico: **Recharts** (todavía no instalado; se instala en R5).
+
+### 15.3 Secuencia y estado (`IMPLEMENTATION_PLAN.md` §22.2)
 
 | Subfase | Estado |
 |---|---|
@@ -650,10 +671,15 @@ Secuencia y estado (`IMPLEMENTATION_PLAN.md` §22.2):
 | R3.2 — Interacciones | APROBADO |
 | R3.3 — Responsive | APROBADO |
 | R3.4 — Documentación UX | COMPLETADA |
-| **R4 — Backend analítico** | **SIGUIENTE**: migración 36, Repository, Service, DTO, tests |
-| R5 — UI | PENDIENTE: Recharts + `ReportesView` según §16–§17 y `DESIGN.md` §35; smoke manual |
+| R4.1 — Diseño técnico backend | COMPLETADO |
+| R4.2 — Domain + tests | COMPLETADO |
+| R4.3 — SQL / migración 36 (aplicada en DEV) | COMPLETADO |
+| R4.4 — Repository + tests DB | COMPLETADO |
+| R4.5 — Service + DTO + composition / action | COMPLETADO |
+| R4.6 — Validación integral backend | COMPLETADO |
+| **R5 — UI de Reportes** | **SIGUIENTE**: Recharts + `ReportesView` según §16–§17 y `DESIGN.md` §35; smoke manual |
 
-Tests (R4) deben cubrir como mínimo: atribución y residuo por RTO, unión agregada RTO/RTM por producto, productos repetidos en un RTO, entidades ML/CF, promedio mensual, frecuencia, concentración (incluido < 10 entidades y sin facturación), semántica mensual, corte de fechas futuras, selector de años y empty state. Sin fixtures persistentes.
+Pendiente fuera de R5: aplicar la migración 36 en producción (requiere autorización explícita).
 
 ---
 

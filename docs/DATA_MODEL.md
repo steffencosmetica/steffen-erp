@@ -2318,11 +2318,13 @@ Mercado Libre y Consumidor Final no tienen `customer_id` y no se crean como `cus
 
 Atribución y redondeo: `BUSINESS_RULES.md` §36.5.3–§36.5.4 (6 decimales; residuo al producto con mayor subtotal bruto del RTO; desempate por `product_id`; la suma por RTO cuadra exactamente con `total_order_ars`).
 
-## 65.5 Implementación prevista
+## 65.5 Implementación
 
-Decisión de arquitectura (no implementada todavía):
+Implementada en la migración aditiva `20261002000036_reporting_read_only_functions.sql` (aplicada en DEV; pendiente en producción). Funciones: `get_reporting_first_year`, `get_reporting_billing_months`, `get_reporting_products`, `get_reporting_entities`, `get_reporting_entity_sales`; índices `idx_remittance_items_remittance` e `idx_margin_remittance_items_margin_remittance`. Detalle de capas: `REPORTES.md` §15.
 
-- una migración aditiva futura (`36`) con funciones PostgreSQL `STABLE`, exclusivamente READ-ONLY, para las agregaciones;
+Características:
+
+- funciones PostgreSQL `LANGUAGE sql`, `STABLE`, `SECURITY INVOKER`, exclusivamente READ-ONLY, para las agregaciones;
 - `EXECUTE` solo para `service_role`, mismo patrón que `get_customer_last_activity()`;
 - sin `INSERT` / `UPDATE` / `DELETE` sobre tablas operativas;
 - NUMERIC exactos devueltos sin pérdida de precisión (como texto hacia la app);

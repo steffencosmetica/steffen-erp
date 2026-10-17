@@ -753,8 +753,16 @@ Subfases:
   - R3.2 Interacciones: APROBADO;
   - R3.3 Responsive: APROBADO;
   - R3.4 Documentación UX: COMPLETADA.
-- **R4 — Backend analítico.** SIGUIENTE. Migración aditiva `36` con funciones PostgreSQL `STABLE` exclusivamente READ-ONLY (solo `service_role`, NUMERIC exactos, sin escrituras); regenerar tipos Supabase oficialmente; `ReportingRepository`, `ReportingService`, `reporting.dto`; tests de reglas (atribución y residuo por RTO, unión agregada RTO/RTM por producto, entidades ML/CF, promedio mensual, frecuencia, concentración, semántica mensual, corte de fechas futuras, selector de años, empty state).
-- **R5 — UI.** PENDIENTE. Instalar Recharts; implementar `ReportesView` según `DESIGN.md` §35; smoke manual.
+- **R4 — Backend analítico** (`REPORTES.md` §15). COMPLETADO:
+  - R4.1 Diseño técnico backend: COMPLETADO;
+  - R4.2 Domain + tests (`src/domain/reporting.ts`): COMPLETADO;
+  - R4.3 SQL / migración `20261002000036` (5 funciones `STABLE` READ-ONLY, solo `service_role`, + 2 índices; tipos Supabase regenerados): COMPLETADO;
+  - R4.4 Repository + tests DB: COMPLETADO;
+  - R4.5 Service + DTO + `getReportingService()` + Server Action de análisis individual: COMPLETADO;
+  - R4.6 Validación integral backend (`npm test`, `tsc`, build): COMPLETADO.
+
+  La migración 36 está aplicada **solo en DEV**; todavía **no** está aplicada en producción.
+- **R5 — UI de Reportes.** SIGUIENTE. Instalar Recharts; implementar `/reportes` (Server Component) y `ReportesView` según `DESIGN.md` §35; smoke manual. La UI nueva todavía no está implementada.
 
 ---
 

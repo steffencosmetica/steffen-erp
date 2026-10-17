@@ -128,7 +128,10 @@ Rama: feat/reportes-analytics
 - R2.1 Documentación funcional (docs/REPORTES.md): COMPLETADA.
 - R3.1 Desktop / R3.2 Interacciones / R3.3 Responsive: APROBADOS.
 - R3.4 Documentación UX (DESIGN §35, COMPONENTS §60.1, REPORTES §17): COMPLETADA.
-- Siguiente: R4 Backend analítico. Después: R5 UI.
+- R4.1–R4.6 Backend analítico (domain, migration 36, Repository, Service, DTO, action, validación integral): COMPLETADOS (REPORTES §15).
+- Migration 36 aplicada SOLO en DEV (vhvvomwysxmeumlzrhdk); NO aplicada en producción.
+- UI nueva de /reportes: NO implementada todavía.
+- Siguiente: R5 — UI de Reportes.
 
 Reglas: BUSINESS_RULES §36 + docs/REPORTES.md (la antigua definición de "cuatro cards" de Reportes está derogada; esas métricas siguen en el Dashboard, §35.5).
 
