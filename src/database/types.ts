@@ -2723,6 +2723,61 @@ export type Database = {
         Args: { p_party_id: string; p_party_type: string }
         Returns: Json
       }
+      get_reporting_billing_months: {
+        Args: { p_as_of_date: string; p_year: number }
+        Returns: {
+          billed_ars: string
+          expenses_ars: string
+          gain_ars: string
+          month: number
+          sales_count: number
+          transport_ars: string
+          year: number
+        }[]
+      }
+      get_reporting_entities: {
+        Args: { p_as_of_date: string; p_year: number }
+        Returns: {
+          billed_ars: string
+          customer_id: string
+          customer_name: string
+          customer_source: string
+          first_purchase_date: string
+          last_purchase_date: string
+          sales_count: number
+        }[]
+      }
+      get_reporting_entity_sales: {
+        Args: {
+          p_as_of_date: string
+          p_customer_id: string
+          p_customer_source: string
+          p_year: number
+        }
+        Returns: {
+          business_date: string
+          remittance_id: string
+          rto_code: string
+          total_order_ars: string
+        }[]
+      }
+      get_reporting_first_year: {
+        Args: { p_as_of_date: string }
+        Returns: {
+          first_year: number
+        }[]
+      }
+      get_reporting_products: {
+        Args: { p_as_of_date: string; p_year: number }
+        Returns: {
+          billed_ars: string
+          contribution_ars: string
+          cost_ars: string
+          product_id: string
+          product_name: string
+          units: number
+        }[]
+      }
       manufacture_bulk_lot_atomic: {
         Args: {
           p_base_product_id: string
