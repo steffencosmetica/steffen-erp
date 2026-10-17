@@ -34,6 +34,8 @@ import { PlanningRepository } from '@/repositories/planning.repository';
 import { PlanningDomainService } from '@/services/planning.service';
 import { ReportRepository } from '@/repositories/report.repository';
 import { ReportDomainService } from '@/services/report.service';
+import { ReportingRepository } from '@/repositories/reporting.repository';
+import { ReportingService } from '@/services/reporting.service';
 import { RemittanceRepository } from '@/repositories/remittance.repository';
 import { ExchangeRateRepository } from '@/repositories/exchange-rate.repository';
 import { ExchangeRateDomainService } from '@/services/exchange-rate.service';
@@ -308,6 +310,16 @@ export function getReportService(): ReportDomainService {
     reportServiceInstance = new ReportDomainService(new ReportRepository(serverSupabase));
   }
   return reportServiceInstance;
+}
+
+let reportingServiceInstance: ReportingService | null = null;
+
+/** Reportes analíticos READ-ONLY; la fecha comercial proviene de ReportRepository (sin duplicarla). */
+export function getReportingService(): ReportingService {
+  if (!reportingServiceInstance) {
+    reportingServiceInstance = new ReportingService(new ReportingRepository(serverSupabase), new ReportRepository(serverSupabase));
+  }
+  return reportingServiceInstance;
 }
 
 let remittanceRepoInstance: RemittanceRepository | null = null;
