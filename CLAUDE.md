@@ -137,7 +137,9 @@ Rama: feat/reportes-analytics
 - R5.5 Responsive/estados/touch: COMPLETADO.
 - R5.6 Validación UI: COMPLETADO. Tests de Reportes (98), suite completa contra DEV (675), TypeScript y build aprobados; smoke manual aprobado por el usuario en 375, 768, 1280 y 1440 px.
 - UI nueva de /reportes implementada en feat/reportes-analytics; todavía NO mergeada a main y NO desplegada a producción.
-- Siguiente: R6 — integración y pruebas finales (NO iniciada).
+- R6 — integración y pruebas finales: COMPLETADO. Suite completa: 679 tests aprobados, sin fallos ni omitidos; TypeScript y build aprobados; dry-run de DEV sin migraciones pendientes. Cleanup verificado (REPORTES §15.4).
+- Deudas previas: ESLint no analiza TS/TSX; algunos teardowns de suites operativas requieren cleanup adicional. No se modificó su configuración ni esos tests (REPORTES §15.4).
+- Siguiente: R7 — merge / producción (NO iniciada). La migración 36 sigue aplicada solo en DEV; producción pendiente y feature todavía sin merge a main.
 
 Reglas: BUSINESS_RULES §36 + docs/REPORTES.md (la antigua definición de "cuatro cards" de Reportes está derogada; esas métricas siguen en el Dashboard, §35.5).
 

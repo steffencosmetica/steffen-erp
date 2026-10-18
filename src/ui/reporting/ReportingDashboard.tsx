@@ -18,7 +18,7 @@ import { ProductRanking } from './ProductRanking';
 import { ProductSharePanel } from './ProductSharePanel';
 import { TopBuyersList } from './TopBuyersList';
 import { CustomerConcentration } from './CustomerConcentration';
-import { CustomerAnalysis } from './CustomerAnalysis';
+import { CustomerAnalysis, type ReportingAnalysisState } from './CustomerAnalysis';
 import { ConcentrationComparison } from './ConcentrationComparison';
 import './reporting.css';
 
@@ -33,6 +33,7 @@ export interface ReportingDashboardProps {
   billing: ReportingBillingDTO | null;
   products: ReportingProductsDTO | null;
   customers: ReportingCustomersDTO | null;
+  initialAnalysis: ReportingAnalysisState | null;
 }
 
 const LOAD_ERROR = 'No se pudieron cargar los datos de este bloque.';
@@ -40,7 +41,7 @@ const ROW = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-5 items-start';
 const WIDE = 'xl:col-span-7';
 const NARROW = 'xl:col-span-5';
 
-export const ReportingDashboard: React.FC<ReportingDashboardProps> = ({ years, billing, products, customers }) => {
+export const ReportingDashboard: React.FC<ReportingDashboardProps> = ({ years, billing, products, customers, initialAnalysis }) => {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const year = years?.selectedYear;
@@ -150,7 +151,7 @@ export const ReportingDashboard: React.FC<ReportingDashboardProps> = ({ years, b
         </div>
 
         <div className={ROW}>
-          <CustomerAnalysis customers={customers} year={year} loading={pending} error={customers ? null : LOAD_ERROR} className={WIDE} />
+          <CustomerAnalysis key={year} customers={customers} year={year} loading={pending} error={customers ? null : LOAD_ERROR} initialAnalysis={initialAnalysis} className={WIDE} />
           <ConcentrationComparison
             current={customers?.concentration ?? null}
             previous={customers?.concentrationPrevious ?? null}

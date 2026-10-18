@@ -771,7 +771,8 @@ Subfases:
   - R5.6 Validación UI: COMPLETADO. Tests de Reportes (98), suite completa contra DEV (675), TypeScript y build aprobados; smoke manual aprobado por el usuario en 375, 768, 1280 y 1440 px.
 
   Nueva UI de `/reportes` implementada con Recharts en `feat/reportes-analytics`; todavía **NO mergeada a main** y **NO desplegada a producción**.
-- **R6 — integración y pruebas finales.** SIGUIENTE; NO iniciada.
+- **R6 — integración y pruebas finales.** COMPLETADO. Auditoría de alcance, contrato, arquitectura, seguridad y performance; precarga del primer análisis individual en el Server Component (sin fetch inicial cliente); suite completa de 679 tests aprobados (0 fallos, 0 omitidos), TypeScript y build aprobados; dry-run contra DEV sin migraciones pendientes. Cleanup contrastado con conteos de 48 tablas y saldos previos; deudas heredadas de lint y teardowns documentadas en `REPORTES.md` §15.4.
+- **R7 — merge / producción.** SIGUIENTE; NO iniciada. La feature continúa en `feat/reportes-analytics`, NO mergeada a main ni desplegada a producción; migración 36 aplicada solo en DEV, producción pendiente.
 
 ---
 

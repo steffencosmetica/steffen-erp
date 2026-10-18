@@ -18,6 +18,7 @@ import type {
   EntitySaleRecord,
 } from '../src/repositories/reporting.repository';
 import type { CustomerSource } from '../src/database/domain-types';
+import type { ReportingDashboardProps } from '../src/ui/reporting/ReportingDashboard';
 
 /**
  * REPORTES R4.5 — ReportingService + DTOs + Server Action, sin DB.
@@ -415,5 +416,64 @@ test('REPORTES R4.5 — getReportingEntityAnalysisAction: autorización y result
     const invalid = await getReportingEntityAnalysisAction(2026, 'CLI:xx');
     assert.strictEqual(invalid.success, false);
     assert.match(invalid.error ?? '', /Clave de entidad analítica inválida/);
+  });
+});
+
+test('REPORTES R6 — carga inicial del Server Component y aislamiento del análisis', async (t) => {
+  mock.module('@/ui/reporting/ReportingDashboard', { namedExports: { ReportingDashboard: () => null } });
+  mock.module('next/navigation', {
+    namedExports: { redirect: (location: string): never => { throw new Error(`REDIRECT:${location}`); } },
+  });
+  const { default: page } = await import('../src/app/(erp)/reportes/page');
+
+  await t.test('sin autorización redirige antes de consultar el servicio', async () => {
+    serviceRequests = 0;
+    for (const user of [null, { id: OTHER_ID, email: 'otro@example.com' }]) {
+      sessionUser = user;
+      await assert.rejects(() => page({}), /REDIRECT:\/login/);
+    }
+    assert.strictEqual(serviceRequests, 0);
+  });
+
+  await t.test('primera entidad precargada como DTO exacto usando el mismo año y corte', async () => {
+    sessionUser = { id: AUTHORIZED_ID, email: 'operador@example.com' };
+    serviceRequests = 0;
+    actionRepo.calls = [];
+    const result = await page({ searchParams: Promise.resolve({ year: '2026' }) });
+    const props = result.props as ReportingDashboardProps;
+    assertPlain(props);
+    assert.strictEqual(serviceRequests, 1);
+    assert.strictEqual(props.initialAnalysis?.status, 'ready');
+    if (props.initialAnalysis?.status !== 'ready') throw new Error('Falta el análisis inicial');
+    assert.strictEqual(props.initialAnalysis.entityKey, 'CF');
+    assert.strictEqual(props.initialAnalysis.year, props.years?.selectedYear);
+    assert.strictEqual(props.initialAnalysis.data?.entity.billedArs, '42.5');
+    assert.strictEqual(props.initialAnalysis.data?.history[0].rtoCode, 'RTO7');
+    assert.strictEqual(actionRepo.calls.filter(call => call.startsWith('first:')).length, 1);
+    assert.ok(actionRepo.calls.includes(`billing:2026:${AS_OF}`));
+    assert.ok(actionRepo.calls.includes(`products:2026:${AS_OF}`));
+    assert.strictEqual(actionRepo.calls.filter(call => call === 'sales:2026:CONSUMER_FINAL:null').length, 1);
+  });
+
+  await t.test('fallo individual no elimina otros bloques; sin entidades no consulta ventas', async () => {
+    const failingSales = mock.method(actionRepo, 'getEntitySales', async () => { throw new Error('detalle interno'); });
+    try {
+      const props = (await page({})).props as ReportingDashboardProps;
+      assert.ok(props.billing && props.products && props.customers);
+      assert.strictEqual(props.initialAnalysis?.status, 'error');
+      assert.doesNotMatch(JSON.stringify(props.initialAnalysis), /detalle interno/);
+    } finally {
+      failingSales.mock.restore();
+    }
+    const original = actionRepo.entities.get(2026)!;
+    actionRepo.entities.set(2026, []);
+    actionRepo.calls = [];
+    try {
+      const props = (await page({})).props as ReportingDashboardProps;
+      assert.strictEqual(props.initialAnalysis, null);
+      assert.ok(!actionRepo.calls.some(call => call.startsWith('sales:')));
+    } finally {
+      actionRepo.entities.set(2026, original);
+    }
   });
 });

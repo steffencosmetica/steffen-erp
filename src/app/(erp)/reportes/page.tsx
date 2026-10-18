@@ -7,8 +7,10 @@ import {
   serializeReportingBilling,
   serializeReportingProducts,
   serializeReportingCustomers,
+  serializeReportingEntityAnalysis,
 } from '@/actions/reporting.dto';
 import { ReportingDashboard } from '@/ui/reporting/ReportingDashboard';
+import type { ReportingAnalysisState } from '@/ui/reporting/CustomerAnalysis';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +41,7 @@ export default async function ReportesPage(props: { searchParams?: Promise<{ yea
   const years = await service.resolveYears(parseYearParam(searchParams.year)).catch(() => null);
 
   if (!years) {
-    return <ReportingDashboard years={null} billing={null} products={null} customers={null} />;
+    return <ReportingDashboard years={null} billing={null} products={null} customers={null} initialAnalysis={null} />;
   }
 
   const [billing, products, customers] = await Promise.all([
@@ -48,12 +50,30 @@ export default async function ReportesPage(props: { searchParams?: Promise<{ yea
     service.getCustomers(years).then(serializeReportingCustomers).catch(() => null),
   ]);
 
+  // Precargar la primera entidad sin una segunda ida al servidor desde un
+  // useEffect cliente. Reutiliza el año y la fecha comercial ya resueltos.
+  const firstEntity = customers?.selectableEntities[0];
+  let initialAnalysis: ReportingAnalysisState | null = null;
+  if (firstEntity) {
+    const entityKey = firstEntity.entityKey;
+    try {
+      const analysis = await service.getEntityAnalysis(years, entityKey);
+      initialAnalysis = {
+        status: 'ready', year: years.selectedYear, entityKey,
+        data: analysis === null ? null : serializeReportingEntityAnalysis(analysis),
+      };
+    } catch {
+      initialAnalysis = { status: 'error', year: years.selectedYear, entityKey, message: 'No se pudo cargar el análisis de esta entidad.' };
+    }
+  }
+
   return (
     <ReportingDashboard
       years={serializeReportingYears(years)}
       billing={billing}
       products={products}
       customers={customers}
+      initialAnalysis={initialAnalysis}
     />
   );
 }

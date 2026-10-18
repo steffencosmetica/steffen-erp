@@ -3,7 +3,7 @@
 Estado funcional: APROBADO
 Estructura, UX y responsive: APROBADO (§17)
 Detalles visuales finos (colores, px, alturas, gaps): RESUELTOS en R5 reutilizando el sistema visual existente (§18)
-Implementación: backend COMPLETADO (R4, migración 36 aplicada solo en DEV); UI COMPLETADA (R5.1–R5.6, smoke manual aprobado). Siguiente fase: R6 — integración y pruebas finales (NO iniciada)
+Implementación: backend COMPLETADO (R4, migración 36 aplicada solo en DEV); UI COMPLETADA (R5.1–R5.6, smoke manual aprobado); integración y pruebas finales COMPLETADAS (R6, §15.4). Siguiente fase: R7 — merge / producción (NO iniciada)
 
 Rama de trabajo:
 feat/reportes-analytics
@@ -658,7 +658,7 @@ Funciones SQL: `get_reporting_first_year`, `get_reporting_billing_months`, `get_
 |---|---|
 | `tests/reporting.test.ts` | dominio puro |
 | `tests/reporting-db.test.ts` | 5 RPC + Repository contra DEV (años artificiales, `p_as_of_date` explícito, limpieza verificada, sin RTO `RTM_PENDING`); permisos anon / authenticated / service_role |
-| `tests/reporting-service.test.ts` | Service, DTOs y autorización de la Server Action (sin DB) |
+| `tests/reporting-service.test.ts` | Service, DTOs, autorización de la Server Action y carga inicial del Server Component con aislamiento de errores (sin DB) |
 
 Motor gráfico: **Recharts**, instalado y utilizado por la UI de Reportes.
 
@@ -686,11 +686,26 @@ Motor gráfico: **Recharts**, instalado y utilizado por la UI de Reportes.
 | R5.4 — Clientes | COMPLETADO |
 | R5.5 — Responsive/estados/touch | COMPLETADO |
 | R5.6 — Validación UI | COMPLETADO |
-| **R6 — integración y pruebas finales** | **SIGUIENTE; NO iniciada** |
+| **R6 — integración y pruebas finales** | **COMPLETADO** |
+| **R7 — merge / producción** | **SIGUIENTE; NO iniciada** |
 
 Cierre R5.6: tests específicos de Reportes (98), suite completa contra DEV (675), `npx tsc --noEmit` y `npm run build` aprobados. Smoke manual de `/reportes` aprobado por el usuario en 375, 768, 1280 y 1440 px, sin problemas bloqueantes de responsive, overflow, gráficos, colores SVG, tooltips, controles, combobox, cambios de entidad/año e historial.
 
 Pendiente fuera de R5: aplicar la migración 36 en producción (requiere autorización explícita).
+
+### 15.4 Validación integral R6
+
+- Diff de la feature auditado contra `main`: sin cambios de código en módulos operativos, Dashboard, `ReportDomainService`, `ReportRepository`, `v_current_reports` ni autenticación global. Cambios compartidos limitados a composición de Reportes, tipos generados de sus RPC y dependencia Recharts, además de la documentación del módulo.
+- Carga inicial de Facturación, Productos y Clientes en paralelo desde el Server Component. El primer análisis individual también llega precargado como DTO serializable, reutilizando año y fecha comercial; la Server Action queda para selecciones de entidad. Sin fetch inicial de datos por `useEffect`, sin N+1 y sin cambios en fórmulas ni RPC.
+- `npm test`: **679 tests, 679 passed, 0 failed, 0 skipped**, aproximadamente **19 minutos**, contra DEV exacto `vhvvomwysxmeumlzrhdk` (URL y project ref enlazado verificados antes de ejecutar).
+- Cleanup de esta ejecución confirmado por comparación de conteos de **48 tablas** y saldos financieros con la referencia previa. La comparación detectó residuos de teardowns heredados de Fabricación/Productos y dos versiones de precios sobre productos preexistentes creadas por el test de aumento global. Se limpiaron solo los IDs trazados a esta corrida y se restauraron las versiones de precios anteriores enlazadas, con respaldo y guardas; no se tocaron residuos previos. Conteos y saldos finales coinciden con la referencia.
+- `npx tsc --noEmit`: aprobado. `npm run lint`: exit 0, con deuda previa: `eslint.config.mjs` solo configura exclusiones y no analiza TS/TSX (comprobado explícitamente con un TSX). No se modificó ESLint global ni las suites operativas heredadas.
+- `npm run build`: aprobado. Dev server detenido antes del build y reiniciado después del dry-run porque estaba activo previamente. Advertencia previa no bloqueante: plugin de Next.js ausente en la configuración de ESLint.
+- `npx --no-install supabase db push --dry-run`: guarda explícita de DEV; resultado **Remote database is up to date**. Sin push real, relink ni acciones en producción; `cli-latest` restaurado tras la ejecución.
+- Migración 36: cinco funciones SQL `STABLE`, `SECURITY INVOKER`, de solo lectura, con permisos exclusivos de `service_role`, y dos índices. Aplicada en DEV; **NO aplicada todavía en producción** según el estado del repositorio. No se consultó producción.
+- Seguridad: página y action requieren operador autorizado; permisos anon/authenticated rechazados en tests DB. Bundle de navegador revisado (43 archivos JS): sin literal de la clave `service_role`. Sin nuevos `any`, TODO/FIXME, logs de credenciales ni temporales dentro del repositorio.
+
+R6 **COMPLETADO**. R7 es la siguiente fase, **NO iniciada**: la feature sigue en `feat/reportes-analytics`, **NO mergeada a main** y **NO desplegada a producción**. Deudas previas pendientes: cobertura TS/TSX de lint, aislamiento/cleanup de las suites operativas indicadas y referencias de DESIGN/COMPONENTS que aún describen Recharts como no instalado.
 
 ---
 

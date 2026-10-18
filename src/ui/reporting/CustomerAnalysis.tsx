@@ -17,7 +17,7 @@ import { formatReportingArs, formatReportingCount, formatReportingDate, formatRe
  * coincide con la selección vigente; las respuestas viejas se descartan.
  */
 
-type AnalysisState =
+export type ReportingAnalysisState =
   | { status: 'ready'; year: number; entityKey: string; data: ReportingEntityAnalysisDTO | null }
   | { status: 'error'; year: number; entityKey: string; message: string };
 
@@ -26,17 +26,20 @@ export const CustomerAnalysis: React.FC<{
   year: number | undefined;
   loading: boolean;
   error: string | null;
+  initialAnalysis: ReportingAnalysisState | null;
   className?: string;
-}> = ({ customers, year, loading, error, className }) => {
+}> = ({ customers, year, loading, error, initialAnalysis, className }) => {
   const options = customers?.selectableEntities ?? [];
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
-  const [state, setState] = useState<AnalysisState | null>(null);
+  const [state, setState] = useState<ReportingAnalysisState | null>(initialAnalysis);
 
   // Entidad efectiva: la elegida si sigue disponible en el año; si no, la primera.
   const entityKey = options.some((o) => o.entityKey === selectedKey) ? selectedKey : (options[0]?.entityKey ?? null);
 
   useEffect(() => {
-    if (year === undefined || entityKey === null) return;
+    // La primera entidad ya llega del Server Component. Solo consultar aquí
+    // después de una selección explícita; sin fetch inicial al montar.
+    if (year === undefined || entityKey === null || selectedKey === null) return;
     let cancelled = false;
     getReportingEntityAnalysisAction(year, entityKey)
       .then((res) => {
@@ -53,7 +56,7 @@ export const CustomerAnalysis: React.FC<{
     return () => {
       cancelled = true;
     };
-  }, [year, entityKey]);
+  }, [year, entityKey, selectedKey]);
 
   const current = state && state.year === year && state.entityKey === entityKey ? state : null;
   const analysisLoading = entityKey !== null && current === null;
