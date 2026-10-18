@@ -12,6 +12,8 @@ import type {
 import { ReportingPanel, ReportingPendingNotice } from './ReportingPanel';
 import { ReportingYearSelect } from './ReportingYearSelect';
 import { formatReportingArs, formatReportingCount, formatReportingPct } from './format';
+import { BillingMonthlyChart, isMonthlyEmpty } from './charts/BillingMonthlyChart';
+import { BillingYearComparisonChart, isYearComparisonEmpty } from './charts/BillingYearComparisonChart';
 
 /**
  * Raíz cliente de Reportes (DESIGN.md §35). Recibe los DTOs serializados del
@@ -78,19 +80,40 @@ export const ReportingDashboard: React.FC<ReportingDashboardProps> = ({ years, b
         <SectionHeader title="FACTURACIÓN" variant="strong" className="!mb-0" />
 
         <ReportingPanel title={year ? `RESUMEN ANUAL · ${year}` : 'RESUMEN ANUAL'} loading={pending} error={billing ? null : LOAD_ERROR}>
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
             {kpis.map((kpi) => (
-              <KpiCard key={kpi.label} label={kpi.label} value={<span className="text-[20px] whitespace-nowrap">{kpi.value}</span>} className="min-h-[90px]" />
+              <KpiCard
+                key={kpi.label}
+                label={kpi.label}
+                value={<span className="text-[18px] whitespace-nowrap tabular-nums">{kpi.value}</span>}
+                className="min-h-[84px]"
+              />
             ))}
           </div>
         </ReportingPanel>
 
         <div className={ROW}>
-          <ReportingPanel title="EVOLUCIÓN MENSUAL" className={WIDE} loading={pending} error={billing ? null : LOAD_ERROR}>
-            <ReportingPendingNotice phase="R5.2" />
+          <ReportingPanel
+            title="EVOLUCIÓN MENSUAL"
+            className={WIDE}
+            loading={pending}
+            error={billing ? null : LOAD_ERROR}
+            empty={billing && isMonthlyEmpty(billing.monthly) ? `Sin facturación, ganancia ni gastos operativos en ${year}.` : null}
+          >
+            {billing && year !== undefined && <BillingMonthlyChart monthly={billing.monthly} year={year} />}
           </ReportingPanel>
-          <ReportingPanel title="FACTURACIÓN Y GANANCIA POR AÑO" className={NARROW} loading={pending} error={billing ? null : LOAD_ERROR}>
-            <ReportingPendingNotice phase="R5.2" />
+          <ReportingPanel
+            title="FACTURACIÓN Y GANANCIA POR AÑO"
+            className={NARROW}
+            loading={pending}
+            error={billing ? null : LOAD_ERROR}
+            empty={
+              billing && year !== undefined && isYearComparisonEmpty(billing.byYear)
+                ? `Sin facturación ni ganancia entre ${year - 2} y ${year}.`
+                : null
+            }
+          >
+            {billing && <BillingYearComparisonChart byYear={billing.byYear} />}
           </ReportingPanel>
         </div>
       </section>

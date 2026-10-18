@@ -33,6 +33,21 @@ export function formatReportingArs(value: string | null): string {
   return value === null ? EMPTY_VALUE : formatArs(value);
 }
 
+/**
+ * Etiqueta COMPACTA de eje para ARS ("$ 500 mil", "$ 2,5 M"). Solo para ticks
+ * de gráficos (recibe el número de geometría); tooltips y KPIs muestran
+ * siempre el importe exacto con formatReportingArs. Sin notación científica.
+ */
+export function formatReportingArsTick(value: number): string {
+  if (!Number.isFinite(value)) return '';
+  const d = new Decimal(value);
+  const abs = d.abs();
+  const sign = d.isNegative() && !d.isZero() ? '-' : '';
+  if (abs.greaterThanOrEqualTo(1_000_000)) return `${sign}$ ${formatDecimal(abs.div(1_000_000).toString(), 1, true)} M`;
+  if (abs.greaterThanOrEqualTo(1_000)) return `${sign}$ ${formatDecimal(abs.div(1_000).toString(), 1, true)} mil`;
+  return `${sign}$ ${formatDecimal(abs.toString(), 0, true)}`;
+}
+
 /** Conteo entero con separador de miles. */
 export function formatReportingCount(value: number): string {
   return groupThousands(String(value));
