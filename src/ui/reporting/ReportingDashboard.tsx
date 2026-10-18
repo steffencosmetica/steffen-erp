@@ -9,13 +9,17 @@ import type {
   ReportingProductsDTO,
   ReportingCustomersDTO,
 } from '@/actions/reporting.dto';
-import { ReportingPanel, ReportingPendingNotice } from './ReportingPanel';
+import { ReportingPanel } from './ReportingPanel';
 import { ReportingYearSelect } from './ReportingYearSelect';
 import { formatReportingArs, formatReportingCount, formatReportingPct } from './format';
 import { BillingMonthlyChart, isMonthlyEmpty } from './charts/BillingMonthlyChart';
 import { BillingYearComparisonChart, isYearComparisonEmpty } from './charts/BillingYearComparisonChart';
 import { ProductRanking } from './ProductRanking';
 import { ProductSharePanel } from './ProductSharePanel';
+import { TopBuyersList } from './TopBuyersList';
+import { CustomerConcentration } from './CustomerConcentration';
+import { CustomerAnalysis } from './CustomerAnalysis';
+import { ConcentrationComparison } from './ConcentrationComparison';
 
 /**
  * Raíz cliente de Reportes (DESIGN.md §35). Recibe los DTOs serializados del
@@ -135,39 +139,24 @@ export const ReportingDashboard: React.FC<ReportingDashboardProps> = ({ years, b
         <SectionHeader title="CLIENTES" variant="strong" className="!mb-0" />
 
         <div className={ROW}>
-          <ReportingPanel
-            title="MAYORES COMPRADORES"
-            className={WIDE}
+          <TopBuyersList customers={customers} year={year} loading={pending} error={customers ? null : LOAD_ERROR} className={WIDE} />
+          <CustomerConcentration
+            concentration={customers?.concentration ?? null}
             loading={pending}
             error={customers ? null : LOAD_ERROR}
-            empty={customers && customers.topBuyers.length === 0 ? `No hay compras registradas en ${year}.` : null}
-          >
-            <ReportingPendingNotice phase="R5.4" />
-          </ReportingPanel>
-          <ReportingPanel
-            title="CONCENTRACIÓN"
             className={NARROW}
-            loading={pending}
-            error={customers ? null : LOAD_ERROR}
-            empty={customers && !customers.concentration.hasData ? 'Sin datos' : null}
-          >
-            <ReportingPendingNotice phase="R5.4" />
-          </ReportingPanel>
+          />
         </div>
 
         <div className={ROW}>
-          <ReportingPanel
-            title="ANÁLISIS INDIVIDUAL"
-            className={WIDE}
+          <CustomerAnalysis customers={customers} year={year} loading={pending} error={customers ? null : LOAD_ERROR} className={WIDE} />
+          <ConcentrationComparison
+            current={customers?.concentration ?? null}
+            previous={customers?.concentrationPrevious ?? null}
             loading={pending}
             error={customers ? null : LOAD_ERROR}
-            empty={customers && customers.selectableEntities.length === 0 ? `No hay clientes con compras en ${year}.` : null}
-          >
-            <ReportingPendingNotice phase="R5.5" />
-          </ReportingPanel>
-          <ReportingPanel title="EVOLUCIÓN DE LA CONCENTRACIÓN" className={NARROW} loading={pending} error={customers ? null : LOAD_ERROR}>
-            <ReportingPendingNotice phase="R5.4" />
-          </ReportingPanel>
+            className={NARROW}
+          />
         </div>
       </section>
     </div>

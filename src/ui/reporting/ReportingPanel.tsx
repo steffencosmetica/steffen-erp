@@ -37,8 +37,3 @@ export const ReportingPanel: React.FC<{
     </div>
   </Panel>
 );
-
-/** Marcador TÉCNICO temporal de un bloque cuya visualización se implementa en una subfase posterior. */
-export const ReportingPendingNotice: React.FC<{ phase: string }> = ({ phase }) => (
-  <p className="text-xs text-steffen-muted">Visualización pendiente de implementación ({phase}).</p>
-);

@@ -27,6 +27,19 @@ export const seriesColors = {
 export const shareSliceColors = ['var(--steffen-gold)', 'var(--steffen-blue-hover)', 'var(--steffen-green)', 'var(--steffen-blue)'] as const;
 export const shareOthersColor = 'var(--steffen-text-muted)';
 
+/** Grupos de concentración: 1–5 y 6–10 diferenciados; Resto el más neutro. */
+export const concentrationColors = {
+  POS_1_5: 'var(--steffen-gold)',
+  POS_6_10: 'var(--steffen-blue-hover)',
+  REST: 'var(--steffen-text-muted)',
+} as const;
+
+/** Comparación interanual de concentración: año seleccionado vs año anterior. */
+export const yearComparisonColors = {
+  selected: 'var(--steffen-gold)',
+  previous: 'var(--steffen-silver)',
+} as const;
+
 /** Paleta disponible (tokens existentes); el orden no implica asignación. */
 export const chartPalette = {
   gold: 'var(--steffen-gold)',
