@@ -1,95 +1,59 @@
 import React from 'react';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getAuthenticatedUser, isUserAuthorized } from '@/auth/guard';
-import { getReportService } from '@/services/composition';
-import { formatArs } from '@/lib/format';
-import { ErpIcon } from '@/ui/components/ErpIcon';
-import { KpiCard, Panel, SecondaryHeader, SectionHeader, forwardLinkClass, ForwardArrow } from '@/ui/components/UIComponents';
+import { getReportingService } from '@/services/composition';
+import {
+  serializeReportingYears,
+  serializeReportingBilling,
+  serializeReportingProducts,
+  serializeReportingCustomers,
+} from '@/actions/reporting.dto';
+import { ReportingDashboard } from '@/ui/reporting/ReportingDashboard';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Reportes • Steffen ERP',
-  description: 'Resumen mensual: ventas, total facturado, ganancia y pedidos abiertos.',
+  description: 'Reportes analíticos: facturación, productos y clientes por año.',
 };
 
-const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-];
-
-const MoneyValue: React.FC<{ value: string }> = ({ value }) => (
-  <span className="text-[22px] whitespace-nowrap">{value}</span>
-);
+/** `?year=YYYY` → número; cualquier otro valor se ignora (el Service valida contra los años disponibles). */
+function parseYearParam(value: string | string[] | undefined): number | undefined {
+  return typeof value === 'string' && /^\d{4}$/.test(value) ? Number(value) : undefined;
+}
 
 /**
- * Reportes (BUSINESS_RULES §36, DESIGN.md §35): exactamente cuatro cards derivadas
- * en tiempo real de v_current_reports (mes corriente por business_date; Pedidos
- * abiertos sin filtro mensual). Accesos a los reportes detallados existentes.
+ * Reportes analíticos READ-ONLY (docs/REPORTES.md, DESIGN.md §35). El Server
+ * Component resuelve el año (una sola lectura de la fecha comercial), carga en
+ * paralelo Facturación, Productos y Clientes y entrega DTOs serializados al
+ * cliente. Un bloque que falla se muestra con error dentro de su panel.
  */
-export default async function ReportesPage() {
+export default async function ReportesPage(props: { searchParams?: Promise<{ year?: string | string[] }> }) {
   const user = await getAuthenticatedUser();
   if (!user || !isUserAuthorized(user)) {
     redirect('/login');
   }
 
-  const reportService = getReportService();
-  const [reports, period] = await Promise.all([
-    reportService.getCurrentReports().catch(() => null),
-    reportService.getCurrentBusinessPeriod().catch(() => null),
+  const searchParams = props.searchParams ? await props.searchParams : {};
+  const service = getReportingService();
+  const years = await service.resolveYears(parseYearParam(searchParams.year)).catch(() => null);
+
+  if (!years) {
+    return <ReportingDashboard years={null} billing={null} products={null} customers={null} />;
+  }
+
+  const [billing, products, customers] = await Promise.all([
+    service.getBilling(years).then(serializeReportingBilling).catch(() => null),
+    service.getProducts(years).then(serializeReportingProducts).catch(() => null),
+    service.getCustomers(years).then(serializeReportingCustomers).catch(() => null),
   ]);
 
   return (
-    <div className="space-y-5">
-      <SecondaryHeader title="Reportes" backHref="/" />
-
-      <Panel>
-        <SectionHeader
-          title={period ? `RESUMEN MENSUAL · ${MONTH_NAMES[period.month - 1].toUpperCase()} ${period.year}` : 'RESUMEN MENSUAL'}
-        />
-        {!reports && <p className="mb-3 text-xs text-steffen-red">No se pudieron cargar las métricas del mes.</p>}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-[720px]">
-          <KpiCard
-            className="min-h-[110px]"
-            label="Ventas del mes"
-            value={reports ? reports.salesCurrentMonth : '—'}
-            icon={<ErpIcon name="ingresos" tone="chrome" className="w-10 h-10" />}
-          />
-          <KpiCard
-            className="min-h-[110px]"
-            label="Total facturado"
-            value={reports ? <MoneyValue value={formatArs(reports.billedCurrentMonthArs)} /> : '—'}
-          />
-          <KpiCard
-            className="min-h-[110px]"
-            label="Ganancia"
-            variant="positive"
-            value={reports ? <MoneyValue value={formatArs(reports.gainCurrentMonthArs)} /> : '—'}
-          />
-          <KpiCard
-            className="min-h-[110px]"
-            label="Pedidos abiertos"
-            value={reports ? reports.openOrders : '—'}
-            icon={<ErpIcon name="orden" tone="chrome" className="w-10 h-10" />}
-          />
-        </div>
-      </Panel>
-
-      <div className="flex flex-wrap items-center gap-8 px-1">
-        <Link href="/ventas" className={forwardLinkClass}>
-          IR A VENTAS <ForwardArrow />
-        </Link>
-        <Link href="/clientes" className={forwardLinkClass}>
-          IR A CLIENTES <ForwardArrow />
-        </Link>
-        <Link href="/proveedores" className={forwardLinkClass}>
-          IR A PROVEEDORES <ForwardArrow />
-        </Link>
-        <Link href="/movimientos" className={forwardLinkClass}>
-          IR A MOVIMIENTOS <ForwardArrow />
-        </Link>
-      </div>
-    </div>
+    <ReportingDashboard
+      years={serializeReportingYears(years)}
+      billing={billing}
+      products={products}
+      customers={customers}
+    />
   );
 }
