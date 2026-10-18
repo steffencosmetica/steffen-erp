@@ -2,11 +2,13 @@
 
 Estado funcional: APROBADO
 Estructura, UX y responsive: APROBADO (§17)
-Detalles visuales finos (colores, px, alturas, gaps): PENDIENTE — se resuelven en la implementación reutilizando el sistema visual existente (§18)
-Implementación: backend COMPLETADO (R4, migración 36 aplicada solo en DEV); UI PENDIENTE — siguiente fase: R5 UI de Reportes
+Detalles visuales finos (colores, px, alturas, gaps): RESUELTOS en R5 reutilizando el sistema visual existente (§18)
+Implementación: backend COMPLETADO (R4, migración 36 aplicada solo en DEV); UI COMPLETADA (R5.1–R5.6, smoke manual aprobado). Siguiente fase: R6 — integración y pruebas finales (NO iniciada)
 
 Rama de trabajo:
 feat/reportes-analytics
+
+La nueva UI de Reportes está implementada en esta rama; todavía **NO mergeada a main** y **NO desplegada a producción**. La migración 36 está aplicada en DEV (`vhvvomwysxmeumlzrhdk`) y **NO aplicada todavía en producción**.
 
 ---
 
@@ -627,7 +629,7 @@ Referencia normativa: `DATA_MODEL.md` §65.
 
 ## 15. Arquitectura técnica
 
-Backend **implementado y validado en DEV** (R4). La migración 36 está aplicada **solo en DEV** (`vhvvomwysxmeumlzrhdk`); **todavía NO está aplicada en producción**. La UI nueva de `/reportes` **todavía NO está implementada** (R5).
+Backend **implementado y validado en DEV** (R4). La migración 36 está aplicada **solo en DEV** (`vhvvomwysxmeumlzrhdk`); **todavía NO está aplicada en producción**. La UI nueva de `/reportes` está **implementada y validada** (R5.1–R5.6) en `feat/reportes-analytics`; todavía **NO mergeada a main** y **NO desplegada a producción**.
 
 ### 15.1 Capas
 
@@ -658,7 +660,7 @@ Funciones SQL: `get_reporting_first_year`, `get_reporting_billing_months`, `get_
 | `tests/reporting-db.test.ts` | 5 RPC + Repository contra DEV (años artificiales, `p_as_of_date` explícito, limpieza verificada, sin RTO `RTM_PENDING`); permisos anon / authenticated / service_role |
 | `tests/reporting-service.test.ts` | Service, DTOs y autorización de la Server Action (sin DB) |
 
-Motor gráfico: **Recharts** (todavía no instalado; se instala en R5).
+Motor gráfico: **Recharts**, instalado y utilizado por la UI de Reportes.
 
 ### 15.3 Secuencia y estado (`IMPLEMENTATION_PLAN.md` §22.2)
 
@@ -677,7 +679,16 @@ Motor gráfico: **Recharts** (todavía no instalado; se instala en R5).
 | R4.4 — Repository + tests DB | COMPLETADO |
 | R4.5 — Service + DTO + composition / action | COMPLETADO |
 | R4.6 — Validación integral backend | COMPLETADO |
-| **R5 — UI de Reportes** | **SIGUIENTE**: Recharts + `ReportesView` según §16–§17 y `DESIGN.md` §35; smoke manual |
+| **R5 — UI de Reportes** | **COMPLETADO** |
+| R5.1 — Fundación UI | COMPLETADO |
+| R5.2 — Facturación | COMPLETADO |
+| R5.3 — Productos | COMPLETADO |
+| R5.4 — Clientes | COMPLETADO |
+| R5.5 — Responsive/estados/touch | COMPLETADO |
+| R5.6 — Validación UI | COMPLETADO |
+| **R6 — integración y pruebas finales** | **SIGUIENTE; NO iniciada** |
+
+Cierre R5.6: tests específicos de Reportes (98), suite completa contra DEV (675), `npx tsc --noEmit` y `npm run build` aprobados. Smoke manual de `/reportes` aprobado por el usuario en 375, 768, 1280 y 1440 px, sin problemas bloqueantes de responsive, overflow, gráficos, colores SVG, tooltips, controles, combobox, cambios de entidad/año e historial.
 
 Pendiente fuera de R5: aplicar la migración 36 en producción (requiere autorización explícita).
 
@@ -764,9 +775,9 @@ Resumen consolidado de `DESIGN.md` §35 (aprobado en R3.1–R3.3). Ante discrepa
 
 ---
 
-## 18. Pendientes exclusivamente visuales
+## 18. Detalles visuales resueltos en R5
 
-Estructura, interacciones y responsive están aprobados (§17). Quedan para la implementación, reutilizando el sistema visual existente del ERP y sin efecto sobre reglas ni comportamiento:
+Estructura, interacciones y responsive están aprobados (§17). Los siguientes detalles se resolvieron en R5, reutilizando el sistema visual existente del ERP y sin efecto sobre reglas ni comportamiento:
 
 - colores de series y gráficos (dentro de la paleta vigente; sin colores nuevos);
 - tamaños en px, alturas exactas y gaps exactos;
@@ -778,7 +789,6 @@ Estructura, interacciones y responsive están aprobados (§17). Quedan para la i
 Comentarios de código que todavía citan `BUSINESS_RULES §36` para las cuatro métricas mensuales, que ahora están en §35.5:
 
 - `src/app/(erp)/page.tsx` (bloque `REPORTE MENSUAL`);
-- `src/app/(erp)/reportes/page.tsx` (será reemplazado);
 - `src/repositories/report.repository.ts`;
 - `src/services/report.service.ts`.
 

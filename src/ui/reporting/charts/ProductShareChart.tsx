@@ -63,7 +63,7 @@ export const ProductShareChart: React.FC<{ share: ReportingShareDTO; metric: Sha
       content={(props) => (
         <ReportingChartTooltip
           {...props}
-          formatLabel={() => metricLabel}
+          formatLabel={(label) => share.hasNegative ? String(label ?? metricLabel) : metricLabel}
           formatValue={(entry) => {
             const row = byKey.get(sliceKeyOf(entry.payload) ?? '');
             if (!row) return null;

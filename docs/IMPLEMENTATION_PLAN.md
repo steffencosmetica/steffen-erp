@@ -761,8 +761,17 @@ Subfases:
   - R4.5 Service + DTO + `getReportingService()` + Server Action de análisis individual: COMPLETADO;
   - R4.6 Validación integral backend (`npm test`, `tsc`, build): COMPLETADO.
 
-  La migración 36 está aplicada **solo en DEV**; todavía **no** está aplicada en producción.
-- **R5 — UI de Reportes.** SIGUIENTE. Instalar Recharts; implementar `/reportes` (Server Component) y `ReportesView` según `DESIGN.md` §35; smoke manual. La UI nueva todavía no está implementada.
+  La migración 36 está aplicada **solo en DEV** (`vhvvomwysxmeumlzrhdk`); todavía **NO** está aplicada en producción.
+- **R5 — UI de Reportes.** COMPLETADO:
+  - R5.1 Fundación UI: COMPLETADO;
+  - R5.2 Facturación: COMPLETADO;
+  - R5.3 Productos: COMPLETADO;
+  - R5.4 Clientes: COMPLETADO;
+  - R5.5 Responsive/estados/touch: COMPLETADO;
+  - R5.6 Validación UI: COMPLETADO. Tests de Reportes (98), suite completa contra DEV (675), TypeScript y build aprobados; smoke manual aprobado por el usuario en 375, 768, 1280 y 1440 px.
+
+  Nueva UI de `/reportes` implementada con Recharts en `feat/reportes-analytics`; todavía **NO mergeada a main** y **NO desplegada a producción**.
+- **R6 — integración y pruebas finales.** SIGUIENTE; NO iniciada.
 
 ---
 
