@@ -19,6 +19,14 @@ export const seriesColors = {
   expenses: 'var(--steffen-red)',
 } as const;
 
+/**
+ * Porciones de participación (Top 4 + Otros): 4 tokens bien diferenciados
+ * sobre fondo negro y "Otros" en el gris neutro del sistema. El rojo queda
+ * reservado (gastos / alertas) y no se usa para productos.
+ */
+export const shareSliceColors = ['var(--steffen-gold)', 'var(--steffen-blue-hover)', 'var(--steffen-green)', 'var(--steffen-blue)'] as const;
+export const shareOthersColor = 'var(--steffen-text-muted)';
+
 /** Paleta disponible (tokens existentes); el orden no implica asignación. */
 export const chartPalette = {
   gold: 'var(--steffen-gold)',

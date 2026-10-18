@@ -53,6 +53,11 @@ export function formatReportingCount(value: number): string {
   return groupThousands(String(value));
 }
 
+/** Unidades vendidas "1.234 u". */
+export function formatReportingUnits(value: number): string {
+  return `${formatReportingCount(value)} u`;
+}
+
 /** Porcentaje "43 %" / "43,2 %"; null → "—". */
 export function formatReportingPct(value: string | null): string {
   return value === null ? EMPTY_VALUE : `${formatDecimal(value, PCT_DECIMALS, true)} %`;

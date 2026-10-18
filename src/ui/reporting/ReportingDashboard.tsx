@@ -14,6 +14,8 @@ import { ReportingYearSelect } from './ReportingYearSelect';
 import { formatReportingArs, formatReportingCount, formatReportingPct } from './format';
 import { BillingMonthlyChart, isMonthlyEmpty } from './charts/BillingMonthlyChart';
 import { BillingYearComparisonChart, isYearComparisonEmpty } from './charts/BillingYearComparisonChart';
+import { ProductRanking } from './ProductRanking';
+import { ProductSharePanel } from './ProductSharePanel';
 
 /**
  * Raíz cliente de Reportes (DESIGN.md §35). Recibe los DTOs serializados del
@@ -123,24 +125,8 @@ export const ReportingDashboard: React.FC<ReportingDashboardProps> = ({ years, b
         <SectionHeader title="PRODUCTOS" variant="strong" className="!mb-0" />
 
         <div className={ROW}>
-          <ReportingPanel
-            title="RANKING DE PRODUCTOS"
-            className={WIDE}
-            loading={pending}
-            error={products ? null : LOAD_ERROR}
-            empty={products && products.rows.length === 0 ? `No hay productos vendidos en ${year}.` : null}
-          >
-            <ReportingPendingNotice phase="R5.3" />
-          </ReportingPanel>
-          <ReportingPanel
-            title="PARTICIPACIÓN POR PRODUCTO"
-            className={NARROW}
-            loading={pending}
-            error={products ? null : LOAD_ERROR}
-            empty={products && products.rows.length === 0 ? `No hay productos vendidos en ${year}.` : null}
-          >
-            <ReportingPendingNotice phase="R5.3" />
-          </ReportingPanel>
+          <ProductRanking products={products} year={year} loading={pending} error={products ? null : LOAD_ERROR} className={WIDE} />
+          <ProductSharePanel products={products} year={year} loading={pending} error={products ? null : LOAD_ERROR} className={NARROW} />
         </div>
       </section>
 
