@@ -62,23 +62,14 @@ export const CustomerAnalysis: React.FC<{
     <ReportingPanel
       title="ANÁLISIS INDIVIDUAL"
       className={className}
-      loading={loading}
-      error={error}
-      empty={customers && options.length === 0 ? `No hay clientes con compras en ${year}.` : null}
+      initialLoadingHeight={380}
+      loading={loading || analysisLoading}
+      error={error ?? (current?.status === 'error' ? 'No se pudo cargar el análisis de esta entidad.' : null)}
+      empty={customers && options.length === 0 ? `No hay clientes con compras en ${year}.` : current?.status === 'ready' && current.data === null ? `Sin compras de esta entidad en ${year}.` : null}
+      bodyControls={options.length > 0 ? <ReportingEntitySelect key={year} options={options} value={entityKey} onChange={setSelectedKey} disabled={loading} className="w-full md:max-w-sm" /> : undefined}
     >
       <div className="space-y-4">
-        <ReportingEntitySelect options={options} value={entityKey} onChange={setSelectedKey} className="w-full md:max-w-sm" />
-
-        {analysisLoading ? (
-          <div className="space-y-2" aria-busy="true" aria-label="Cargando análisis">
-            <div className="h-20 rounded-[5px] bg-steffen-gray/50 animate-pulse" />
-            <div className="h-40 rounded-[5px] bg-steffen-gray/50 animate-pulse" />
-          </div>
-        ) : current?.status === 'error' ? (
-          <p className="text-sm text-steffen-red">{current.message}</p>
-        ) : current?.status === 'ready' && current.data === null ? (
-          <p className="text-sm text-steffen-muted">Sin compras de esta entidad en {year}.</p>
-        ) : current?.status === 'ready' && current.data ? (
+        {current?.status === 'ready' && current.data ? (
           <AnalysisBody key={`${current.year}|${current.entityKey}`} analysis={current.data} />
         ) : null}
       </div>
@@ -98,9 +89,9 @@ const AnalysisBody: React.FC<{ analysis: ReportingEntityAnalysisDTO }> = ({ anal
   ];
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
         {kpis.map((kpi) => (
-          <KpiCard key={kpi.label} label={kpi.label} value={<span className="text-[16px] whitespace-nowrap tabular-nums">{kpi.value}</span>} className="min-h-[76px]" />
+          <KpiCard key={kpi.label} label={kpi.label} value={<span className="text-[16px] tabular-nums">{kpi.value}</span>} className="reporting-kpi min-h-[76px]" />
         ))}
       </div>
       <EntityMonthlyChart monthly={analysis.monthly} year={analysis.year} entityLabel={e.label} />
@@ -120,32 +111,30 @@ const SalesHistory: React.FC<{ history: readonly ReportingEntitySaleDTO[] }> = (
         aria-expanded={open}
         aria-controls={listId}
         onClick={() => setOpen((o) => !o)}
-        className="ui-btn-dark inline-flex min-h-[40px] items-center rounded-[5px] px-4 text-sm font-semibold"
+        className="ui-btn-dark inline-flex min-h-[44px] items-center rounded-[5px] px-4 text-sm font-semibold focus-visible:outline focus-visible:outline-1 focus-visible:outline-steffen-gold"
       >
         {open ? 'Ocultar historial' : `Ver historial (${history.length})`}
       </button>
-      {open && (
-        <div id={listId} className="mt-3">
+        <div id={listId} hidden={!open} className="mt-3">
           {history.length === 0 ? (
             <p className="text-sm text-steffen-muted">Sin ventas registradas para mostrar.</p>
           ) : (
             <ul className="divide-y divide-steffen-gray text-sm" aria-label="Historial de ventas">
-              <li aria-hidden className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-x-4 pb-1.5 text-xs font-semibold text-steffen-muted">
+              <li aria-hidden className="hidden xl:grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-x-4 pb-1.5 text-xs font-semibold text-steffen-muted">
                 <span>RTO</span>
                 <span className="text-right">Fecha</span>
-                <span className="w-32 text-right">Total</span>
+                <span className="text-right">Total</span>
               </li>
               {history.map((sale) => (
-                <li key={sale.remittanceId} className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-x-4 py-1.5">
-                  <span className="truncate text-steffen-surface">{sale.rtoCode}</span>
-                  <span className="text-right tabular-nums text-steffen-muted">{formatReportingDate(sale.businessDate)}</span>
-                  <span className="w-32 text-right tabular-nums whitespace-nowrap text-steffen-surface">{formatReportingArs(sale.totalOrderArs)}</span>
+                <li key={sale.remittanceId} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-x-4 gap-y-1 py-2">
+                  <span className="truncate text-steffen-surface" title={sale.rtoCode}>{sale.rtoCode}</span>
+                  <span className="col-start-1 row-start-2 xl:col-start-2 xl:row-start-1 xl:text-right tabular-nums text-steffen-muted">{formatReportingDate(sale.businessDate)}</span>
+                  <span className="col-start-2 row-start-1 row-span-2 xl:col-start-3 xl:row-span-1 min-w-0 text-right tabular-nums [overflow-wrap:anywhere] text-steffen-surface">{formatReportingArs(sale.totalOrderArs)}</span>
                 </li>
               ))}
             </ul>
           )}
         </div>
-      )}
     </div>
   );
 };

@@ -15,7 +15,7 @@ export const ReportingChartFrame: React.FC<{
   ariaLabel: string;
   children: ReactElement;
 }> = ({ height, minWidth, ariaLabel, children }) => (
-  <div className={minWidth ? 'w-full overflow-x-auto' : 'w-full'} role="img" aria-label={ariaLabel}>
+  <div className={minWidth ? 'relative min-w-0 w-full overflow-x-auto overscroll-x-contain focus-visible:outline focus-visible:outline-1 focus-visible:outline-steffen-gold' : 'relative min-w-0 w-full'} role="region" tabIndex={minWidth ? 0 : undefined} aria-label={ariaLabel}>
     <div style={minWidth ? { minWidth } : undefined}>
       <ResponsiveContainer width="100%" height={height}>
         {children}

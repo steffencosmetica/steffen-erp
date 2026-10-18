@@ -22,7 +22,7 @@ const LIMITS: readonly SegmentedOption<BuyersLimit>[] = [
   { value: '10', label: 'Top 10' },
 ];
 
-const COLUMNS = 'xl:grid xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)_6.5rem_5.5rem] xl:items-center xl:gap-x-4';
+const COLUMNS = 'xl:grid xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.8fr)] xl:items-center xl:gap-x-2';
 
 export const TopBuyersList: React.FC<{
   customers: ReportingCustomersDTO | null;
@@ -62,25 +62,25 @@ export const TopBuyersList: React.FC<{
                   <span className="truncate text-steffen-surface" title={row.label}>
                     {row.label}
                   </span>
-                  <span className="xl:hidden tabular-nums whitespace-nowrap text-steffen-surface">{formatReportingArs(row.billedArs)}</span>
+                  <span className="xl:hidden min-w-0 max-w-[60%] text-right tabular-nums [overflow-wrap:anywhere] text-steffen-surface">{formatReportingArs(row.billedArs)}</span>
                 </div>
-                <div className="mt-0.5 text-xs text-steffen-muted xl:hidden">
+                <div className="mt-0.5 text-xs [overflow-wrap:anywhere] text-steffen-muted xl:hidden">
                   {formatReportingArs(row.monthlyAverageArs)}/mes · {formatReportingDate(row.lastPurchaseDate)} · {formatReportingDays(row.frequencyDays)}
                 </div>
                 <span aria-hidden className="mt-1.5 block h-2 rounded-full bg-steffen-gray/50">
                   <span className="block h-full rounded-full" style={{ width: `${width}%`, backgroundColor: chartPalette.gold }} />
                 </span>
               </div>
-              <span role="cell" className="hidden xl:block text-right tabular-nums whitespace-nowrap text-steffen-surface">
+              <span role="cell" className="hidden xl:block min-w-0 text-right tabular-nums [overflow-wrap:anywhere] text-steffen-surface">
                 {formatReportingArs(row.billedArs)}
               </span>
-              <span role="cell" className="hidden xl:block text-right tabular-nums whitespace-nowrap text-steffen-surface">
+              <span role="cell" className="hidden xl:block min-w-0 text-right tabular-nums [overflow-wrap:anywhere] text-steffen-surface">
                 {formatReportingArs(row.monthlyAverageArs)}
               </span>
-              <span role="cell" className="hidden xl:block text-right tabular-nums whitespace-nowrap text-steffen-surface">
+              <span role="cell" className="hidden xl:block min-w-0 text-right tabular-nums [overflow-wrap:anywhere] text-steffen-surface">
                 {formatReportingDate(row.lastPurchaseDate)}
               </span>
-              <span role="cell" className="hidden xl:block text-right tabular-nums whitespace-nowrap text-steffen-surface">
+              <span role="cell" className="hidden xl:block min-w-0 text-right tabular-nums [overflow-wrap:anywhere] text-steffen-surface">
                 {formatReportingDays(row.frequencyDays)}
               </span>
             </div>

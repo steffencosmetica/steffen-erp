@@ -23,14 +23,14 @@ export const ReportingChartTooltip: React.FC<ReportingTooltipProps> = ({ active,
     .filter((row): row is { entry: TooltipPayloadEntry; i: number; text: string } => row.text !== null);
   if (rows.length === 0) return null;
   return (
-    <div className="ui-panel px-3 py-2 text-xs text-steffen-surface">
+    <div className="ui-panel !overflow-visible w-max max-w-[min(15rem,calc(100vw-4rem))] break-words px-3 py-2 text-xs text-steffen-surface">
       <div className="mb-1 font-semibold text-steffen-muted">{formatLabel ? formatLabel(label) : String(label ?? '')}</div>
       <ul className="space-y-0.5">
         {rows.map(({ entry, i, text }) => (
-          <li key={`${String(entry.dataKey ?? entry.name ?? i)}`} className="flex items-center gap-3 whitespace-nowrap">
-            <span aria-hidden className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
-            <span className="text-steffen-muted">{entry.name}</span>
-            <span className="ml-auto tabular-nums">{text}</span>
+          <li key={`${String(entry.dataKey ?? entry.name ?? i)}`} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span aria-hidden className="inline-block h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: entry.color }} />
+            <span className="min-w-0 [overflow-wrap:anywhere] text-steffen-muted">{entry.name}</span>
+            <span className="ml-auto min-w-0 [overflow-wrap:anywhere] tabular-nums">{text}</span>
           </li>
         ))}
       </ul>

@@ -34,9 +34,9 @@ export const ProductSharePanel: React.FC<{
       loading={loading}
       error={error}
       empty={products && products.rows.length === 0 ? `No hay productos vendidos en ${year}.` : null}
+      bodyControls={<ReportingSegmented mode="toggle" ariaLabel="Métrica de participación" options={METRICS} value={metric} onChange={setMetric} />}
     >
       <div className="space-y-4">
-        <ReportingSegmented mode="toggle" ariaLabel="Métrica de participación" options={METRICS} value={metric} onChange={setMetric} />
         {products && <ProductShareChart share={products.share[metric]} metric={metric} metricLabel={metricLabel} />}
       </div>
     </ReportingPanel>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import type { ReportingProductRowDTO, ReportingProductsDTO } from '@/actions/reporting.dto';
 import { ReportingPanel } from './ReportingPanel';
 import { ReportingSegmented, type SegmentedOption } from './ReportingSegmented';
@@ -61,6 +61,8 @@ export const ProductRanking: React.FC<{
 }> = ({ products, year, loading, error, className }) => {
   const [tab, setTab] = useState<RankingTab>('units');
   const [limit, setLimit] = useState<RankingLimit>('5');
+  const tabsId = useId();
+  const panelId = useId();
 
   const rows = (products?.rankings[tab] ?? []).slice(0, Number(limit));
   const values = rows.map((r) => exactValue(r, tab));
@@ -75,10 +77,10 @@ export const ProductRanking: React.FC<{
       error={error}
       empty={products && products.rows.length === 0 ? `No hay productos vendidos en ${year}.` : null}
       controls={<ReportingSegmented mode="toggle" ariaLabel="Cantidad de productos" options={LIMITS} value={limit} onChange={setLimit} />}
+      bodyControls={<ReportingSegmented id={tabsId} panelId={panelId} mode="tabs" ariaLabel="Criterio del ranking" options={TABS} value={tab} onChange={setTab} />}
+      tabPanel={{ id: panelId, labelledBy: `${tabsId}-${tab}` }}
     >
       <div className="space-y-4">
-        <ReportingSegmented mode="tabs" ariaLabel="Criterio del ranking" options={TABS} value={tab} onChange={setTab} />
-        <div role="tabpanel" aria-label={TABS.find((t) => t.value === tab)?.label}>
         <ol className="space-y-3">
           {rows.map((row, i) => {
             const value = values[i];
@@ -89,7 +91,7 @@ export const ProductRanking: React.FC<{
                 <span className="truncate text-sm text-steffen-surface" title={row.label}>
                   {row.label}
                 </span>
-                <span className="row-span-2 self-start text-sm text-steffen-surface tabular-nums whitespace-nowrap">{formatValue(value, tab)}</span>
+                <span className="row-span-2 max-w-[10rem] min-w-0 self-start text-right text-sm text-steffen-surface tabular-nums [overflow-wrap:anywhere]">{formatValue(value, tab)}</span>
                 <span aria-hidden className="relative block h-2 rounded-full bg-steffen-gray/50">
                   {hasNegative && <span className="absolute inset-y-[-2px] w-px bg-steffen-muted" style={{ left: `${geometry(0).left}%` }} />}
                   <span
@@ -101,7 +103,6 @@ export const ProductRanking: React.FC<{
             );
           })}
         </ol>
-        </div>
       </div>
     </ReportingPanel>
   );

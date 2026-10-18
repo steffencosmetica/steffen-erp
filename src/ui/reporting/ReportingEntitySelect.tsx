@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useId, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import type { ReportingEntityOptionDTO } from '@/actions/reporting.dto';
 
@@ -18,10 +18,12 @@ export const ReportingEntitySelect: React.FC<{
   options: readonly ReportingEntityOptionDTO[];
   value: string | null;
   onChange: (entityKey: string) => void;
+  disabled?: boolean;
   className?: string;
-}> = ({ options, value, onChange, className = '' }) => {
+}> = ({ options, value, onChange, disabled = false, className = '' }) => {
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
@@ -44,7 +46,6 @@ export const ReportingEntitySelect: React.FC<{
   const choose = (option: ReportingEntityOptionDTO | undefined) => {
     if (option) onChange(option.entityKey);
     close();
-    inputRef.current?.blur();
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -59,26 +60,33 @@ export const ReportingEntitySelect: React.FC<{
         choose(filtered[active]);
       }
     } else if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
       close();
     }
   };
 
-  const activeId = open && filtered[active] ? `${listId}-opt-${active}` : undefined;
+  const activeId = open && !disabled && filtered[active] ? `${listId}-opt-${active}` : undefined;
+  useEffect(() => {
+    if (open) listRef.current?.querySelector<HTMLElement>(`[data-active="true"]`)?.scrollIntoView({ block: 'nearest' });
+  }, [open, active, query]);
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative min-w-0 ${open ? 'z-20' : ''} ${className}`}>
       <input
+        disabled={disabled}
         ref={inputRef}
         type="text"
         role="combobox"
         aria-label="Cliente o canal a analizar"
-        aria-expanded={open}
-        aria-controls={listId}
+        aria-expanded={open && !disabled}
+        aria-controls={open && !disabled ? listId : undefined}
         aria-autocomplete="list"
         aria-activedescendant={activeId}
         value={open ? query : selectedLabel}
         placeholder={open ? selectedLabel || 'Buscar por nombre' : 'Buscar por nombre'}
         onFocus={openList}
+        onClick={() => { if (!open) openList(); }}
         onBlur={close}
         onChange={(e) => {
           setQuery(e.target.value);
@@ -86,11 +94,13 @@ export const ReportingEntitySelect: React.FC<{
           setOpen(true);
         }}
         onKeyDown={onKeyDown}
-        className="h-10 w-full pl-3 pr-9 text-sm border border-steffen-border rounded-[5px] focus:outline-none focus:border-steffen-gold"
+        title={selectedLabel}
+        autoComplete="off"
+        className="h-11 w-full min-w-0 pl-3 pr-9 text-base md:text-sm border border-steffen-border rounded-[5px] focus:outline-none focus:border-steffen-gold focus-visible:ring-1 focus-visible:ring-steffen-gold"
       />
       <ChevronDown aria-hidden className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-steffen-muted" />
-      {open && (
-        <ul id={listId} role="listbox" className="ui-panel absolute z-20 mt-1 max-h-64 w-full overflow-y-auto py-1">
+      {open && !disabled && (
+        <ul ref={listRef} id={listId} role="listbox" aria-label="Clientes y canales" className="ui-panel absolute z-20 mt-1 max-h-64 w-full overflow-x-hidden overflow-y-auto overscroll-contain py-1">
           {filtered.length === 0 ? (
             <li className="px-3 py-2 text-sm text-steffen-muted">Sin coincidencias.</li>
           ) : (
@@ -100,10 +110,12 @@ export const ReportingEntitySelect: React.FC<{
                 id={`${listId}-opt-${i}`}
                 role="option"
                 aria-selected={option.entityKey === value}
+                data-active={i === active}
+                title={option.label}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => choose(option)}
                 onMouseEnter={() => setActive(i)}
-                className={`min-h-[40px] cursor-pointer px-3 py-2 text-sm ${i === active ? 'bg-steffen-gray text-steffen-surface' : 'text-steffen-surface'} ${
+                className={`min-h-[44px] [overflow-wrap:anywhere] cursor-pointer px-3 py-2 text-sm ${i === active ? 'bg-steffen-gray text-steffen-surface' : 'text-steffen-surface'} ${
                   option.entityKey === value ? 'font-semibold' : ''
                 }`}
               >

@@ -20,6 +20,7 @@ import { TopBuyersList } from './TopBuyersList';
 import { CustomerConcentration } from './CustomerConcentration';
 import { CustomerAnalysis } from './CustomerAnalysis';
 import { ConcentrationComparison } from './ConcentrationComparison';
+import './reporting.css';
 
 /**
  * Raíz cliente de Reportes (DESIGN.md §35). Recibe los DTOs serializados del
@@ -61,7 +62,7 @@ export const ReportingDashboard: React.FC<ReportingDashboardProps> = ({ years, b
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="reporting-page min-w-0 space-y-6">
       {/* Encabezado: título + selector global de año (mobile: selector debajo, ancho completo). */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
@@ -91,8 +92,8 @@ export const ReportingDashboard: React.FC<ReportingDashboardProps> = ({ years, b
               <KpiCard
                 key={kpi.label}
                 label={kpi.label}
-                value={<span className="text-[18px] whitespace-nowrap tabular-nums">{kpi.value}</span>}
-                className="min-h-[84px]"
+                value={<span className="text-[18px] tabular-nums">{kpi.value}</span>}
+                className="reporting-kpi min-h-[84px]"
               />
             ))}
           </div>

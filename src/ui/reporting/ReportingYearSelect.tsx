@@ -22,7 +22,7 @@ export const ReportingYearSelect: React.FC<{
     }}
     disabled={disabled}
     aria-label="Año del reporte"
-    className={`h-10 px-3 text-sm border border-steffen-border rounded-[5px] cursor-pointer disabled:opacity-50 ${className}`}
+    className={`h-11 px-3 text-base md:text-sm border border-steffen-border rounded-[5px] cursor-pointer disabled:opacity-50 focus-visible:outline focus-visible:outline-1 focus-visible:outline-steffen-gold ${className}`}
   >
     {availableYears.map((year) => (
       <option key={year} value={year}>

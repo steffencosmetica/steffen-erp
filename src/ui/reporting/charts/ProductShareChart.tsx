@@ -126,13 +126,13 @@ export const ProductShareChart: React.FC<{ share: ReportingShareDTO; metric: Sha
 
       <ul className="space-y-1.5 text-sm" aria-label={`Detalle de participación (${metricLabel})`}>
         {rows.map((r) => (
-          <li key={r.key} className="grid grid-cols-[0.75rem_minmax(0,1fr)_auto_auto] items-center gap-x-2">
+          <li key={r.key} className="grid grid-cols-[0.75rem_minmax(0,1fr)_minmax(0,1fr)] items-start gap-x-2 gap-y-0.5">
             <span aria-hidden className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: r.color }} />
             <span className={`truncate ${r.key === OTHERS_KEY ? 'text-steffen-muted' : 'text-steffen-surface'}`} title={r.label}>
               {r.label}
             </span>
-            <span className="tabular-nums whitespace-nowrap text-steffen-surface">{formatShareValue(r.value, metric)}</span>
-            <span className="w-14 text-right tabular-nums whitespace-nowrap text-steffen-muted">
+            <span className="row-span-2 min-w-0 text-right tabular-nums [overflow-wrap:anywhere] text-steffen-surface">{formatShareValue(r.value, metric)}</span>
+            <span className="col-start-2 min-w-0 tabular-nums text-steffen-muted">
               {r.sharePct === null ? '' : formatReportingPct(r.sharePct)}
             </span>
           </li>

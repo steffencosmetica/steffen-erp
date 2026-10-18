@@ -42,7 +42,7 @@ export const ReportingLegend: React.FC<{
           type="button"
           aria-pressed={visible}
           onClick={() => onToggle(item.key)}
-          className={`ui-list-item inline-flex min-h-[32px] items-center gap-2 rounded-[5px] px-2 text-xs transition-opacity ${visible ? '' : 'opacity-50'}`}
+          className={`ui-list-item inline-flex min-h-[44px] items-center gap-2 rounded-[5px] px-2 text-xs transition-opacity focus-visible:outline focus-visible:outline-1 focus-visible:outline-steffen-gold ${visible ? '' : 'opacity-50'}`}
         >
           <span aria-hidden className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
           {item.label}

@@ -1,0 +1,17 @@
+/* Protecciones locales: conservar los tokens y componentes del ERP. */
+.reporting-page .reporting-kpi {
+  min-width: 0;
+  padding-inline: 0.5rem;
+}
+
+.reporting-page .reporting-kpi > div,
+.reporting-page .reporting-kpi > div > span {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.reporting-page .recharts-tooltip-wrapper {
+  z-index: 10;
+  max-width: 100%;
+}
