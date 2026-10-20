@@ -11,7 +11,8 @@ import type {
 } from '@/actions/reporting.dto';
 import { ReportingPanel } from './ReportingPanel';
 import { ReportingYearSelect } from './ReportingYearSelect';
-import { formatReportingArs, formatReportingCount, formatReportingPct } from './format';
+import { formatReportingCount, formatReportingPct } from './format';
+import { ReportingKpiMoney } from './ReportingKpiMoney';
 import { BillingMonthlyChart, isMonthlyEmpty } from './charts/BillingMonthlyChart';
 import { BillingYearComparisonChart, isYearComparisonEmpty } from './charts/BillingYearComparisonChart';
 import { ProductRanking } from './ProductRanking';
@@ -55,11 +56,11 @@ export const ReportingDashboard: React.FC<ReportingDashboardProps> = ({ years, b
   const summary = billing?.summary;
   const kpis = [
     { label: 'Ventas', value: summary ? formatReportingCount(summary.salesCount) : '—' },
-    { label: 'Facturación Total', value: summary ? formatReportingArs(summary.billedArs) : '—' },
-    { label: 'Transporte', value: summary ? formatReportingArs(summary.transportArs) : '—' },
-    { label: 'Ganancia', value: summary ? formatReportingArs(summary.gainArs) : '—' },
+    { label: 'Facturación Total', value: summary ? <ReportingKpiMoney value={summary.billedArs} label="Facturación Total" /> : '—' },
+    { label: 'Transporte', value: summary ? <ReportingKpiMoney value={summary.transportArs} label="Transporte" /> : '—' },
+    { label: 'Ganancia', value: summary ? <ReportingKpiMoney value={summary.gainArs} label="Ganancia" /> : '—' },
     { label: 'Margen %', value: summary ? formatReportingPct(summary.marginPct) : '—' },
-    { label: 'Gastos operativos', value: summary ? formatReportingArs(summary.expensesArs) : '—' },
+    { label: 'Gastos operativos', value: summary ? <ReportingKpiMoney value={summary.expensesArs} label="Gastos operativos" /> : '—' },
   ];
 
   return (
@@ -95,7 +96,7 @@ export const ReportingDashboard: React.FC<ReportingDashboardProps> = ({ years, b
                 variant={kpi.label === 'Ganancia' ? 'positive' : 'default'}
                 key={kpi.label}
                 label={kpi.label}
-                value={<span className="text-[18px] tabular-nums">{kpi.value}</span>}
+                value={<span className="reporting-summary-value tabular-nums">{kpi.value}</span>}
                 className="min-w-0 min-h-[84px]"
               />
             ))}

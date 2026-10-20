@@ -1,4 +1,43 @@
 /* Protecciones locales: conservar los tokens y componentes del ERP. */
+.reporting-page .reporting-summary-value {
+  font-size: clamp(24px, 2.5vw, 32px);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.reporting-kpi-money {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.reporting-kpi-money-trigger {
+  color: inherit;
+  font: inherit;
+  cursor: help;
+  border-radius: var(--steffen-radius-control);
+}
+
+.reporting-kpi-money-trigger:focus-visible {
+  outline: 1px solid var(--steffen-primary);
+  outline-offset: 3px;
+}
+
+.reporting-kpi-money-tooltip {
+  position: absolute;
+  z-index: 30;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 160px;
+  padding: 6px;
+  font-size: var(--text-xs);
+  font-weight: 400;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
 .reporting-page .reporting-kpi {
   min-width: 0;
   padding-inline: 0.5rem;

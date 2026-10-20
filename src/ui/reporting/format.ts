@@ -33,10 +33,25 @@ export function formatReportingArs(value: string | null): string {
   return value === null ? EMPTY_VALUE : formatArs(value);
 }
 
+/** Solo KPI monetarios: abreviación visual exacta con Decimal, no para cálculos. */
+export function formatReportingKpiArs(value: string | null): string {
+  if (value === null) return EMPTY_VALUE;
+  const d = new Decimal(value);
+  const abs = d.abs();
+  if (d.isZero()) return '$0';
+  const sign = d.isNegative() ? '-' : '';
+  // Elegir también por la magnitud redondeada evita 1000K en el límite de M.
+  if (abs.lessThan(1_000)) return formatArs(value);
+  const thousands = abs.div(1_000).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const millions = thousands.greaterThanOrEqualTo(1_000);
+  const scaled = abs.div(millions ? 1_000_000 : 1_000);
+  return `${sign}$${formatDecimal(scaled.toString(), 2, true)}${millions ? 'M' : 'K'}`;
+}
+
 /**
  * Etiqueta COMPACTA de eje para ARS ("$ 500 mil", "$ 2,5 M"). Solo para ticks
- * de gráficos (recibe el número de geometría); tooltips y KPIs muestran
- * siempre el importe exacto con formatReportingArs. Sin notación científica.
+ * de gráficos (recibe el número de geometría); tooltips muestran siempre el
+ * importe exacto con formatReportingArs. Sin notación científica.
  */
 export function formatReportingArsTick(value: number): string {
   if (!Number.isFinite(value)) return '';

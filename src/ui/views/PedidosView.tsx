@@ -135,17 +135,19 @@ export const PedidosView: React.FC<PedidosViewProps> = ({ orders, initialPlannin
                 onClick={() => setSelectedOrderId(isSelected ? null : o.id)}
                 aria-pressed={isSelected}
                 title={`Ver o editar pedido ${o.code}`}
-                className={`ui-degrade shrink-0 w-[120px] min-h-[102px] px-3 py-3 rounded-[10px] border-2 flex flex-col items-center justify-center text-center gap-1 text-steffen-surface transition-colors cursor-pointer ${
-                  isSelected ? 'border-steffen-gold' : 'border-steffen-gray hover:border-steffen-border'
-                }`}
+                className="ui-order-card shrink-0 text-steffen-surface transition-colors cursor-pointer"
               >
-                <span className="flex items-center gap-2">
-                  <ErpIcon name="pedido" tone="gold" className="w-8 h-8" />
-                  <span className="text-2xl font-bold">{o.code}</span>
+                <span className="flex min-w-0 items-center gap-2">
+                  <ErpIcon name="pedido" tone="gold" className="w-6 h-6" />
+                  <span className="min-w-0 truncate text-base font-semibold" title={o.customerName}>{o.customerName}</span>
                 </span>
-                <span className="text-base font-semibold truncate max-w-full">{o.customerName}</span>
-                <span className="text-base font-semibold">{o.formattedDate}</span>
-                <span className="text-sm font-semibold tabular-nums">{o.formattedTotalOrder}</span>
+                <span className="ui-order-card-details">
+                  <span className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-steffen-muted">
+                    <span>{o.code}</span>
+                    <span>{o.formattedDate}</span>
+                  </span>
+                  <span className="min-w-0 text-right text-base tabular-nums [overflow-wrap:anywhere]">{o.formattedTotalOrder}</span>
+                </span>
               </button>
             );
           })}

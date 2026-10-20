@@ -5,7 +5,7 @@ import { formatArs } from '@/lib/format';
  * Cuentas patrimoniales en cards (Figma Dashboard): CAJA STEFFEN, CAJA MERCADO LIBRE,
  * DEUDAS CLIENTES, DEUDAS PROVEEDORES y NETO (ancho mayor), con columna de acciones.
  * Solo presentación: los saldos llegan ya calculados (mismo formato y colores semánticos).
- * Importes en Display ExtraLight (Inter 200); NETO en Bold (DESIGN.md §5.1).
+ * Importes: cajas y Neto Bold; deudas Regular, compartidos con Administración.
  */
 interface AccountBalanceCardsProps {
   cajaSteffen: string;
@@ -27,16 +27,16 @@ interface AccountBalanceCardsProps {
   actionsFlow?: 'grid' | 'fluid';
 }
 
-const BalanceCard: React.FC<{ value: string; label: string; labelClassName: string; tone?: 'neutral' | 'positive' | 'negative'; strong?: boolean; className?: string }> = ({
+const BalanceCard: React.FC<{ value: string; label: string; labelClassName: string; tone?: 'neutral' | 'positive' | 'negative'; amountRole?: 'cash' | 'debt' | 'net'; className?: string }> = ({
   value,
   label,
   labelClassName,
   tone = 'neutral',
-  strong,
+  amountRole = 'debt',
   className = '',
 }) => (
   <div className={`ui-balance-card ui-balance-card--${tone} rounded-[5px] border px-5 py-3 flex flex-col justify-center ${className}`}>
-    <span className={`whitespace-nowrap ${strong ? 'text-[26px] font-bold tabular-nums tracking-[-0.01em]' : 'text-[24px] ui-display-extralight'}`}>
+    <span className={`whitespace-nowrap tabular-nums ui-balance-amount--${amountRole} ${amountRole === 'net' ? 'text-[26px] tracking-[-0.01em]' : 'text-[24px] tracking-[-0.02em]'}`}>
       {value}
     </span>
     <span className={`mt-1 text-xs ${labelClassName}`}>{label}</span>
@@ -59,9 +59,9 @@ export const AccountBalanceCards: React.FC<AccountBalanceCardsProps> = ({
       <p className="flex-1 py-6 text-center text-xs text-steffen-red">{error}</p>
     ) : (
       // Cards ajustadas al contenido: 2 columnas max-content (importe completo + padding), sin estirarse.
-      <div className="w-fit max-w-full grid grid-cols-1 sm:grid-cols-[repeat(2,max-content)] gap-3">
-        <BalanceCard value={formatArs(cajaSteffen)} label="CAJA STEFFEN" labelClassName="text-steffen-green" tone="positive" className="ui-balance-card--cash" />
-        <BalanceCard value={formatArs(cajaMercadoLibre)} label="CAJA MERCADO LIBRE" labelClassName="text-steffen-green" tone="positive" className="ui-balance-card--cash" />
+      <div className="w-fit min-w-0 max-w-full overflow-x-auto grid grid-cols-1 sm:grid-cols-[repeat(2,max-content)] gap-3">
+        <BalanceCard value={formatArs(cajaSteffen)} label="CAJA STEFFEN" labelClassName="text-steffen-green" tone="positive" amountRole="cash" className="ui-balance-card--cash" />
+        <BalanceCard value={formatArs(cajaMercadoLibre)} label="CAJA MERCADO LIBRE" labelClassName="text-steffen-green" tone="positive" amountRole="cash" className="ui-balance-card--cash" />
         <BalanceCard value={formatArs(deudasClientes)} label="DEUDAS CLIENTES" labelClassName="text-steffen-green" tone="positive" />
         <BalanceCard
           value={deudasProveedores && deudasProveedores !== '0' ? `-${formatArs(deudasProveedores)}` : '$ 0'}
@@ -73,7 +73,7 @@ export const AccountBalanceCards: React.FC<AccountBalanceCardsProps> = ({
           value={formatArs(neto)}
           label="NETO"
           labelClassName="text-steffen-surface font-semibold"
-          strong
+          amountRole="net"
           className="ui-balance-card--net col-span-full min-h-[86px]"
         />
       </div>

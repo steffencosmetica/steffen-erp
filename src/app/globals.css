@@ -780,7 +780,7 @@ pre {
   background-image: var(--steffen-gradient);
   border-color: var(--steffen-border-section);
 }
-.dashboard-accounts .ui-balance-card--cash > span:first-child {
+.ui-balance-amount--cash {
   font-weight: 700;
   letter-spacing: -0.02em;
 }
@@ -790,8 +790,11 @@ pre {
 .dashboard-accounts :is(.ui-balance-card--positive, .ui-balance-card--negative):not(.ui-balance-card--cash) {
   border-color: transparent;
 }
-.dashboard-accounts :is(.ui-balance-card--positive, .ui-balance-card--negative):not(.ui-balance-card--cash) > span:first-child {
+.ui-balance-amount--debt {
   font-weight: 400;
+}
+.ui-balance-amount--net {
+  font-weight: 700;
 }
 .dashboard-accounts .ui-balance-card--positive:not(.ui-balance-card--cash) > span:last-child {
   color: var(--steffen-success);
@@ -806,6 +809,42 @@ pre {
 }
 .dashboard-accounts .ui-balance-card--net > span:last-child {
   font-weight: 400;
+}
+
+/* Pedidos: dos filas compactas, manteniendo el scroll de la colección. */
+.ui-order-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(var(--spacing) * 2);
+  width: 282px;
+  max-width: calc(100vw - 48px);
+  min-height: 64px;
+  padding: calc(var(--spacing) * 3);
+  border: 1px solid var(--steffen-border-section);
+  border-radius: var(--steffen-radius-control);
+  background-color: var(--steffen-surface);
+  background-image: var(--steffen-gradient);
+  text-align: left;
+}
+.ui-order-card-details {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: baseline;
+  gap: calc(var(--spacing) * 3);
+}
+.ui-order-card:hover {
+  border-color: var(--steffen-border-control);
+}
+.ui-order-card[aria-pressed="true"] {
+  border-color: var(--steffen-primary);
+}
+:root:not([data-theme="light"]) .ui-order-card[aria-pressed="true"] {
+  background: var(--steffen-black);
+}
+.ui-order-card:focus-visible {
+  outline: 2px solid var(--steffen-primary);
+  outline-offset: -3px;
 }
 .dashboard-accounts > div > div:last-child {
   justify-content: space-between;

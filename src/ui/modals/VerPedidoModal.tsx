@@ -477,25 +477,30 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
               </div>
             </div>
 
-            {/* Tabla de Renglones Exacta a Figma PEDIDO.png */}
-            <div className="overflow-hidden">
-              <table className={`${tableStyles.table} text-left`}>
+            {/* Productos del pedido: scroll interno y precios completos en una línea. */}
+            <div
+              className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain focus-visible:outline focus-visible:outline-1 focus-visible:outline-steffen-gold"
+              role="region"
+              aria-label="Productos del pedido"
+              tabIndex={0}
+            >
+              <table className={`${tableStyles.table} min-w-[720px] text-left`}>
                 <thead>
-                  <tr className={tableStyles.headRowHighlight}>
-                    <th className="py-2 px-3 w-14 text-center">Acción</th>
-                    <th className="py-2 px-3 w-20 text-center">Cant.</th>
-                    <th className="py-2 px-3">Producto</th>
-                    <th className="py-2 px-3 text-right w-24">PU</th>
-                    <th className="py-2 px-3 text-right w-28">PT</th>
-                    <th className="py-2 px-3 text-center w-24">AG</th>
+                  <tr className={tableStyles.headRow}>
+                    <th scope="col" className="py-1 px-2 w-14 text-center"><span className="sr-only">Acción</span></th>
+                    <th scope="col" className="py-1 px-2 w-20 text-center">Cant.</th>
+                    <th scope="col" className="py-1 px-3 min-w-[200px] text-center">Producto</th>
+                    <th scope="col" className="py-1 px-3 min-w-[112px] text-right">PU</th>
+                    <th scope="col" className="py-1 px-3 min-w-[112px] text-right">PT</th>
+                    <th scope="col" className="py-1 px-2 w-24 text-center">AG</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-steffen-border">
+                <tbody className="divide-y divide-steffen-border-section">
                   {lines.map((l) => {
                     const linePt = l.unitPriceArs.times(l.requestedQuantity);
                     return (
                       <tr key={l.id} className={tableStyles.row}>
-                        <td className="py-2 px-2 text-center">
+                        <td className="py-1 px-2 text-center">
                           <button
                             type="button"
                             onClick={() => handleRemoveLine(l.id)}
@@ -516,11 +521,11 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                             className="w-16 p-1 border border-steffen-border rounded-[5px] text-center font-bold focus:outline-none focus:border-steffen-gold"
                           />
                         </td>
-                        <td className="py-2 px-3 font-semibold text-black">
+                        <td className="py-1.5 px-3 font-semibold text-steffen-surface [overflow-wrap:anywhere]">
                           {l.productCode} - {l.productName}
                         </td>
-                        <td className="py-2 px-3 text-right font-medium text-black">{formatArs(l.unitPriceArs)}</td>
-                        <td className="py-2 px-3 text-right font-bold text-black">{formatArs(linePt)}</td>
+                        <td className="py-1.5 px-3 whitespace-nowrap text-right tabular-nums font-medium text-steffen-surface">{formatArs(l.unitPriceArs)}</td>
+                        <td className="py-1.5 px-3 whitespace-nowrap text-right tabular-nums font-bold text-steffen-surface">{formatArs(linePt)}</td>
                         <td className="py-1 px-2 text-center">
                           <input
                             type="number"
