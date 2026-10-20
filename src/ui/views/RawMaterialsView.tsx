@@ -201,11 +201,11 @@ export const RawMaterialsView: React.FC<RawMaterialsViewProps> = ({
             </Button>
 
             {activeTab === 'PRO' ? (
-              <Button variant="secundario" onClick={() => setCreateProductOpen(true)}>
+              <Button variant="principal" onClick={() => setCreateProductOpen(true)}>
                 Nuevo producto
               </Button>
             ) : (
-              <Button variant="secundario" onClick={() => setCreateOpen(true)}>
+              <Button variant="principal" onClick={() => setCreateOpen(true)}>
                 Nueva materia prima/componente
               </Button>
             )}

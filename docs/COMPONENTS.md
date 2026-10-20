@@ -71,8 +71,8 @@ Misma acción, geometría y componente entre temas; solo cambian tokens. Base: d
 
 | Variante | Contrato |
 |---|---|
-| Primary | énfasis Primary, texto sobre acción con contraste |
-| PrimaryDark | acción neutra en ambos temas; surface-raised/gradiente prescrito, border-control, text-primary y hover del tema |
+| Primary | acción principal; Light puede usar Info/Info hover, sin convertir Success/Danger/neutrales en azules |
+| PrimaryDark | neutro: Dark con gradiente oscuro y border-control; Light negro absoluto con text-on-action. Icon/IconText neutros admiten superficie elevada |
 | Success | Success + text-on-action |
 | Danger | Danger + text-on-action |
 | Info | Info + text-on-action; hover `#05346E` |
@@ -103,9 +103,9 @@ Default, Hover, Selected (solo si representa estado persistente), Disabled (opac
 Botón de la barra lateral (variante Menu).
 
 - Estructura: ícono (≈21 px) arriba, label 11 px semibold debajo.
-- Default: ícono plateado, label `Text Muted`.
-- Hover / Selected (módulo activo): ícono y label `Primary`.
-- Logout: control al pie separado de los módulos; referencia canónica exclusiva: Dashboard nuevo suministrado por el usuario. Las demás maquetas de logout son antiguas. Mismo componente, geometría y comportamiento entre Dark/Light; solo tokens. No modificar `logoutAction` ni sesión.
+- Default: icono y label neutrales del tema.
+- Hover: hover-neutral sutil. Selected (módulo activo): icono y label Primary.
+- Logout: control al pie separado de los módulos, sin card ni gradiente; referencia canónica exclusiva: Dashboard nuevo suministrado por el usuario. Las demás maquetas de logout son antiguas. Mismo componente, geometría y comportamiento entre Dark/Light; solo tokens. No modificar `logoutAction` ni sesión.
 
 Conserva las rutas funcionales actuales (`DESIGN.md` §9). No se agregan ítems por aparecer en frames viejos.
 
@@ -334,6 +334,8 @@ Variantes semánticas de Card y KpiCard:
 - **Negative:** LIGHT con danger-soft y semántica Danger; DARK con Surface oscura y énfasis principalmente en texto/valor/borde Danger.
 
 Soft: tokens a calibrar visualmente, sin hexadecimales arbitrarios. Valor numérico dominante sobre etiqueta; conservar tamaños locales. Icono opcional por composición, no nueva identidad visual. No usar Card para reemplazar tablas de gestión ni crear variantes separadas por tema.
+
+Dashboard R3.1: las cards de Pedidos abiertos y Ventas del mes tienen acento/borde Primary en ambos temas según DASHBOARD-dark/light; es una excepción visual explícita a Neutral, sin modificar dimensiones. Importes según DESIGN.md §5.1: Bold en Total facturado, Ganancia, cajas y Neto; Regular en deudas. IconTile de acción usa Info/Info hover en Light y gradiente oscuro en Dark.
 
 ---
 

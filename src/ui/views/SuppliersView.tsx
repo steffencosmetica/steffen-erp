@@ -252,7 +252,7 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({
               >
                 Nueva compra
               </Button>
-              <IconButton label="Nueva cuenta" icon={<ErpIcon name="nueva-cuenta" tone="light" className="w-6 h-6" />} onClick={handleOpenCreate} />
+              <IconButton variant="principal" label="Nueva cuenta" icon={<ErpIcon name="nueva-cuenta" tone="light" className="w-6 h-6" />} onClick={handleOpenCreate} />
           </>
         }
       />

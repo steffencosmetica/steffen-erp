@@ -181,14 +181,14 @@ export const AdministracionView: React.FC<AdministracionViewProps> = ({
             <button
               type="button"
               onClick={() => setIsGastoOperativoOpen(true)}
-              className="ui-btn-dark h-[50px] px-5 rounded-[5px] text-lg uppercase flex items-center justify-center gap-3 transition-colors cursor-pointer"
+              className="ui-btn-primary h-[50px] px-5 rounded-[5px] text-lg uppercase flex items-center justify-center gap-3 transition-colors cursor-pointer"
             >
               <ErpIcon name="gasto" className="w-7 h-7" />
               GASTO OPERATIVO
             </button>
             <Link
               href="/precios"
-              className="ui-btn-dark h-[50px] px-5 rounded-[5px] text-lg uppercase flex items-center justify-center gap-3 transition-colors"
+              className="ui-btn-primary h-[50px] px-5 rounded-[5px] text-lg uppercase flex items-center justify-center gap-3 transition-colors"
             >
               <ErpIcon name="lista-precios" className="w-7 h-7" />
               LISTA DE PRECIOS

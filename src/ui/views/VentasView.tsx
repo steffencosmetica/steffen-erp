@@ -36,7 +36,7 @@ interface VentasViewProps {
 const periodHref = (year: number, month: number) => `/ventas?year=${year}&month=${month}`;
 
 const MoneyValue: React.FC<{ value: string }> = ({ value }) => (
-  <span className="text-[19px] whitespace-nowrap">{value}</span>
+  <span className="text-[19px] font-bold whitespace-nowrap">{value}</span>
 );
 
 /**
@@ -80,8 +80,8 @@ export const VentasView: React.FC<VentasViewProps> = ({ year, month, currentYear
                 aria-current={selected ? 'true' : undefined}
                 className={`h-[26px] inline-flex items-center justify-center rounded-[5px] border text-xs font-semibold transition-colors ${
                   selected
-                    ? 'bg-steffen-blue border-steffen-blue text-steffen-surface'
-                    : 'ui-btn-dark'
+                    ? 'ui-period-selected'
+                    : 'ui-btn-primary'
                 }`}
               >
                 {label}
@@ -92,15 +92,17 @@ export const VentasView: React.FC<VentasViewProps> = ({ year, month, currentYear
       </Panel>
 
       {/* Cards del período seleccionado */}
-      <Panel className="flex flex-wrap items-stretch gap-4">
+      <Panel className="sales-kpis flex flex-wrap items-stretch gap-4">
         <KpiCard
+          presentation="horizontal"
           className="min-w-[110px]"
           label="Ventas"
           value={sales ? sales.length : '—'}
           icon={<ErpIcon name="orden" tone="chrome" className="w-9 h-9" />}
         />
-        <KpiCard className="min-w-[180px]" label="Total facturado" value={sales ? <MoneyValue value={formatArs(billed)} /> : '—'} />
+        <KpiCard presentation="horizontal" className="min-w-[180px]" label="Total facturado" value={sales ? <MoneyValue value={formatArs(billed)} /> : '—'} />
         <KpiCard
+          presentation="horizontal"
           className="min-w-[180px]"
           label="Ganancia"
           variant="positive"

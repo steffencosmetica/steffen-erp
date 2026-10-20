@@ -34,7 +34,7 @@ export const DashboardCuentasCard: React.FC<DashboardCuentasCardProps> = ({
 
   return (
     <>
-      <Panel>
+      <Panel className="dashboard-accounts">
         <AccountBalanceCards
           cajaSteffen={cajaSteffen}
           cajaMercadoLibre={cajaMercadoLibre}
@@ -42,6 +42,7 @@ export const DashboardCuentasCard: React.FC<DashboardCuentasCardProps> = ({
           deudasProveedores={deudasProveedores}
           neto={neto}
           error={error}
+          actionsPosition="below"
           actions={
             <>
               {actions}

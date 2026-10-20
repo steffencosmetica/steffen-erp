@@ -213,7 +213,7 @@ export const DashboardActionButton: React.FC<DashboardActionButtonProps> = ({ ac
         onClick={() => open(action)}
         title={title}
         aria-label={label}
-        className={`ui-btn-dark w-[50px] h-[50px] inline-flex items-center justify-center rounded-[5px] transition-colors cursor-pointer ${className}`}
+        className={`ui-btn-icon w-[50px] h-[50px] inline-flex items-center justify-center rounded-[5px] transition-colors cursor-pointer ${className}`}
       >
         {ACTION_ICON[action]}
       </button>
@@ -224,10 +224,10 @@ export const DashboardActionButton: React.FC<DashboardActionButtonProps> = ({ ac
     'inline-flex items-center justify-center rounded-[5px] transition-colors cursor-pointer';
   const variant =
     appearance === 'success-large'
-      ? 'h-[50px] px-6 text-lg border border-steffen-green bg-steffen-green hover:bg-steffen-green-hover text-steffen-surface'
+      ? 'h-[50px] px-6 text-lg border border-steffen-green bg-steffen-green hover:bg-steffen-green-hover text-steffen-on-action'
       : appearance === 'secondary-large'
       ? 'ui-btn-dark h-[50px] px-6 text-lg'
-      : 'ui-btn-dark h-[30px] px-5 text-sm font-semibold uppercase';
+      : `${action === 'order' ? 'ui-btn-primary' : 'ui-btn-dark'} h-[30px] px-5 text-sm font-semibold uppercase`;
 
   return (
     <button type="button" onClick={() => open(action)} title={title} className={`${base} ${variant} ${className}`}>

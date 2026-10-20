@@ -45,12 +45,12 @@ const LOW_STOCK_LIMIT = 5;
 
 /** Importes de KPI: misma escala tipográfica compacta, sin desbordar la card. */
 const MoneyValue: React.FC<{ value: string }> = ({ value }) => (
-  <span className="text-[19px] whitespace-nowrap">{value}</span>
+  <span className="text-[19px] font-bold tracking-[-0.02em] whitespace-nowrap">{value}</span>
 );
 
-/** Total facturado: Display ExtraLight (Inter 200), como las cards de caja (DESIGN.md §5.1). */
+/** Dashboard canónico: importe Bold, manteniendo el tamaño local vigente. */
 const LightMoneyValue: React.FC<{ value: string }> = ({ value }) => (
-  <span className="text-[22px] ui-display-extralight whitespace-nowrap">{value}</span>
+  <span className="text-[22px] font-bold tracking-[-0.02em] whitespace-nowrap">{value}</span>
 );
 
 /* ==========================================================================
@@ -72,21 +72,21 @@ function MonthlyKpisGrid({
 }) {
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-[1fr_1fr_1.35fr] gap-x-4 gap-y-3 items-stretch">
+      <div className="dashboard-monthly-kpis grid grid-cols-2 md:grid-cols-[1fr_1fr_1.35fr] gap-x-4 gap-y-3 items-stretch">
         <KpiCard
-          className="min-h-[109px]"
+          className="ui-kpi--accent min-h-[109px]"
           label="Pedidos abiertos"
           value={openOrders}
           icon={<ErpIcon name="orden" tone="chrome" className="w-10 h-10" />}
         />
         <KpiCard
-          className="min-h-[109px]"
+          className="ui-kpi--accent min-h-[109px]"
           label="Ventas del mes"
           value={sales}
           icon={<ErpIcon name="ingresos" tone="chrome" className="w-10 h-10" />}
         />
         <div className="col-span-2 md:col-span-1 md:row-span-2 flex flex-col gap-3">
-          <KpiCard className="flex-1" label="Total facturado" value={billed} labelClassName="text-steffen-gold" />
+          <KpiCard className="flex-1" label="Total facturado" value={billed} />
           <KpiCard className="flex-1" label="Ganancia" value={gain} variant="positive" />
         </div>
         <DashboardActionButton action="order" appearance="secondary" className="w-full" />
@@ -169,7 +169,7 @@ async function LowStock({
       }));
   } catch {
     return (
-      <Panel variant="alert">
+      <Panel>
         <p className="py-6 text-center text-xs text-steffen-red">No se pudo cargar el bajo stock.</p>
       </Panel>
     );
@@ -330,10 +330,10 @@ export default async function ErpHomePage() {
 
         {/* BAJO STOCK (Figma): MPR/COM + simular compra · Producto Final + simular fabricación */}
         <div>
-          <SectionHeader title="Bajo stock" variant="alert" />
+          <SectionHeader title="Bajo stock" />
           <Suspense
             fallback={
-              <Panel variant="alert">
+              <Panel>
                 <BlockLoading label="bajo stock" />
               </Panel>
             }

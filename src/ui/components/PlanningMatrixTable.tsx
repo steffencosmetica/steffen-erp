@@ -52,7 +52,7 @@ export const PlanningMatrixTable: React.FC<PlanningMatrixTableProps> = ({
                       disabled={idx === 0 || isPending}
                       onClick={() => onMoveOrder(idx, 'LEFT')}
                       className={`p-0.5 rounded-[5px] transition-colors ${
-                        idx === 0 || isPending ? 'opacity-30 cursor-not-allowed' : 'hover:bg-black/40 cursor-pointer'
+                        idx === 0 || isPending ? 'opacity-30 cursor-not-allowed' : 'hover:bg-steffen-hover-neutral cursor-pointer'
                       }`}
                       title="Mover pedido hacia la izquierda (mayor prioridad)"
                     >
@@ -68,7 +68,7 @@ export const PlanningMatrixTable: React.FC<PlanningMatrixTableProps> = ({
                       className={`p-0.5 rounded-[5px] transition-colors ${
                         idx === planning.openOrders.length - 1 || isPending
                           ? 'opacity-30 cursor-not-allowed'
-                          : 'hover:bg-black/40 cursor-pointer'
+                          : 'hover:bg-steffen-hover-neutral cursor-pointer'
                       }`}
                       title="Mover pedido hacia la derecha (menor prioridad)"
                     >
@@ -90,7 +90,7 @@ export const PlanningMatrixTable: React.FC<PlanningMatrixTableProps> = ({
         <tbody>
           {planning.products.map((p, pIdx) => (
             <tr key={p.productId} className={tableStyles.row}>
-              <td className="py-1.5 px-3 sticky left-0 bg-black z-10">
+              <td className="py-1.5 px-3 sticky left-0 bg-steffen-panel z-10">
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <span className="font-medium block truncate" title={p.productName}>
@@ -136,7 +136,7 @@ export const PlanningMatrixTable: React.FC<PlanningMatrixTableProps> = ({
                     key={o.orderId}
                     className={`py-1.5 px-3 text-center tabular-nums ${
                       cell.hasShortage
-                        ? 'text-steffen-surface font-semibold bg-steffen-alert'
+                        ? 'text-steffen-text-primary font-semibold bg-steffen-danger-soft'
                         : cell.requested > 0
                         ? ''
                         : 'text-steffen-surface/40'

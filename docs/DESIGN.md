@@ -736,7 +736,9 @@ Familia oficial: `Inter`, cargada en el layout raíz mediante `next/font/google`
 
 Numerales de KPI: 24 px Bold (display).
 
-| Display ExtraLight | tamaño local vigente (p. ej. 22 px en Total facturado del Dashboard) | ExtraLight (200), tracking -0.02em | importes de las cards de Cuentas/Caja (Caja Steffen, Caja Mercado Libre, Deudas) y Total facturado; NETO usa Bold. Clase `.ui-display-extralight`. Los importes nunca se truncan: las cards crecen con el contenido |
+| Display monetario Dashboard (R3.1) | tamaños locales vigentes: 22 px Total facturado, 19 px Ganancia, 24 px Cuentas, 26 px Neto | Bold (700) en Total facturado, Ganancia, cajas y Neto; Regular (400) en deudas | Referencias DASHBOARD-dark/light: corregir peso y jerarquía, sin aumentar tamaños. Los importes no se truncan |
+
+La clase histórica `.ui-display-extralight` se conserva en otros contextos; no determina el peso de los importes del Dashboard nuevo.
 
 Inter se carga como fuente variable, por lo que el peso 200 está disponible sin recursos adicionales.
 
@@ -761,8 +763,8 @@ Alturas: Chico `~30 px`, Grande `~50 px`. Radius `5 px`. Íconos dentro de boton
 
 | Variante oficial | Contrato visual compartido |
 |---|---|
-| Primary | énfasis Primary; texto sobre acción con contraste |
-| PrimaryDark | acción neutra; surface-raised/gradiente del tema, border-control y text-primary; el nombre no limita su uso a Dark |
+| Primary | énfasis de acción principal; en Light puede usar Info/Info hover. Primary dorado se conserva para identidad y selección |
+| PrimaryDark | acción neutra; Dark con gradiente oscuro y border-control; Light con negro absoluto y texto sobre acción. Icon e IconText neutros pueden usar superficie elevada del tema |
 | Success | Success y text-on-action |
 | Danger | Danger y text-on-action |
 | Info | Info, hover Info hover y text-on-action |
@@ -783,7 +785,7 @@ El control circular `+` conserva su función y dimensiones actuales, con contras
 **Cerrar sesión:** la única referencia visual canónica es el Dashboard nuevo suministrado por el usuario. Las versiones presentes en otras maquetas son antiguas y no se utilizan. Dark y Light comparten componente, geometría y comportamiento; solo cambian tokens. Mantener `logoutAction` y todo el flujo de sesión. Desktop y mobile conservan sus ubicaciones funcionales vigentes.
 
 - **Barra lateral izquierda** (Surface del tema, ~78 px) con: logo arriba; los 5 módulos en columna (ícono + label debajo); logout como botón Icon al pie, separado.
-- Módulo activo: ícono y label en `Primary` sólido. Inactivos: ícono plateado y label `Text Muted`; hover: ícono y label en **dorado cromado** (degradé metálico sobre `Primary`).
+- Módulo activo: ícono y label en `Primary` sólido. Inactivos: icono y label neutrales del tema; hover sutil con hover-neutral, sin modificar geometría. Logout sin card ni gradiente, según Dashboard nuevo (R3).
 - Debajo de los 5 módulos, separados por una línea, **accesos directos** a pantallas existentes: Clientes (`/clientes`), Proveedores (`/proveedores`) y Listas de precios (`/precios`). No son módulos nuevos ni agregan funciones; se resaltan solo en su propia ruta.
 - Área de contenido sobre background del tema.
 - **Encabezado de pantalla principal:** título H1 a la izquierda; chip `Admin` (sesión) y selector global de theme en la zona superior derecha; línea border-section debajo.
@@ -953,6 +955,8 @@ Variantes semánticas compartidas por cards y KPI:
 - **Negative:** en Light, fondo danger-soft y semántica Danger; en Dark, Surface oscura con énfasis principalmente en valor/texto/borde Danger.
 
 Los fondos soft son tokens a calibrar visualmente, sin hexadecimales inventados. Un icono es una composición, no otra identidad visual. Conservar tamaños locales y jerarquía existentes; no convertir las cards en inputs.
+
+Precisión de las referencias canónicas R3.1 (`DASHBOARD-dark.png`, `DASHBOARD-light.png`, `Frame-dark.png`, `Frame-light.png`): Pedidos abiertos y Ventas del mes conservan borde/acento Primary y gradiente del tema, sin cambiar dimensiones. Cajas neutras, deudas semánticas, Neto centrado sin card y acciones actuales de Cuentas debajo. En Dashboard, Bajo stock usa título/línea y contenedores neutrales; Danger queda en headers y datos de alerta. Los tiles de acción y Admin son azules en Light; Ver ventas es PrimaryDark y Actualizar es Success.
 
 ---
 

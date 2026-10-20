@@ -49,6 +49,7 @@
   --steffen-text-soft: rgb(255 255 255 / 0.8);
   --steffen-border-section: #393939;
   --steffen-hover: #393939;
+  --steffen-hover-neutral: rgb(255 255 255 / 0.04);
   --steffen-surface-selected: #000000;
   --steffen-overlay: rgb(0 0 0 / 0.75);
   /* Derivados mínimos: se conservan tintes Dark y se calibrarán en R3+. */
@@ -81,6 +82,7 @@
   /* Light: derivados de los grises y colores comunes, sin otra paleta.
      Calibración visual fina pendiente para R3+. Overlay conserva contraste. */
   --steffen-hover: #DEDDDD;
+  --steffen-hover-neutral: rgb(33 33 33 / 0.04);
   --steffen-surface-selected: #F3F2F2;
   --steffen-overlay: rgb(0 0 0 / 0.5);
   --steffen-success-soft: rgb(0 129 2 / 0.1);
@@ -115,6 +117,7 @@
 @theme inline {
   --color-steffen-background: var(--steffen-background);
   --color-steffen-panel: var(--steffen-surface);
+  --color-steffen-hover-neutral: var(--steffen-hover-neutral);
   --color-steffen-raised: var(--steffen-surface-raised);
   --color-steffen-text-primary: var(--steffen-text-primary);
   --color-steffen-text-secondary: var(--steffen-text-secondary);
@@ -179,13 +182,18 @@ body {
 }
 
 /* Botón dark (PrimaryDark): degradé + Border Button; hover Button Hover. */
-.ui-btn-dark {
+.ui-btn-dark,
+.ui-btn-primary,
+.ui-btn-icon {
   background-color: var(--steffen-bg);
   background-image: var(--steffen-degrade);
   border: 1px solid var(--steffen-border);
   color: var(--steffen-text-primary);
 }
-.ui-btn-dark:hover:not(:disabled) {
+.ui-btn-dark:hover:not(:disabled),
+.ui-btn-primary:hover:not(:disabled),
+.ui-btn-icon:hover:not(:disabled),
+.ui-icon-tile:hover .ui-btn-icon {
   background-image: none;
   background-color: var(--steffen-button-hover);
 }
@@ -548,18 +556,6 @@ pre {
   background-color: var(--steffen-gray);
 }
 
-/* Navegación lateral: hover en dorado cromado (ícono + texto); el activo conserva Primary sólido. */
-.ui-nav-item:not([aria-current]):hover .ui-icon {
-  background-color: transparent;
-  background-image: var(--steffen-gold-chrome);
-}
-.ui-nav-item:not([aria-current]):hover .ui-nav-label {
-  background-image: var(--steffen-gold-chrome);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
 /* Peso tipográfico de tablas (DESIGN.md §12): el contenido de las celdas va en Inter 400.
    Excepciones con énfasis semántico: filas de total (tr font-semibold/bold), valores en
    rojo/verde (alertas, faltantes, ganancias) y badges de estado (con fondo). Encabezados
@@ -639,4 +635,262 @@ pre {
    se reconcilia en los labels SVG, sin reasignar colores de datos. */
 :root[data-theme] .recharts-text {
   fill: var(--steffen-chart-axis);
+}
+
+/* R3: botones principales y neutros conservan geometría y significado.
+   PrimaryDark Light es negro absoluto; icon tiles conservan superficie elevada. */
+[data-theme="light"] .ui-btn-primary {
+  background: var(--steffen-info);
+  border-color: var(--steffen-info);
+  color: var(--steffen-text-on-action);
+}
+[data-theme="light"] .ui-btn-primary:hover:not(:disabled) {
+  background: var(--steffen-info-hover);
+  border-color: var(--steffen-info-hover);
+}
+[data-theme="light"] .ui-btn-dark {
+  background: var(--steffen-black);
+  border-color: var(--steffen-black);
+  color: var(--steffen-text-on-action);
+}
+[data-theme="light"] .ui-btn-dark:hover:not(:disabled) {
+  background: var(--steffen-text-primary);
+}
+[data-theme="light"] :is(.ui-btn-dark, .ui-btn-primary) .ui-icon--chrome {
+  background-image: linear-gradient(180deg, #FFFFFF, #D9D9D9);
+}
+[data-theme="light"] :is(.ui-btn-dark, .ui-btn-primary) :is(.text-steffen-surface, .text-steffen-text-primary) {
+  color: var(--steffen-text-on-action);
+}
+[data-theme="light"] :is(.ui-btn-dark, .ui-btn-primary) .ui-icon--light {
+  background-color: var(--steffen-text-on-action);
+}
+
+/* Navegación y sesión: hover neutro discreto, activo Primary sólido.
+   Los derivados R3 son alfa de blanco/negro existentes, sin otra paleta. */
+.ui-sidebar-link:not([aria-current]):hover,
+.ui-logout:hover {
+  background-color: var(--steffen-hover-neutral);
+  color: var(--steffen-text-primary);
+}
+.ui-sidebar-link:not([aria-current]):hover .ui-nav-label {
+  color: var(--steffen-text-primary);
+}
+.ui-session-chip,
+.ui-theme-toggle {
+  background-color: var(--steffen-surface);
+  border: 1px solid var(--steffen-border-section);
+  color: var(--steffen-text-primary);
+}
+.ui-theme-toggle:hover {
+  background-color: var(--steffen-hover-neutral);
+}
+.ui-theme-toggle svg {
+  color: var(--steffen-primary);
+}
+.ui-icon-tile:hover .ui-btn-icon {
+  border-color: var(--steffen-text-secondary);
+}
+
+/* Cards R3: Neutral con gradiente del theme; semánticas Dark sobre Surface.
+   Light utiliza los soft de R2 (Success 10 %, Danger 8 %). No cambian tamaños. */
+.ui-kpi,
+.ui-balance-card {
+  background-color: var(--steffen-surface);
+  background-image: var(--steffen-gradient);
+  border-color: var(--steffen-border-section);
+  color: var(--steffen-text-primary);
+}
+.ui-kpi--positive,
+.ui-balance-card--positive {
+  background-image: none;
+  border-color: var(--steffen-success);
+}
+.ui-kpi--negative,
+.ui-balance-card--negative {
+  background-image: none;
+  border-color: var(--steffen-danger);
+}
+.ui-kpi--positive > div {
+  color: var(--steffen-success);
+}
+.ui-kpi--negative > div {
+  color: var(--steffen-danger);
+}
+/* Labels pequeños conservan contraste; la semántica queda en valor y borde. */
+:is(.ui-kpi--positive, .ui-kpi--negative) > span,
+:is(.ui-balance-card--positive, .ui-balance-card--negative) > span:last-child {
+  color: var(--steffen-text-primary);
+}
+[data-theme="light"] :is(.ui-kpi--positive, .ui-balance-card--positive) {
+  background-color: var(--steffen-success-soft);
+}
+[data-theme="light"] :is(.ui-kpi--negative, .ui-balance-card--negative) {
+  background-color: var(--steffen-danger-soft);
+}
+
+/* R3.1 — comparación directa con DASHBOARD-light/dark y Frame-light/dark.
+   Estos colores soft se muestrearon en DASHBOARD-light: Ganancia #BFD9BF,
+   Deudas Clientes #C5DFC5 y Deudas Proveedores #F1C5C5. Alcance Dashboard,
+   sin cambiar la paleta global de estados ni otros módulos. */
+[data-theme="light"] .dashboard-monthly-kpis {
+  --steffen-success-soft: #BFD9BF;
+}
+[data-theme="light"] .dashboard-accounts {
+  --steffen-success-soft: #C5DFC5;
+  --steffen-danger-soft: #F1C5C5;
+}
+.ui-kpi--accent {
+  border-color: var(--steffen-primary);
+}
+.dashboard-monthly-kpis .ui-kpi > span {
+  font-weight: 400;
+}
+.dashboard-monthly-kpis .ui-kpi--positive {
+  border-color: var(--steffen-border-section);
+}
+.dashboard-monthly-kpis .ui-kpi--positive > span {
+  color: var(--steffen-success);
+}
+[data-theme="dark"] .dashboard-monthly-kpis .ui-kpi--positive {
+  background-image: var(--steffen-gradient);
+}
+
+/* Solo los tiles de acción son azules en Light: no menú, logout ni Ver ventas. */
+[data-theme="light"] .ui-icon-tile .ui-btn-icon {
+  background: var(--steffen-info);
+  border-color: var(--steffen-info);
+  color: var(--steffen-text-on-action);
+}
+[data-theme="light"] .ui-icon-tile:hover .ui-btn-icon {
+  background: var(--steffen-info-hover);
+  border-color: var(--steffen-info-hover);
+}
+[data-theme="light"] .ui-icon-tile .ui-icon--chrome {
+  background-image: linear-gradient(180deg, #FFFFFF, #D9D9D9);
+}
+[data-theme="light"] .ui-icon-tile .text-steffen-silver {
+  color: var(--steffen-text-on-action);
+}
+
+/* Cuentas canónicas: cajas neutras Bold; deudas Regular con label semántico;
+   Neto Bold centrado, sin card. Se conservan tamaños, formatos y acciones. */
+.dashboard-accounts .ui-balance-card--cash {
+  background-color: var(--steffen-surface);
+  background-image: var(--steffen-gradient);
+  border-color: var(--steffen-border-section);
+}
+.dashboard-accounts .ui-balance-card--cash > span:first-child {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.dashboard-accounts .ui-balance-card--cash > span:last-child {
+  color: var(--steffen-text-primary);
+}
+.dashboard-accounts :is(.ui-balance-card--positive, .ui-balance-card--negative):not(.ui-balance-card--cash) {
+  border-color: transparent;
+}
+.dashboard-accounts :is(.ui-balance-card--positive, .ui-balance-card--negative):not(.ui-balance-card--cash) > span:first-child {
+  font-weight: 400;
+}
+.dashboard-accounts .ui-balance-card--positive:not(.ui-balance-card--cash) > span:last-child {
+  color: var(--steffen-success);
+}
+.dashboard-accounts .ui-balance-card--negative > span:last-child {
+  color: var(--steffen-danger);
+}
+.dashboard-accounts .ui-balance-card--net {
+  background: transparent;
+  border-color: transparent;
+  text-align: center;
+}
+.dashboard-accounts .ui-balance-card--net > span:last-child {
+  font-weight: 400;
+}
+.dashboard-accounts > div > div:last-child {
+  justify-content: space-between;
+}
+
+.ui-usd-card [data-testid="usd-rate-current"] > span {
+  display: block;
+}
+.ui-theme-toggle {
+  background: transparent;
+  border: 0;
+}
+.ui-theme-toggle svg {
+  color: var(--steffen-text-secondary);
+}
+[data-theme="light"] .ui-theme-toggle svg {
+  color: var(--steffen-text-primary);
+}
+[data-theme="dark"] .ui-session-chip {
+  background-image: var(--steffen-gradient);
+  border-color: var(--steffen-border-control);
+}
+[data-theme="light"] .ui-session-chip {
+  background: var(--steffen-info);
+  border-color: var(--steffen-info);
+  color: var(--steffen-text-on-action);
+}
+[data-theme="light"] .ui-sidebar-link[aria-current="page"] {
+  background-color: var(--steffen-background);
+}
+.ui-sidebar-link .ui-nav-label {
+  font-weight: 400;
+}
+[data-theme="light"] .ui-btn-dark:hover:not(:disabled) {
+  background: var(--steffen-background);
+  border-color: var(--steffen-border-control);
+  color: var(--steffen-text-primary);
+}
+[data-theme="light"] .ui-btn-dark:hover:not(:disabled) :is(.text-steffen-surface, .text-steffen-text-primary) {
+  color: var(--steffen-text-primary);
+}
+[data-theme="light"] .ui-btn-dark:hover:not(:disabled) .ui-icon--chrome {
+  background-image: var(--steffen-chrome);
+}
+[data-theme="light"] .ui-btn-dark:hover:not(:disabled) .ui-icon--light {
+  background-color: var(--steffen-text-primary);
+}
+/* R3.2: KPI integrados comparten tokens/tipografía sin imponer cards elevadas.
+   Inline: etiqueta arriba (Reportes). Horizontal: valor arriba (Ventas).
+   No altera la presentación card por defecto del Dashboard. */
+.ui-kpi:is(.ui-kpi--inline, .ui-kpi--horizontal) {
+  align-items: flex-start;
+  text-align: left;
+  background: transparent;
+  border-color: transparent;
+}
+.ui-kpi--inline > div { order: 1; }
+.ui-kpi--inline > span { order: 0; margin-top: 0; margin-bottom: 6px; }
+.ui-kpi:is(.ui-kpi--inline, .ui-kpi--horizontal) > span {
+  text-transform: none;
+  font-weight: 400;
+}
+.ui-kpi--inline > div { max-width: 100%; overflow-wrap: anywhere; }
+.ui-kpi--horizontal.ui-kpi--positive {
+  background: var(--steffen-gradient);
+  border-color: var(--steffen-border-section);
+}
+.ui-kpi--horizontal.ui-kpi--positive > span { color: var(--steffen-success); }
+[data-theme="light"] .sales-kpis {
+  /* Mismo verde suave calibrado en la referencia de Ganancia del Dashboard. */
+  --steffen-success-soft: #BFD9BF;
+}
+[data-theme="light"] .ui-kpi--horizontal.ui-kpi--positive {
+  background: var(--steffen-success-soft);
+}
+[data-theme="light"] .ui-kpi--inline.ui-kpi--positive {
+  background: transparent;
+}
+.ui-period-selected {
+  background: var(--steffen-info);
+  border-color: var(--steffen-info);
+  color: var(--steffen-text-on-action);
+}
+[data-theme="light"] .ui-period-selected {
+  background: var(--steffen-background);
+  border-color: var(--steffen-border-control);
+  color: var(--steffen-text-primary);
 }

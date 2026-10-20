@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { LogOut, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ErpIcon, type ErpIconName } from './ErpIcon';
 import { ThemeToggle } from './ThemeToggle';
+import { LogoutButton } from './LogoutButton';
 
 interface NavItem {
   name: string;
@@ -81,7 +82,7 @@ const SidebarLink: React.FC<{ href: string; icon: ErpIconName; name: string; isA
   <Link
     href={href}
     aria-current={isActive ? 'page' : undefined}
-    className="ui-nav-item w-full flex flex-col items-center gap-1.5 py-1"
+    className="ui-sidebar-link w-full rounded-[5px] transition-colors focus-visible:outline focus-visible:outline-1 focus-visible:outline-steffen-gold flex flex-col items-center gap-1.5 py-1"
   >
     <ErpIcon name={icon} tone={isActive ? 'gold' : 'chrome'} className="w-7 h-7" />
     <span className={`ui-nav-label text-[11px] font-semibold ${isActive ? 'text-steffen-gold' : 'text-steffen-muted'}`}>
@@ -92,7 +93,7 @@ const SidebarLink: React.FC<{ href: string; icon: ErpIconName; name: string; isA
 
 /**
  * Barra lateral (DESIGN.md §9.0): ícono + label en columna; el módulo activo en
- * Primary, el resto plateado con label Text Muted; hover en dorado cromado.
+ * Primary, el resto plateado con label Text Muted; hover neutro sutil.
  */
 export const ErpSidebarNav: React.FC = () => {
   const pathname = usePathname();
@@ -153,20 +154,20 @@ export const ErpNavMobile: React.FC<{ logo: React.ReactNode; logoutAction: () =>
     '';
 
   const linkClass = (active: boolean) =>
-    `ui-nav-item flex items-center gap-3 px-3 h-[38px] rounded-[5px] text-sm font-semibold ${
+    `ui-sidebar-link flex items-center gap-3 px-3 h-[38px] rounded-[5px] text-sm font-semibold ${
       active ? 'ui-degrade' : ''
     }`;
 
   return (
     <>
-      <div className="xl:hidden sticky top-0 z-40 flex items-center gap-3 px-4 h-[48px] bg-steffen-bg border-b border-steffen-gray">
+      <div className="xl:hidden sticky top-0 z-40 flex items-center gap-3 px-4 h-[48px] bg-steffen-panel border-b border-steffen-gray">
         <button
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Abrir menú"
           aria-expanded={open}
           aria-controls="erp-mobile-drawer"
-          className="ui-btn-dark w-[36px] h-[30px] inline-flex items-center justify-center rounded-[5px] cursor-pointer"
+          className="ui-btn-icon w-[36px] h-[30px] inline-flex items-center justify-center rounded-[5px] cursor-pointer"
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -183,12 +184,12 @@ export const ErpNavMobile: React.FC<{ logo: React.ReactNode; logoutAction: () =>
             type="button"
             aria-label="Cerrar menú"
             onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-black/70 cursor-default"
+            className="absolute inset-0 bg-steffen-overlay cursor-default"
           />
           <nav
             id="erp-mobile-drawer"
             aria-label="Módulos"
-            className="absolute left-0 top-0 h-full w-[260px] max-w-[85vw] bg-steffen-bg border-r border-steffen-gray flex flex-col px-3 py-4 overflow-y-auto"
+            className="absolute left-0 top-0 h-full w-[260px] max-w-[85vw] bg-steffen-panel border-r border-steffen-gray flex flex-col px-3 py-4 overflow-y-auto"
           >
             <div className="flex items-center justify-between mb-4 px-1">
               <Link href="/" title="Steffen ERP">
@@ -231,13 +232,7 @@ export const ErpNavMobile: React.FC<{ logo: React.ReactNode; logoutAction: () =>
             </div>
 
             <form action={logoutAction} className="mt-auto pt-4">
-              <button
-                type="submit"
-                className="group ui-btn-dark w-full h-[34px] inline-flex items-center justify-center gap-2 rounded-[5px] text-sm font-semibold cursor-pointer"
-              >
-                <LogOut className="w-4 h-4 text-steffen-silver group-hover:text-steffen-gold transition-colors" />
-                Cerrar sesión
-              </button>
+              <LogoutButton layout="inline" />
             </form>
           </nav>
         </div>
@@ -272,7 +267,7 @@ export const ErpPageHeader: React.FC<{ sessionLabel: string; sessionTitle?: stri
         <div className="hidden xl:block"><ThemeToggle /></div>
         <span
           title={sessionTitle}
-          className="ui-btn-dark inline-flex items-center h-[26px] px-5 rounded-[5px] text-sm font-semibold"
+          className="ui-session-chip inline-flex items-center h-[26px] px-5 rounded-[5px] text-sm font-semibold"
         >
           {sessionLabel}
         </span>

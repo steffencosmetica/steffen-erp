@@ -27,14 +27,15 @@ interface AccountBalanceCardsProps {
   actionsFlow?: 'grid' | 'fluid';
 }
 
-const BalanceCard: React.FC<{ value: string; label: string; labelClassName: string; strong?: boolean; className?: string }> = ({
+const BalanceCard: React.FC<{ value: string; label: string; labelClassName: string; tone?: 'neutral' | 'positive' | 'negative'; strong?: boolean; className?: string }> = ({
   value,
   label,
   labelClassName,
+  tone = 'neutral',
   strong,
   className = '',
 }) => (
-  <div className={`ui-degrade rounded-[5px] border border-steffen-gray px-5 py-3 flex flex-col justify-center ${className}`}>
+  <div className={`ui-balance-card ui-balance-card--${tone} rounded-[5px] border px-5 py-3 flex flex-col justify-center ${className}`}>
     <span className={`whitespace-nowrap ${strong ? 'text-[26px] font-bold tabular-nums tracking-[-0.01em]' : 'text-[24px] ui-display-extralight'}`}>
       {value}
     </span>
@@ -59,20 +60,21 @@ export const AccountBalanceCards: React.FC<AccountBalanceCardsProps> = ({
     ) : (
       // Cards ajustadas al contenido: 2 columnas max-content (importe completo + padding), sin estirarse.
       <div className="w-fit max-w-full grid grid-cols-1 sm:grid-cols-[repeat(2,max-content)] gap-3">
-        <BalanceCard value={formatArs(cajaSteffen)} label="CAJA STEFFEN" labelClassName="text-steffen-green" />
-        <BalanceCard value={formatArs(cajaMercadoLibre)} label="CAJA MERCADO LIBRE" labelClassName="text-steffen-green" />
-        <BalanceCard value={formatArs(deudasClientes)} label="DEUDAS CLIENTES" labelClassName="text-steffen-green" />
+        <BalanceCard value={formatArs(cajaSteffen)} label="CAJA STEFFEN" labelClassName="text-steffen-green" tone="positive" className="ui-balance-card--cash" />
+        <BalanceCard value={formatArs(cajaMercadoLibre)} label="CAJA MERCADO LIBRE" labelClassName="text-steffen-green" tone="positive" className="ui-balance-card--cash" />
+        <BalanceCard value={formatArs(deudasClientes)} label="DEUDAS CLIENTES" labelClassName="text-steffen-green" tone="positive" />
         <BalanceCard
           value={deudasProveedores && deudasProveedores !== '0' ? `-${formatArs(deudasProveedores)}` : '$ 0'}
           label="DEUDAS PROVEEDORES"
           labelClassName="text-steffen-red"
+          tone="negative"
         />
         <BalanceCard
           value={formatArs(neto)}
           label="NETO"
           labelClassName="text-steffen-surface font-semibold"
           strong
-          className="col-span-full min-h-[86px]"
+          className="ui-balance-card--net col-span-full min-h-[86px]"
         />
       </div>
     )}

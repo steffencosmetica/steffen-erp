@@ -84,7 +84,7 @@ export const DashboardLowStock: React.FC<DashboardLowStockProps> = ({
   return (
     <div className="grid grid-cols-1 xl:grid-cols-[1.45fr_1fr] gap-5 items-start">
       {/* Izquierda: Componente/MP + simular compra */}
-      <Panel variant="alert">
+      <Panel>
         <div className="overflow-x-auto">
           <table className={tableStyles.table}>
             <thead>
@@ -92,8 +92,8 @@ export const DashboardLowStock: React.FC<DashboardLowStockProps> = ({
                 <th className="py-2 px-3 text-left">COMPONENTE/MP</th>
                 <th className="py-2 px-3 text-left">PROVEEDOR</th>
                 <th className="py-2 px-3 text-right">ACTUAL</th>
-                <th className="py-2 px-3 text-center !bg-steffen-gray">SIMULAR COMPRA</th>
-                <th className="py-2 px-3 text-right !bg-steffen-gray">$</th>
+                <th className="py-2 px-3 text-center !bg-steffen-gray !text-steffen-text-primary">SIMULAR COMPRA</th>
+                <th className="py-2 px-3 text-right !bg-steffen-gray !text-steffen-text-primary">$</th>
               </tr>
             </thead>
             <tbody>
@@ -147,7 +147,7 @@ export const DashboardLowStock: React.FC<DashboardLowStockProps> = ({
       </Panel>
 
       {/* Derecha: Producto Final (misma fuente que Mi Fábrica → Próxima fabricación) */}
-      <Panel variant="alert">
+      <Panel>
         {urgencyUnavailable && (
           <p className="mb-2 text-xs text-steffen-red">
             No se pudo cargar la planificación: la urgencia por pedidos no está disponible.
@@ -177,7 +177,7 @@ export const DashboardLowStock: React.FC<DashboardLowStockProps> = ({
                       {p.name}
                     </td>
                     <td className="py-1.5 px-3 text-center tabular-nums">{p.stockActual}</td>
-                    <td className="py-1.5 px-3 text-center">{p.isUrgentForOrders ? 'URG PARA PEDIDOS' : 'POCO STOCK'}</td>
+                    <td className={`py-1.5 px-3 text-center ${p.isUrgentForOrders ? 'text-steffen-red' : 'text-steffen-text-secondary'}`}>{p.isUrgentForOrders ? 'URG PARA PEDIDOS' : 'POCO STOCK'}</td>
                     <td className="py-1 px-3 text-center">
                       <SimulateManufacturingButton productName={p.name} onClick={() => simulate(p.baseProductId)} />
                     </td>

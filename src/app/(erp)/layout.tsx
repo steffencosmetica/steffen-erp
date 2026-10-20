@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { getAuthenticatedUser, isUserAuthorized } from '@/auth/guard';
 import { UNAUTHORIZED_LOGIN_ERROR } from '@/auth/auth-routing';
 import { logoutAction } from '@/actions/auth.actions';
-import { LogOut } from 'lucide-react';
+import { LogoutButton } from '@/ui/components/LogoutButton';
 import { SteffenLogoIcon } from '@/ui/components/SteffenLogo';
 import { ErpSidebarNav, ErpNavMobile, ErpPageHeader } from '@/ui/components/ErpNavigation';
 
@@ -26,29 +26,16 @@ export default async function ErpLayout({
   return (
     <div className="min-h-screen bg-steffen-page text-steffen-surface flex font-sans antialiased">
       {/* Desktop (>= 1280): barra lateral con logo, módulos, accesos y logout separado (DESIGN.md §9.0) */}
-      <aside className="hidden xl:flex sticky top-0 h-screen w-[78px] shrink-0 bg-steffen-bg flex-col items-center py-6 overflow-y-auto">
+      <aside className="hidden xl:flex sticky top-0 h-screen w-[78px] shrink-0 bg-steffen-panel flex-col items-center py-6 overflow-y-auto">
         <Link href="/" className="mb-8 transition-opacity hover:opacity-90" title="Steffen ERP">
           <SteffenLogoIcon className="w-9 h-12" />
         </Link>
 
         <ErpSidebarNav />
 
-        {/* Cerrar sesión: misma lógica (logoutAction); ítem de menú con caja Border Button + degradé. */}
+        {/* Cerrar sesión: misma lógica (logoutAction); icono y label sin card ni gradiente. */}
         <form action={logoutAction} className="mt-auto pt-6">
-          <button
-            type="submit"
-            title="Cerrar sesión"
-            className="group ui-nav-item flex flex-col items-center gap-1.5 cursor-pointer"
-          >
-            <span className="ui-btn-dark w-[40px] h-[34px] inline-flex items-center justify-center rounded-[5px] transition-colors">
-              <LogOut className="w-5 h-5 text-steffen-silver group-hover:text-steffen-gold transition-colors" />
-            </span>
-            <span className="ui-nav-label text-[11px] font-semibold leading-tight text-center text-steffen-muted">
-              Cerrar
-              <br />
-              sesión
-            </span>
-          </button>
+          <LogoutButton />
         </form>
       </aside>
 

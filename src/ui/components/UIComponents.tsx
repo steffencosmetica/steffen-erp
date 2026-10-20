@@ -1,4 +1,4 @@
-// Core UI Components conforming to COMPONENTS.md & DESIGN.md (sistema dark definitivo, Frame 1.png)
+// Core UI Components conforming to COMPONENTS.md & DESIGN.md (Dark/Light).
 
 import React, { ReactNode } from 'react';
 import Link from 'next/link';
@@ -6,9 +6,9 @@ import { X, AlertCircle } from 'lucide-react';
 import { ErpIcon } from './ErpIcon';
 
 // Buttons
-// Variantes (COMPONENTS.md §4): principal / secundario = PrimaryDark (degradé + Border Button),
-// verde = Success, rojo = Danger, azul = Tertiary.
-// Los nombres de variante se conservan para no tocar ningún call site.
+// principal = Primary (Light azul, Dark degradé); secundario = PrimaryDark explícito.
+// verde = Success, rojo = Danger, azul = Info en ambos temas.
+// Conservar los nombres públicos; no inferir PrimaryDark a partir de la jerarquía de la acción.
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'principal' | 'secundario' | 'verde' | 'rojo' | 'azul';
   size?: 'small' | 'large';
@@ -32,6 +32,8 @@ export const Button: React.FC<ButtonProps> = ({
   let variantClasses = '';
   switch (variant) {
     case 'principal':
+      variantClasses = 'ui-btn-primary';
+      break;
     case 'secundario':
       variantClasses = 'ui-btn-dark';
       break;
@@ -229,23 +231,26 @@ export const Panel: React.FC<{
   <section className={`ui-panel px-5 py-4 ${variant === 'alert' ? '!border-steffen-red' : ''} ${className}`}>{children}</section>
 );
 
-// KpiCard: Default (negra + borde dorado), con ícono, o Positiva (verde sólido). COMPONENTS.md §19.
+// KPI Neutral/Positive/Negative: misma geometría y tipografía, tokens según theme.
 export const KpiCard: React.FC<{
   label: string;
   value: ReactNode;
-  variant?: 'default' | 'inverted' | 'positive';
+  variant?: 'default' | 'inverted' | 'positive' | 'negative';
+  presentation?: 'card' | 'inline' | 'horizontal';
   icon?: ReactNode;
   className?: string;
   /** Estilo opcional del label (p. ej. dorado en Total facturado, Figma Dashboard). */
   labelClassName?: string;
-}> = ({ label, value, variant = 'default', icon, className = '', labelClassName = '' }) => {
+}> = ({ label, value, variant = 'default', presentation = 'card', icon, className = '', labelClassName = '' }) => {
   const variantClasses =
     variant === 'positive'
-      ? 'bg-steffen-green border-steffen-green text-steffen-on-action'
-      : 'bg-steffen-panel border-steffen-gold text-steffen-surface';
+      ? 'ui-kpi--positive'
+      : variant === 'negative'
+      ? 'ui-kpi--negative'
+      : '';
   return (
     <div
-      className={`rounded-[10px] border-2 px-4 py-3 flex flex-col items-center justify-center text-center ${variantClasses} ${className}`}
+      className={`ui-kpi rounded-[10px] border-2 px-4 py-3 flex flex-col items-center justify-center text-center ${variantClasses} ${presentation !== 'card' ? `ui-kpi--${presentation}` : ''} ${className}`}
     >
       <div className="flex items-center gap-2">
         {icon}
@@ -260,7 +265,7 @@ export const KpiCard: React.FC<{
 interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon: ReactNode;
   label: string;
-  variant?: 'secundario' | 'rojo' | 'verde';
+  variant?: 'principal' | 'secundario' | 'rojo' | 'verde';
   size?: 'small' | 'large';
 }
 
@@ -277,14 +282,16 @@ export const IconButton: React.FC<IconButtonProps> = ({
       ? 'border border-steffen-red bg-steffen-red text-steffen-on-action hover:bg-steffen-red-hover'
       : variant === 'verde'
       ? 'border border-steffen-green bg-steffen-green text-steffen-on-action hover:bg-steffen-green-hover'
-      : 'ui-btn-dark';
+      : variant === 'principal'
+      ? 'ui-btn-primary'
+      : 'ui-btn-icon';
   const sizeClasses = size === 'large' ? 'w-[50px] h-[50px]' : 'w-[30px] h-[30px]';
   return (
     <button
       type="button"
       title={label}
       aria-label={label}
-      className={`inline-flex items-center justify-center shrink-0 rounded-[5px] text-steffen-surface transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${sizeClasses} ${variantClasses} ${className}`}
+      className={`inline-flex items-center justify-center shrink-0 rounded-[5px] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${sizeClasses} ${variantClasses} ${className}`}
       {...props}
     >
       {icon}
@@ -377,14 +384,14 @@ export const tableStyles = {
   headRowHighlight: 'text-steffen-on-action font-semibold text-sm [&>th]:bg-steffen-gold [&>th:first-child]:rounded-l-[5px] [&>th:last-child]:rounded-r-[5px]',
   headRowAlert: 'text-steffen-on-action font-semibold text-sm [&>th]:bg-steffen-red [&>th:first-child]:rounded-l-[5px] [&>th:last-child]:rounded-r-[5px]',
   headCell: 'px-5 py-2 text-left',
-  row: 'border-b border-steffen-surface/70',
-  rowAlert: 'ui-row-alert border-b border-steffen-surface/70',
+  row: 'border-b border-steffen-border-section',
+  rowAlert: 'ui-row-alert border-b border-steffen-border-section',
   cell: 'px-5 py-1.5',
   numericCell: 'px-5 py-1.5 text-right tabular-nums',
 } as const;
 
 // IconTile: acción compacta de ícono con label debajo (Figma Dashboard: Acceso rápido / Cuentas).
-// Ícono plateado por defecto; hover en dorado cromado como la navegación.
+// Icono de contraste y superficie elevada del theme, sin cambiar dimensiones.
 export const IconTile: React.FC<{
   icon: ReactNode;
   label: string;
@@ -394,14 +401,14 @@ export const IconTile: React.FC<{
   className?: string;
 }> = ({ icon, label, title, onClick, href, className = '' }) => {
   const box = (
-    <span className="ui-btn-dark w-[50px] h-[50px] inline-flex items-center justify-center rounded-[5px] transition-colors">
+    <span className="ui-btn-icon w-[50px] h-[50px] inline-flex items-center justify-center rounded-[5px] transition-colors">
       {icon}
     </span>
   );
   const caption = (
     <span className="ui-nav-label text-[11px] leading-tight text-center text-steffen-surface/85 max-w-[64px]">{label}</span>
   );
-  const classes = `group ui-nav-item inline-flex flex-col items-center gap-1.5 cursor-pointer ${className}`;
+  const classes = `group ui-icon-tile inline-flex flex-col items-center gap-1.5 cursor-pointer ${className}`;
   return href ? (
     <Link href={href} title={title ?? label} className={classes}>
       {box}

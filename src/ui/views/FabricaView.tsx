@@ -105,7 +105,7 @@ export const FabricaView: React.FC<FabricaViewProps> = ({
                 <>
                   <Link
                     href="/stock?tab=productos&action=new"
-                    className="ui-btn-dark h-8 px-3 inline-flex items-center gap-1.5 rounded-[5px] text-xs font-semibold transition-colors"
+                    className="ui-btn-primary h-8 px-3 inline-flex items-center gap-1.5 rounded-[5px] text-xs font-semibold transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     Nuevo producto

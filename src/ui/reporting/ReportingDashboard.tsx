@@ -54,12 +54,12 @@ export const ReportingDashboard: React.FC<ReportingDashboardProps> = ({ years, b
 
   const summary = billing?.summary;
   const kpis = [
-    { label: 'Facturación', value: summary ? formatReportingArs(summary.billedArs) : '—' },
-    { label: 'Ganancia', value: summary ? formatReportingArs(summary.gainArs) : '—' },
-    { label: 'Gastos operativos', value: summary ? formatReportingArs(summary.expensesArs) : '—' },
-    { label: 'Transporte', value: summary ? formatReportingArs(summary.transportArs) : '—' },
     { label: 'Ventas', value: summary ? formatReportingCount(summary.salesCount) : '—' },
+    { label: 'Facturación Total', value: summary ? formatReportingArs(summary.billedArs) : '—' },
+    { label: 'Transporte', value: summary ? formatReportingArs(summary.transportArs) : '—' },
+    { label: 'Ganancia', value: summary ? formatReportingArs(summary.gainArs) : '—' },
     { label: 'Margen %', value: summary ? formatReportingPct(summary.marginPct) : '—' },
+    { label: 'Gastos operativos', value: summary ? formatReportingArs(summary.expensesArs) : '—' },
   ];
 
   return (
@@ -91,10 +91,12 @@ export const ReportingDashboard: React.FC<ReportingDashboardProps> = ({ years, b
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
             {kpis.map((kpi) => (
               <KpiCard
+                presentation="inline"
+                variant={kpi.label === 'Ganancia' ? 'positive' : 'default'}
                 key={kpi.label}
                 label={kpi.label}
                 value={<span className="text-[18px] tabular-nums">{kpi.value}</span>}
-                className="reporting-kpi min-h-[84px]"
+                className="min-w-0 min-h-[84px]"
               />
             ))}
           </div>

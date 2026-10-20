@@ -86,36 +86,18 @@ export const UsdRateCard: React.FC<{
     </p>
   );
   const title = (
-    <span className="text-sm font-semibold uppercase leading-tight shrink-0">
-      Cotización
-      <br />
-      dólar
+    <span className="text-sm font-semibold uppercase leading-tight shrink-0 max-w-[80px]">
+      Cotización dólar
     </span>
   );
 
-  if (layout === 'stacked') {
-    return (
-      <Panel className={`flex flex-col gap-3 ${className}`}>
-        <div className="flex items-center gap-3">
-          {title}
-          <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-            {actual}
-            {input}
-          </div>
-        </div>
-        <div className="flex flex-col items-center gap-1">
-          {action}
-          {message}
-        </div>
-      </Panel>
-    );
-  }
-
   return (
-    <Panel className={`!py-3 flex flex-col gap-1.5 ${className}`}>
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <Panel className={`ui-usd-card !py-3 flex flex-col gap-1.5 ${layout === 'stacked' ? 'w-full' : ''} ${className}`}>
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5">
         {title}
         {actual}
+      </div>
+      <div className="flex items-center gap-2 min-w-0">
         {input}
         {action}
       </div>
