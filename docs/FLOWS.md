@@ -653,7 +653,7 @@ No genera movimientos.
    - descuentos;
    - Total pedido;
    - peso potencial.
-5. Guardar.
+5. Persistir automáticamente al confirmar Agregar producto, según §14; no requiere botón Guardar.
 
 No genera movimientos.
 
@@ -676,7 +676,63 @@ No se permite:
 - cambiar el snapshot de lista;
 - cambiar descuentos congelados de Cliente registrado.
 
-Toda modificación recalcula el potencial del pedido.
+Toda modificación recalcula el potencial del pedido. El autosave siguiente solo cubre campos y operaciones actualmente editables; no agrega controles ni campos nuevos. Las reglas de BUSINESS_RULES.md permanecen intactas.
+
+## 14.1 Persistencia automática del Pedido abierto — R1
+
+Todo cambio editable que antes dependía de Guardar se persiste automáticamente: AG, cantidad solicitada cuando sea editable, bultos, agregar/eliminar producto y cualquier otro campo actualmente editable. Eliminar Guardar y Cancelar del editor cuando se implemente este contrato; no dejar huecos visuales reservados. No eliminar las acciones de cancelar formularios auxiliares o confirmaciones vigentes.
+
+## 14.2 Inputs: blur y Enter
+
+Inputs numéricos y textuales guardan al perder foco (blur) o al presionar Enter. No guardar cada tecla. Enter seguido de blur no produce dos escrituras equivalentes; tampoco se escribe si no cambió el valor confirmado. Validar según el contrato vigente antes de enviar. No hace falta debounce para estos eventos.
+
+## 14.3 Acciones discretas
+
+Agregar producto persiste al confirmar la acción; eliminar producto persiste al confirmar la acción según el flujo actual, sin inventar un nuevo diálogo. Mantener las validaciones de producto, precio histórico, cantidades y mínimo de una línea. Borrar pedido conserva su confirmación propia (§15) y no equivale a eliminar una línea.
+
+## 14.4 Borrador, confirmación y errores
+
+Separar estado borrador del último estado confirmado por el servidor. Solo considerar definitivo un cambio después de confirmación exitosa. Si falla:
+
+1. mostrar error visible;
+2. restaurar el último valor confirmado del campo o la operación afectada;
+3. no presentar el valor fallido como válido ni incorporarlo a payloads posteriores.
+
+Un error no resuelto bloquea Generar remito aunque la UI ya haya restaurado el valor. Resolverlo requiere reconciliar explícitamente el estado confirmado o confirmar con éxito una corrección/reintento pertinente; no basta ocultar el mensaje. Los fallos inesperados de comunicación también deben llevar al estado de error y reconciliación, sin asumir persistencia exitosa.
+
+## 14.5 Serialización por pedido
+
+Una sola petición activa por pedido; serializar cambios rápidos. Construir cada payload desde el último estado confirmado y las operaciones pendientes correspondientes al ejecutarlo, no desde un snapshot antiguo capturado al escribir. Identificar respuestas por pedido/operación para impedir que una respuesta antigua sobrescriba un cambio posterior o afecte otro pedido seleccionado.
+
+Ante fallo, detener/reconciliar operaciones dependientes antes de continuar; conservar cambios ya confirmados. La cola no debe reintroducir un valor fallido. Refrescar cards y planificación tras confirmación sin reinicializar borradores vigentes.
+
+## 14.6 Cierre mediante X
+
+La X simplemente cierra la vista: no cancela, no revierte, no pregunta si guardar ni descarta cambios confirmados. El blur correspondiente confirma el borrador activo conforme §14.2; cerrar no debe abortar esa operación. Si hay guardado activo o en cola, su ciclo de vida debe sobrevivir al cierre visual, por ejemplo mediante coordinación en un padre estable por pedido. Un error posterior debe seguir siendo visible y conservarse al reabrir el pedido.
+
+## 14.7 Generar remito como barrera
+
+Antes de continuar:
+
+1. confirmar cualquier borrador activo;
+2. esperar todos los guardados pendientes;
+3. comprobar que no exista error sin resolver.
+
+Si todo fue confirmado, continuar con las validaciones y confirmación vigentes. Si algún guardado falló, bloquear la generación y mostrar error. La barrera debe coordinar blur/Enter y click para no adelantarse al último cambio ni duplicar escrituras. El RTO se previsualiza y genera siempre desde el último estado persistido, no desde un borrador local. Se mantiene el bloqueo por RTM pendiente y toda validación vigente de remito.
+
+## 14.8 AG y alcance de concurrencia
+
+AG admite entero >= 0 o vacío/null durante la edición según contrato vigente; puede ser menor, igual o **mayor** que la cantidad solicitada. Para generar remito se mantienen AG completo y al menos un AG positivo según las validaciones existentes. Autosave no cambia esta regla.
+
+Fuera de alcance: detectar/resolver conflictos entre dos pestañas o usuarios que editan simultáneamente el mismo pedido. Conservar comportamiento actual: última escritura válida prevalece. No agregar versionado ni migración para este alcance.
+
+## 14.9 Reutilización del contrato existente
+
+Reutilizar `updateOrderAction` → OrderService.updateOrder → OrderRepository.updateOrderAtomic → `update_order_atomic(p_order_id, p_update_json)`. No hace falta una Server Action nueva ni cambios de backend/DB para este alcance.
+
+La RPC admite campos opcionales de cabecera; si recibe `items`, reemplaza la lista completa de renglones, no aplica deltas por línea. Bloquea el pedido y exige OPEN; los precios se resuelven a `price_snapshot_at` de su lista original. La cola construye ese reemplazo completo desde estado confirmado más operaciones pendientes. Reconciliar el detalle devuelto por lectura cuando haga falta para precios/normalizaciones; no presentar precios preliminares vigentes como confirmación del precio histórico.
+
+La atomicidad de la RPC no detecta snapshots obsoletos de otras pestañas; esa limitación sigue fuera de alcance. **No hace falta migración.**
 
 ---
 

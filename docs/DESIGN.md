@@ -25,13 +25,13 @@ La lógica funcional no se modifica para coincidir con un diseño desactualizado
 - `PDFS.md` manda sobre el **contrato documental/histórico** de los PDFs.
 - La implementación actual conserva **todas** sus funcionalidades existentes.
 
-El rediseño es exclusivamente visual: no agrega ni elimina funciones, no cambia rutas, flujos, reglas ni modelo de datos.
+Dark/Light es exclusivamente visual. La única modificación de persistencia de R1 es el autosave del Pedido abierto definido en `FLOWS.md` §14; no cambia reglas de negocio, rutas ni modelo de datos.
 
-Frames de referencia del nuevo Figma (rediseño dark definitivo): `docs/visual-references/figma/` — `Frame 1.png` (guía de estilo: paleta, tipografía, márgenes, botones, inputs, cards), Dashboard, Mi Fábrica, Fórmulas, Pedidos, Pedido, Productos Finales, Stock, Ventas, Administración, Cuentas Clientes, Cuentas Proveedores, y el tablero completo en `Pdf.pdf`.
+Referencias visuales del repositorio (supeditadas al contrato R1 y a las imágenes nuevas suministradas por el usuario): `docs/visual-references/figma/` — `Frame 1.png` (guía de estilo: paleta, tipografía, márgenes, botones, inputs, cards), Dashboard, Mi Fábrica, Fórmulas, Pedidos, Pedido, Productos Finales, Stock, Ventas, Administración, Cuentas Clientes, Cuentas Proveedores, y el tablero completo en `Pdf.pdf`.
 
 Íconos base: `docs/visual-references/iconos/` (se usan tal cual; solo se adapta color/estilo, ver §4.4).
 
-Estos frames son las referencias visuales **definitivas** y reemplazan a las anteriores, que fueron eliminadas. No deben restaurarse ni usarse como fuente vigente.
+Las nuevas imágenes establecen estética; no restauran estructuras funcionales históricas. Prevalece la funcionalidad actual si una imagen la contradice. Caso explícito: no reconstruir la antigua sección/tablas de Cuentas de Administración. Cerrar sesión se referencia únicamente al Dashboard nuevo (§9.0).
 
 ---
 
@@ -70,16 +70,9 @@ Las anotaciones funcionales del Figma (viejo o nuevo) no reemplazan a `BUSINESS_
 
 # 3. Responsive y estrategia por dispositivo
 
-## 3.0 Estado vigente (rediseño visual)
+## 3.0 Estado vigente y preservación responsive
 
-- La **referencia primaria es desktop**, según el nuevo Figma.
-- El comportamiento mobile/tablet final **no se diseña en esta etapa**: la adaptación responsive se resuelve en **Fase 18**.
-- Los componentes deben construirse de forma que permitan esa adaptación futura.
-- Evitar dimensiones rígidas innecesarias (anchos/altos fijos de contenedores, tablas o columnas cuando no los exija el diseño).
-
-El principio funcional de §3.1 (misma funcionalidad en todos los dispositivos) se mantiene.
-
-Las subsecciones §3.2–§3.24 son **pautas preliminares**: se conservan como insumo para Fase 18 y no son normativas hasta que esa fase las revise contra el nuevo lenguaje visual.
+Dark y Light conservan los breakpoints y el comportamiento responsive actuales. No modificar navegación, scroll, targets táctiles, orden funcional ni layout funcional, salvo la composición compacta de cotización y las columnas independientes de CLIENTES definidas explícitamente por R1. Las pautas siguientes se leen sin autorizar un rediseño responsive ni una ampliación global de controles.
 
 ## 3.1 Principio general
 
@@ -623,50 +616,60 @@ Mobile landscape puede aprovechar mayor ancho para tablas, pero no debe ser requ
 
 # 4. Sistema visual
 
-Fuente: frame de estilo definitivo `docs/visual-references/figma/Frame 1.png` (paleta, tipografía, márgenes, botones, inputs, cards) y los frames de pantalla del mismo directorio.
+Fuente vigente: contrato R1 e imágenes nuevas del usuario; los frames del repositorio aportan referencias solo cuando no los contradigan.
 
-## 4.1 Paleta definitiva (tokens)
+## 4.1 Tokens semánticos Dark/Light — contrato R1
 
-| Token | Valor | Uso |
+Los temas DARK y LIGHT son dos representaciones visuales del mismo ERP. Existe un único sistema de componentes con tokens semánticos compartidos; no se duplican componentes por tema. Cambiar tema no modifica reglas de negocio, cálculos, datos, permisos, acciones, navegación, estructura funcional ni comportamiento responsive.
+
+### Tokens comunes
+
+| Rol | Valor | Uso |
 |---|---|---|
-| Primary | `#C38926` | dorado Steffen: identidad, módulo activo de la navegación, borde de KPI y de card seleccionada, encabezado destacado de tabla |
-| Secondary | `#000000` | fondo de paneles/secciones, barra lateral, superficies internas |
-| Surface | `#FBFBFB` | texto principal sobre dark; superficie clara (modo light futuro) |
-| Fondo | `#EFEFEF` | fondo de página del **modo light** (reservado; no se implementa todavía) |
-| Fondo Dark | `#101010` | fondo de página del modo dark (área de contenido detrás de los paneles) |
-| Border Button | `#D9D9D9` | borde de botones, inputs y selects |
-| Border Contenedor | `#393939` | borde de paneles/secciones; fondo del encabezado de tabla |
-| Tertiary (Blue) | `#0E50A0` | `Volver`, enlaces `IR A …` / `Ver todas ▸`, navegación secundaria |
-| Blue Hover | `#6E96C6` | hover de Blue |
-| Verde | `#008102` | acción positiva (`REGISTRAR PAGO`, `ACTUALIZAR`), resultado favorable |
-| Verde Hover | `#015C02` | hover de Verde |
-| Rojo | `#DD0000` | destructivo, alerta, faltante |
-| Rojo Hover | `#B10000` | hover de Rojo |
-| Surface Dark Degrade | `linear-gradient(180deg, #121212 0%, #000000 100%)` | fondo de botones, inputs, selects, cards de pedido e ítem de lista seleccionado |
+| Primary / Steffen | `#C38926` | identidad, navegación activa, selección, foco visual y estados puntuales definidos por diseño |
+| Secondary / Black | `#000000` | negro absoluto para casos específicos de alto contraste; no sustituye Surface |
+| Info / Blue | `#0E50A0` | enlaces, acciones informativas y navegación secundaria |
+| Info hover | `#05346E` | hover de Info |
+| Success | `#008102` | acción o resultado positivo |
+| Danger | `#DD0000` | acción destructiva, faltante o alerta |
 
-Tokens derivados (necesarios para reproducir los frames; se documentan aquí antes de usarse):
+El dorado queda excluido de las series estadísticas (§35.11). `#D2AB68` y `#B99D22` son obsoletos para la UI activa. Los usos históricos en PDFs versionados y assets con contrato independiente no se modifican por Dark/Light; rige `PDFS.md`.
 
-| Token | Valor | Uso |
+### Tokens por tema
+
+| Rol | DARK | LIGHT |
 |---|---|---|
-| Text Muted | `#9A9A9A` | títulos de sección (`Reporte mensual`, `VENTAS DEL MES`), labels de navegación inactivos, placeholders |
-| Alert Row | `#6B0000` | fondo de fila de alerta (stock bajo el mínimo, `URG PARA PEDIDOS`, `SALDO ACTUALIZADO` con deuda) |
-| Button Hover | `#393939` | relleno de botón dark en Hover (`PrimaryDark Hover` del frame de estilo) |
+| background | `#161616` | `#EFEFEF` |
+| surface | `#0F0F0F` | `#F6F6F6` |
+| surface-raised | gradiente `#121212 → #000000` cuando el componente lo prescribe; en otro caso Surface | gradiente `#F3F2F2 → #DEDDDD` cuando el componente lo prescribe; en otro caso Surface |
+| border-control / Border button | `#D9D9D9` | `#D9D9D9` |
+| border-section / Border section/header | `#393939` | `#D9D9D9` |
+| text-primary | `#FFFFFF` | `#212121` |
+| section-title | `#6B6B6B` | `#6B6B6B` |
 
-`#C38926` es el **único dorado normativo**. Obsoletos: `#B99D22`, `#D2AB68` (este último solo persiste en los PDFs v1.0, ver `PDFS.md`).
+Light conserva jerarquía entre fondo general, surfaces y componentes elevados: no es una pantalla blanca plana. Dark utiliza Surface para panels y sections; el negro absoluto no es su sustituto indiscriminado. Los gradientes se limitan a botones neutros, inputs/selects, selectores de lista y cards que los prescriban; la card de Pedido seleccionada Dark es una excepción explícita sin gradiente (§18.1).
 
-Equivalencias con nombres anteriores (solo migración): `Background` → `Secondary`; `Border` → `Border Button`; `Gray` → `Border Contenedor`; `Blue` → `Tertiary`.
+Roles independientes obligatorios, además de los anteriores: `text-secondary`, `text-on-action`, `selection`, `hover`, `overlay`, `success`, `danger`, `info`, `chart-grid`, `chart-axis` y `chart-tooltip` (superficie, borde y texto). `selection` usa Primary para el énfasis/borde sin imponer el mismo relleno a todos los componentes. `text-on-action` se determina por contraste sobre la acción, nunca por el color de texto principal del tema. `chart-axis` incluye labels; `chart-grid` no se confunde con el borde de sección.
 
-Los tokens se centralizan como variables CSS (`src/app/globals.css`) y utilidades Tailwind (`bg-steffen-*`, `text-steffen-*`, `border-steffen-*`). No se escriben colores sueltos en componentes si existe un token.
+`text-secondary` toma `#6B6B6B` como referencia muted; títulos de sección usan `section-title`. Debe calibrarse por separado la legibilidad de contenido secundario, placeholders e iconos. Los tokens `success-soft`, `danger-soft`, hover, overlay, texto sobre acción y derivados gráficos sin valor inequívoco quedan **a calibrar visualmente durante implementación**, sin inventar hexadecimales. Esto no permite cambiar los valores explícitos de las tablas anteriores. Se conserva el criterio sin sombras decorativas.
 
-## 4.2 Identidad dark y preparación para modo light
+El token histórico `--steffen-surface` tiene usos ambiguos, incluido texto claro. Antes de reutilizarlo se deben separar los consumidores por rol (fondo, texto, texto sobre acción, etc.). No puede simplemente reasignarse a un fondo Light. La capa heredada `.erp-dark` y los colores locales deben reconciliarse con esos roles; no alcanza con cambiar variables sin revisar sus consumidores.
 
-- Página: `Fondo Dark` `#101010`; barra lateral y paneles: `Secondary` `#000000`.
-- Paneles con borde `Border Contenedor`; botones e inputs con borde `Border Button` y fondo `Surface Dark Degrade`.
-- Sin sombras.
-- Dorado solo para identidad, módulo activo y énfasis (KPI, card seleccionada, header de líneas del pedido).
-- Texto principal `Surface`; texto secundario `Text Muted`.
+Los colores se centralizan como CSS Custom Properties semánticas y utilidades compartidas. Los componentes no incorporan hexadecimales sueltos cuando existe un token.
 
-El modo activo se define con `data-theme` en `<html>` (`dark` vigente). Todos los colores se consumen vía variables, de modo que el modo light futuro (`Fondo` `#EFEFEF`, superficies `Surface`) se agregue redefiniendo las variables bajo `[data-theme="light"]`, sin tocar componentes. **Hoy solo se implementa dark.**
+Lectura de nombres heredados en el resto del documento: Tertiary/Blue = Info; Blue Hover = Info hover; Verde/Green = Success; Rojo/Red = Danger; Border Button = border-control; Border Contenedor/Gray = border-section. Text Muted identifica text-secondary salvo títulos de sección, que usan section-title. Secondary en nombres históricos de botones significa PrimaryDark, no impone fondo negro.
+
+## 4.2 Sistema de theme y preferencia
+
+Contrato conceptual: `data-theme="dark|light"` en el elemento raíz y CSS Custom Properties semánticas. Si existe preferencia persistida se utiliza; de lo contrario, DARK por defecto. La preferencia persiste entre sesiones.
+
+La resolución inicial debe estar disponible para el render del servidor (por ejemplo mediante cookie), y el cliente debe iniciar con el mismo valor: evitar flash de tema incorrecto y hydration mismatch. No convertir innecesariamente Server Components a Client Components; solo el proveedor/control de theme requiere estado cliente cuando sea necesario. El proveedor puede recibir contenido renderizado en servidor sin convertirlo en lógica cliente.
+
+### Selector global DARK ↔ LIGHT
+
+Desktop: zona superior derecha del ERP. Responsive/mobile: acceso equivalente sin alterar la navegación. Cambio inmediato en toda la aplicación, conservando ruta, datos cargados y funcionalidad, sin recarga de datos causada por el cambio de tema. Persistir la preferencia. El control y sus estados comparten geometría entre temas.
+
+La implementación de esta infraestructura queda para R2; R1 solo fija el contrato documental.
 
 ## 4.3 Radius
 
@@ -681,8 +684,8 @@ Reemplaza los valores anteriores (`2 px` / `5 px`).
 
 Fuente: `docs/visual-references/iconos/`. Se usan esos íconos (no se redibujan); solo se adapta color/estilo:
 
-- **Dentro de botones:** plateado/cromado (degradé claro sobre la silueta del ícono).
-- **Navegación:** módulo activo en `Primary`; inactivos en plateado.
+- **Dentro de botones:** tratamiento de icono del tema con contraste, conservando silueta y geometría; cromado donde lo prescriba el diseño.
+- **Navegación:** módulo activo en `Primary`; inactivos mediante token de icono del tema.
 - Ícono PDF/documento: rojo.
 
 Asignación: `panel` → Dashboard; `fabrica` → Mi Fábrica; `hacer-un-pedido` → Pedidos y cards de pedido; `distribuidor` → Stock; `imac` → Administración; `carrito-de-compras` → Compra; `formula` → Fabricación/Fórmulas/Simular; `envase-de-spa-de-jabon-cremoso` → Envasado, Componentes y lista de productos; `lista` → Listas de precios; `medico` → Gasto operativo; `retiro` → Retiro caja; `orden` → Pedidos abiertos / Ventas (KPI); `ingresos` → Ventas del mes; `productos` → pestaña Productos; `Sin-título-1` → pestaña Materia Prima; `tanque` → tile de granel; `usuario` → lista de clientes/proveedores; `nueva-cuenta` → Nueva cuenta; `boton-mas` → botón `+`.
@@ -701,21 +704,26 @@ Donde no hay ícono de referencia se usa un ícono lineal neutro con el mismo tr
 
 ## 5.0 Densidad visual
 
-La referencia de escala es la **densidad visual del ERP con el navegador al 75 % de zoom**, implementada de forma **nativa** en el sistema de diseño:
+La referencia canónica son los tamaños actualmente implementados. Dark/Light conserva exactamente la densidad visual: no agrandar globalmente tipografías, botones, inputs, tablas, sidebar, cards, gaps ni paddings.
 
-- prohibido `zoom: 0.75` y `transform: scale(0.75)`;
-- el layout ocupa `width: 100%` y se adapta al viewport (sin contenedor máximo);
-- controles ~25 % más compactos; tipografía, padding, gaps e íconos reducidos;
-- borders siempre 1 px (no se escalan); radius de panel 10 px y de botón 5 px se conservan;
-- no reducir mecánicamente si perjudica la legibilidad (texto auxiliar mínimo 10–11 px).
+Se mantiene `--spacing: 3px`, los valores locales y la escala real de `globals.css`:
 
-Implementación: tokens de Tailwind en `globals.css` (`--spacing: 3px`, escala `--text-*`) más valores fijos de control (botón 30/50 px).
+| Utilidad | Tamaño |
+|---|---:|
+| text-xs | 11 px |
+| text-sm | 12 px |
+| text-base | 13 px |
+| text-lg | 14 px |
+| text-xl | 16 px |
+| text-2xl | 18 px |
+| text-3xl | 22 px |
+| text-4xl | 26 px |
 
-Esta escala **reemplaza** la escala anterior del rediseño dark (28/24/18/14/12 y botones 40/70).
+Body: **12 px**. Se conservan las excepciones locales existentes justificadas por jerarquía (encabezados de página, valores KPI e importes destacados), sin uniformarlas ni ampliarlas. Dark/Light no autoriza a modificar esta escala ni las dimensiones actuales de los componentes.
 
 ## 5.1 Tipografía
 
-Familia: `Inter` (cargada por la aplicación).
+Familia oficial: `Inter`, cargada en el layout raíz mediante `next/font/google`, variable `--font-inter`, subconjunto latin y display swap.
 
 | Token | Tamaño | Peso | Uso |
 |---|---:|---|---|
@@ -728,7 +736,7 @@ Familia: `Inter` (cargada por la aplicación).
 
 Numerales de KPI: 24 px Bold (display).
 
-| Display ExtraLight | 24 px | ExtraLight (200), tracking -0.02em | importes de las cards de Cuentas/Caja (Caja Steffen, Caja Mercado Libre, Deudas) y Total facturado; NETO usa Bold. Clase `.ui-display-extralight`. Los importes nunca se truncan: las cards crecen con el contenido |
+| Display ExtraLight | tamaño local vigente (p. ej. 22 px en Total facturado del Dashboard) | ExtraLight (200), tracking -0.02em | importes de las cards de Cuentas/Caja (Caja Steffen, Caja Mercado Libre, Deudas) y Total facturado; NETO usa Bold. Clase `.ui-display-extralight`. Los importes nunca se truncan: las cards crecen con el contenido |
 
 Inter se carga como fuente variable, por lo que el peso 200 está disponible sin recursos adicionales.
 
@@ -751,20 +759,20 @@ Gaps: `4 px`, `8 px`, `15 px` (en Tailwind con `--spacing: 3px`: `gap-1`≈3, `g
 
 Alturas: Chico `~30 px`, Grande `~50 px`. Radius `5 px`. Íconos dentro de botones: 18–24 px.
 
-| Variante (frame de estilo) | Default | Hover / Selected |
-|---|---|---|
-| PrimaryDark (Secondary) | fondo `Surface Dark Degrade`, borde `Border Button`, texto `Surface` | fondo `Button Hover` `#393939` |
-| Principal (Grande) | igual que PrimaryDark, 50 px, texto H3 | igual que PrimaryDark |
-| Icon / IconText | PrimaryDark con ícono plateado (± texto) | igual |
-| Verde | `Verde` sólido | `Verde Hover` |
-| Rojo | `Rojo` sólido | `Rojo Hover` |
-| Rojo Foto (icon) | `Rojo` sólido con ícono claro (`Retiro caja`) | `Rojo Hover` |
-| Menu | ícono + label; inactivo plateado/`Text Muted` | activo/hover: ícono y label `Primary` |
-| Lista | transparente, ícono + texto `Surface` | Hover/Selected: fondo `Surface Dark Degrade` |
-| Volver | triángulo + texto `Tertiary` | `Blue Hover` |
-| Add (`+`) | círculo `Surface` con `+` oscuro | `Border Button` |
+| Variante oficial | Contrato visual compartido |
+|---|---|
+| Primary | énfasis Primary; texto sobre acción con contraste |
+| PrimaryDark | acción neutra; surface-raised/gradiente del tema, border-control y text-primary; el nombre no limita su uso a Dark |
+| Success | Success y text-on-action |
+| Danger | Danger y text-on-action |
+| Info | Info, hover Info hover y text-on-action |
+| Icon / IconText | composición de Button con icono, con o sin texto; label accesible cuando no muestra texto |
+| Menu | navegación; activo Primary; inactivo text-secondary/icono del tema |
+| Lista | transparente por defecto; hover/selección con tokens del tema |
+| Volver | triángulo y texto Info, hover Info hover |
+| IconRojo | acción destructiva con icono; Danger y text-on-action |
 
-Todos los íconos dentro de botones se ven plateados/cromados (§4.4). El rediseño no cambia la acción de ningún botón.
+El control circular `+` conserva su función y dimensiones actuales, con contraste e icono adecuados al tema. Componer variantes del Button existente es suficiente: no se exige un componente independiente por variante. El tratamiento de iconos usa tokens del tema (§4.4), conservando su geometría.
 
 ---
 
@@ -772,11 +780,13 @@ Todos los íconos dentro de botones se ven plateados/cromados (§4.4). El redise
 
 ## 9.0 Lenguaje visual
 
-- **Barra lateral izquierda** (`Secondary`, ~78 px) con: logo arriba; los 5 módulos en columna (ícono + label debajo); logout como botón Icon al pie, separado.
+**Cerrar sesión:** la única referencia visual canónica es el Dashboard nuevo suministrado por el usuario. Las versiones presentes en otras maquetas son antiguas y no se utilizan. Dark y Light comparten componente, geometría y comportamiento; solo cambian tokens. Mantener `logoutAction` y todo el flujo de sesión. Desktop y mobile conservan sus ubicaciones funcionales vigentes.
+
+- **Barra lateral izquierda** (Surface del tema, ~78 px) con: logo arriba; los 5 módulos en columna (ícono + label debajo); logout como botón Icon al pie, separado.
 - Módulo activo: ícono y label en `Primary` sólido. Inactivos: ícono plateado y label `Text Muted`; hover: ícono y label en **dorado cromado** (degradé metálico sobre `Primary`).
 - Debajo de los 5 módulos, separados por una línea, **accesos directos** a pantallas existentes: Clientes (`/clientes`), Proveedores (`/proveedores`) y Listas de precios (`/precios`). No son módulos nuevos ni agregan funciones; se resaltan solo en su propia ruta.
-- Área de contenido sobre `Fondo Dark`.
-- **Encabezado de pantalla principal:** título H1 a la izquierda, chip `Admin` (sesión) a la derecha y una línea `Border Contenedor` debajo.
+- Área de contenido sobre background del tema.
+- **Encabezado de pantalla principal:** título H1 a la izquierda; chip `Admin` (sesión) y selector global de theme en la zona superior derecha; línea border-section debajo.
 - **Pantallas secundarias** (Fórmulas, Productos Finales, Clientes, Proveedores, Listas de precios, etc.): sin título H1; `Volver` (Tertiary) a la izquierda, título H3 centrado y acción principal a la derecha.
 
 Los frames `FORMULAS` y `PRODUCTOS FINALES` todavía muestran la navegación superior anterior: se aplica igualmente la barra lateral, por consistencia con el resto de los frames.
@@ -828,8 +838,8 @@ No convertir información tabular en cards si el Figma la define como tabla.
 
 ## 10.1 Contenedores / secciones
 
-- Panel: fondo `Secondary`, borde 1 px `Border Contenedor`, radius `10 px`, padding `15 px` lateral / `12 px` vertical, sin sombra.
-- Título de sección: `Título ———— línea` en `Text Muted` (B1/H3), línea 1 px `Border Contenedor` (o `Surface` en fichas de Cuentas, según frame) que ocupa el ancho restante; controles opcionales (Buscar, select, `REGISTRAR PAGO`) al extremo.
+- Panel: fondo Surface del tema, borde 1 px `Border Contenedor`, radius `10 px`, padding `15 px` lateral / `12 px` vertical, sin sombra.
+- Título de sección: `Título ———— línea` en section-title `#6B6B6B` (B1/H3), línea 1 px border-section (o contraste de text-primary donde esté prescrito) que ocupa el ancho restante; controles opcionales (Buscar, select, `REGISTRAR PAGO`) al extremo.
 - Sección de alerta: título y línea `Rojo`, panel con borde `Rojo`.
 
 ---
@@ -838,27 +848,27 @@ No convertir información tabular en cards si el Figma la define como tabla.
 
 Ventanas disparadas por botones (Fabricación, Envasado, Nueva Fórmula, Nuevo Producto, Nuevo Pedido, Compra, Pago Cliente, Pago Proveedor, Gasto Operativo, Retiro, Nueva MPR/COM, Nuevo Cliente, Nuevo Proveedor).
 
-Tratamiento: panel dark (§10.1, radius 10), título H2/H3, labels sobre inputs, valores automáticos distinguibles, acciones al final (`Cancelar` PrimaryDark; confirmación en su variante semántica). Overlay negro semitransparente. Sin sombras.
+Tratamiento: panel Surface del tema (§10.1, radius 10), título H2/H3, labels sobre inputs, valores automáticos distinguibles, acciones al final (`Cancelar` PrimaryDark; confirmación en su variante semántica). Overlay mediante token semántico del tema. Sin sombras.
 
 ## 11.1 Inputs y selects
 
-- Default: fondo `Surface Dark Degrade`, borde `Border Button`, texto `Surface`, placeholder `Text Muted`, radius `5 px`, B2/B4.
-- Error: borde y texto `Rojo`.
-- Variante de borde claro: fondo `Secondary` con borde `Surface` (frame de estilo, tercer input).
-- Select: misma familia, con flecha ▼ clara.
+- Fondo surface-raised/gradiente del tema cuando esté prescrito; borde border-control, texto text-primary y placeholder text-secondary.
+- Focus: Primary. Error: Danger y mensaje visible. Disabled: sin interacción, conservando legibilidad.
+- Selects, opciones y flecha consumen tokens del tema, incluido el esquema de color nativo.
+- Mantener tamaños, radio y comportamiento actuales; no crear controles separados por tema.
 
 ---
 
 # 12. Patrón de tablas
 
-- Encabezado: fondo `Border Contenedor` `#393939`, texto `Surface` B1, sin radius.
-- Encabezado destacado: fondo `Primary` (líneas del Pedido). Encabezado de alerta: fondo `Rojo` (Bajo stock).
-- Filas sobre `Secondary`, texto `Surface` B2, separador inferior 1 px `Surface`.
-- Fila de alerta: fondo `Alert Row` `#6B0000`, texto `Surface`.
-- Valores positivos en `Verde`, críticos en `Rojo`; cobertura con granel `(n)GR` en `Tertiary`.
-- Densidad alta; alineación numérica consistente; sin zebra.
+- DARK: filas sobre Surface `#0F0F0F`, header `#393939`, texto `#FFFFFF` y divisores con contraste suficiente.
+- LIGHT: filas sobre Surface `#F6F6F6`, header `#D9D9D9`, texto `#212121` y divisores finos.
+- Encabezados semánticos especiales solo donde estén prescritos; no trasladar automáticamente el dorado de maquetas antiguas a headers nuevos.
+- Success para positivos, Danger para faltantes/alertas e Info para enlaces/acciones. La semántica de cobertura se conserva.
+- Alertas mediante tokens semánticos de fondo/texto del tema; no imponer un relleno oscuro a Light.
+- Mantener densidad actual, alturas de fila, tipografía, radios implementados, alineación numérica, responsive y scroll actuales.
 
-El rediseño preserva ordenamientos, búsquedas, filtros e interacciones existentes. Los criterios de cada estado pertenecen a `BUSINESS_RULES.md`.
+Se preservan ordenamientos, búsquedas, filtros e interacciones. Los criterios de estado pertenecen a `BUSINESS_RULES.md`.
 
 ---
 
@@ -874,7 +884,7 @@ El rojo comunica un problema operativo que requiere atención:
 Tratamiento:
 
 - valor crítico en `Rojo`;
-- fila de alerta con fondo `Alert Row` `#6B0000` y texto `Surface` (`URG PARA PEDIDOS`, stock bajo el mínimo, `SALDO ACTUALIZADO` con deuda);
+- fila de alerta con fondo danger-soft y texto de contraste del tema (`URG PARA PEDIDOS`, stock bajo el mínimo, `SALDO ACTUALIZADO` con deuda);
 - sección de alerta: título + línea `Rojo`, panel con borde `Rojo`, encabezados de tabla en `Rojo` (`Bajo stock`).
 
 No usar rojo ni verde como decoración.
@@ -901,6 +911,10 @@ Ejemplos:
 
 ## 15.1 Objetivo visual
 
+Aplicar Dark/Light exclusivamente a la estética de estructura general, Reporte mensual, Cuentas, Acceso rápido, Bajo stock, Resumen de pedidos, Cotización dólar y navegación, incluyendo selector de theme y logout. No alterar consultas, cálculos, acciones ni bloques funcionales actuales.
+
+**Cotización dólar compacta:** `COTIZACION DOLAR`, valor actual y fila `[input] [ACTUALIZAR]`. Evitar altura innecesaria; surface, control y botón consumen tokens del tema. Conservar la lógica vigente de cotización y actualización.
+
 Debe funcionar como resumen operativo.
 
 Bloques:
@@ -916,11 +930,11 @@ Tratamiento visual (rediseño, según el frame Dashboard):
 
 - columna izquierda: `REPORTE MENSUAL` con cards KPI (§15.2) de Pedidos abiertos, Ventas del mes, Total facturado (Default) y Ganancia (destacada positiva; el Figma la rotula `MARGEN NETO`, se mantiene `GANANCIA`), más los botones `NUEVO PEDIDO` y `VER VENTAS` (Secondary);
 - `ACCESO RAPIDO`: botones icon-only y botón con icono + texto (§8);
-- `CUENTAS`: tabla compacta con valores positivos en `Green` y negativos en `Red`; debajo, botones de acciones patrimoniales (`Pago Proveedor` Secondary, `Pago Clientes` Success, acciones icon-only, acción destructiva en Danger);
+- `CUENTAS`: conservar las cards y acciones patrimoniales actuales, con tokens Neutral/Positive/Negative según su significado; mantener Caja Steffen y Caja Mercado Libre separadas;
 - columna derecha: `RESUMEN DE PEDIDOS` (matriz con faltantes en `Red` y cobertura con granel en tono secundario);
 - franja inferior `BAJO STOCK` con el tratamiento de sección de alerta (§13): tabla de Componente/MP con `SIMULAR COMPRA` y tabla de Producto Final con estado y `SIMULAR`.
 
-El Dashboard sigue mostrando todos sus bloques vigentes (§15.1–§15.5), aunque el frame no los dibuje igual. En particular, la tabla `CUENTAS` del frame muestra una sola `CAJA`; se mantienen Caja Steffen y Caja Mercado Libre por separado. El bloque vacío `REPORTE VENTAS` del frame no corresponde a una función vigente y no se implementa hasta que se defina funcionalmente. El atajo `Listas de precios` en Acceso Rápido abre la pantalla existente de Lista de Precios; no crea un flujo nuevo.
+El Dashboard conserva su estructura funcional actual; las referencias solo cambian estética. No reconstruir tablas de Cuentas históricas ni eliminar bloques vigentes. El bloque vacío `REPORTE VENTAS` del frame no corresponde a una función vigente y no se implementa hasta que se defina funcionalmente. El atajo `Listas de precios` en Acceso Rápido abre la pantalla existente de Lista de Precios; no crea un flujo nuevo.
 
 ---
 
@@ -930,19 +944,15 @@ Las cards muestran valores derivados en tiempo real.
 
 No deben parecer inputs.
 
-Deben priorizar:
+Deben priorizar el valor numérico sobre la etiqueta; contexto temporal secundario cuando corresponda.
 
-1. nombre de métrica;
-2. valor;
-3. contexto temporal si aplica.
+Variantes semánticas compartidas por cards y KPI:
 
-Patrón KPI (rediseño):
+- **Neutral:** Surface o gradiente del tema según componente.
+- **Positive:** en Light, fondo success-soft y semántica Success; en Dark, Surface oscura con énfasis principalmente en valor/texto/borde Success.
+- **Negative:** en Light, fondo danger-soft y semántica Danger; en Dark, Surface oscura con énfasis principalmente en valor/texto/borde Danger.
 
-- **Default:** fondo negro, borde dorado (`Primary`);
-- **Con ícono:** igual que Default, con ícono a la izquierda del numeral;
-- **Destacada positiva:** fondo `Verde` sólido.
-
-Numerales grandes y labels compactos.
+Los fondos soft son tokens a calibrar visualmente, sin hexadecimales inventados. Un icono es una composición, no otra identidad visual. Conservar tamaños locales y jerarquía existentes; no convertir las cards en inputs.
 
 ---
 
@@ -1238,7 +1248,7 @@ Solo PED abiertos.
 
 Tratamiento visual de la pantalla Pedidos (rediseño, según el frame Pedidos):
 
-- sección `PEDIDOS`: cada PED abierto como card seleccionable (fondo degradé, borde `Border Contenedor`; seleccionada con borde `Primary`) con icono, código, cliente/origen y fecha; un botón circular `+` crea un Nuevo Pedido;
+- sección `PEDIDOS`: cada PED abierto como card seleccionable con cliente, código, fecha e importe. Default: superficie/gradiente del tema y border-section. Selected DARK: fondo `#000000`, borde `#C38926`, **sin gradiente**. Selected LIGHT: surface/gradiente claro según diseño, borde `#C38926`. El estado no cambia dimensiones. El botón circular `+` conserva la creación de Pedido;
 - al seleccionar una card, el detalle del PED (§19) se muestra en un panel debajo, en la misma pantalla;
 - sección `RESUMEN DE PEDIDOS`: matriz compacta (§12) con faltantes en `Red` y cobertura con granel en tono secundario.
 
@@ -1346,15 +1356,18 @@ Acción destructiva:
 
 - Borrar Pedido con confirmación.
 
-Tratamiento visual (rediseño, según el frame Pedido):
+Tratamiento visual Dark/Light:
 
-- título `PEDIDO xxxx` y cabecera en grilla de pares label/valor; `Cant. bultos` como input dark;
-- tabla de líneas con encabezado destacado en `Primary` (variante de DataTable); por línea, editar (lápiz) y borrar (icono rojo), y `AG` como input dark al extremo derecho;
-- `Agregar producto` (Secondary) debajo de las líneas;
-- totales alineados a la derecha: Subtotal, cada descuento por separado, Total Pedido, Saldo, Total a Cobrar;
-- footer de acciones: `Borrar pedido` (Danger), `Cancelar` y `Guardar` (Secondary) y la acción de confirmación (Success).
+- Conservar los datos y campos actualmente editables; no inventar campos a partir de maquetas históricas.
+- Título `PEDIDO xxxx`, cabecera compacta y bultos/input según theme.
+- Columnas de datos: **Cant. / Producto / PU / PT / AG**. Conservar acciones de línea vigentes en una celda o control auxiliar, sin perder eliminar producto.
+- Importes preferentemente en una línea cuando el ancho lo permita, por ejemplo `$ 7.032.190,00`; evitar separar verticalmente símbolo y número si hay espacio horizontal. Esto no modifica precisión, cálculo ni formato monetario funcional vigente.
+- Peso, cantidades, labels e importes se adaptan horizontalmente al contenido cuando sea posible, sin apilados artificiales.
+- Totales alineados y jerarquía actual, sin alterar cálculos.
+- Al implementar autosave (`FLOWS.md` §14), eliminar Guardar y Cancelar de la edición del Pedido; redistribuir el footer sin huecos reservados. Conservar Borrar pedido con confirmación y Generar remito (Success).
+- La X simplemente cierra; no pregunta si guardar ni cancela persistencia. Estados de guardado/error visibles sin ampliar globalmente controles.
 
-El frame rotula la acción verde como `Registrar compra`: se mantiene el label y la acción vigentes de confirmación del RTO.
+El flujo de confirmación del RTO conserva su función y sus propios controles; la eliminación de Cancelar del editor no elimina cancelar una confirmación o descartar el formulario de agregar producto.
 
 ---
 
@@ -1387,31 +1400,9 @@ No utilizar “Margen”.
 
 # 22. Administración — pantalla principal
 
-La pantalla vigente incluye:
+La implementación actual de Administración determina sus bloques, acciones y navegación. Aplicar tokens Dark/Light a las secciones vigentes, Cotización USD, Ventas, cuentas de clientes/proveedores y movimientos sin reconstruir estructuras retiradas.
 
-- acciones superiores;
-- Cotización USD;
-- Ventas;
-- Resumen Cuentas Clientes;
-- Deudas Proveedores;
-- Cuentas;
-- Últimos Movimientos.
-
-Tratamiento visual (rediseño, según el frame Administración):
-
-- `VENTAS DEL MES`: selector de mes en el encabezado, tabla compacta con Ganancia en `Green`, acceso al RTO con icono, fila `TOTAL` y enlace `IR A VENTAS` (Blue);
-- acciones superiores `GASTO OPERATIVO` y `LISTA DE PRECIOS` como botones grandes con icono;
-- `COTIZACION DOLAR`: input dark y `ACTUALIZAR` (Success);
-- `CUENTAS`: tabla compacta con valores positivos en `Green` y negativos en `Red`, `NETO` destacado y `RETIRO CAJA` (Danger);
-- `CUENTAS CLIENTES` y `DEUDAS PROVEEDORES`: secciones con `REGISTRAR PAGO` (Success) en el encabezado, tabla compacta con acceso a la cuenta por icono, fila `TOTAL` y enlaces `IR A CLIENTES` / `IR A PROVEEDORES` (Blue);
-- `MOVIMIENTOS ADMINISTRACION`: tabla compacta a todo el ancho y enlace `IR A MOVIMIENTOS` (Blue).
-
-Se mantiene todo lo que el frame no dibuja:
-
-- la Cotización Actual y su última actualización (§22.2), además del input;
-- Caja Mercado Libre en Cuentas;
-- el acceso a Liquidación Mercado Libre (§22.6);
-- el acceso discreto a `/system-status`.
+**Referencia histórica excluida:** la antigua sección/tablas de Cuentas visible en algunas maquetas de Administración NO debe restablecerse. Las nuevas imágenes establecen estética; cuando contradigan funcionalidad vigente prevalece el sistema actual. Conservar los accesos actuales, incluida Liquidación Mercado Libre y `/system-status` donde ya existan.
 
 ---
 
@@ -1492,9 +1483,9 @@ Columnas equivalentes:
 
 ---
 
-## 22.6 Cuentas
+## 22.6 Cuentas — referencia histórica, no reconstruir
 
-Mostrar:
+La maqueta histórica mostraba:
 
 - Caja Steffen;
 - Caja Mercado Libre;
@@ -1502,11 +1493,11 @@ Mostrar:
 - Deudas Proveedores;
 - Neto.
 
-Acción:
+Acción histórica:
 
 - Retiro Caja.
 
-También debe existir acceso al flujo de Liquidación Mercado Libre.
+Esta lista no ordena reconstruir una sección ni trasladar sus acciones. Conservar las ubicaciones funcionales actuales y el acceso vigente a Liquidación Mercado Libre.
 
 ---
 
@@ -1580,7 +1571,7 @@ Tratamiento visual (rediseño, según el frame Ventas):
 
 - navegación de pantalla secundaria con `Volver` y título `VENTAS`;
 - selector de período en una fila: año + doce meses como botones; el mes seleccionado con fondo `Blue`;
-- cards KPI (§15.2): cantidad de ventas y Total facturado (Default), Ganancia Total (destacada positiva), más un botón PDF icon-only;
+- cards KPI (§15.2): cantidad de ventas y Total facturado Neutral; Ganancia con semántica Success/Positive; el resto neutral salvo significado explícito. El selector año/mes se adapta al theme sin cambiar filtros ni cálculos;
 - sección `VENTAS DEL MES` con tabla compacta (Ganancia en `Green`; acceso a RTO y RTM con icono de documento, que abre el PDF almacenado).
 
 Los labels normativos se mantienen: `GANANCIA` (no `MARGEN` ni `MARGEN NETO`), `RTO` y `RTM` (no `R. CLIENTE` / `R. MARGEN`).
@@ -1891,9 +1882,9 @@ Reglas funcionales: `BUSINESS_RULES.md` §36. Contrato consolidado: `REPORTES.md
 
 Esta sección define **jerarquía, composición, proporciones conceptuales, controles, interacción, responsive, comportamiento de gráficos y estados de carga/vacío** (aprobados en R3.1 Desktop, R3.2 Interacciones y R3.3 Responsive).
 
-**No define todavía** colores nuevos, tamaños en px, alturas exactas, gaps exactos, tipografías nuevas ni estilos gráficos definitivos. La implementación reutiliza el sistema visual existente del ERP (tokens, `Panel`, `SectionHeader`, inputs/selects, tabs, tablas, empty states).
+R1 fija paleta y theming en §35.11. Se reutilizan componentes y densidad actuales (tokens, Panel, SectionHeader, inputs/selects, tabs, tablas y empty states), sin redefinir tamaños globales.
 
-Motor gráfico previsto: Recharts (todavía no instalado).
+Motor gráfico actual: Recharts. Este contrato no requiere instalar dependencias.
 
 ## 35.1 Estructura general
 
@@ -1908,8 +1899,9 @@ PRODUCTOS
   [Ranking de productos ~60%] [Participación por producto ~40%]
 
 CLIENTES
-  [Mayores compradores ~60%]  [Concentración ~40%]
-  [Análisis individual ~60%]  [Evolución de la concentración ~40%]
+  Columna izquierda ~60%: Mayores compradores → Análisis individual
+  Columna derecha ~40%: Concentración → Evolución de la concentración
+  (apilados independientes, sin filas compartidas)
 ```
 
 - El **selector global de año** se ubica en el encabezado general de Reportes, **no** dentro de Facturación. Controla toda la página.
@@ -1957,13 +1949,13 @@ Dos paneles en una fila, relación aprox. **60/40**.
 
 ## 35.5 CLIENTES — desktop
 
-| Fila | ~60% | ~40% |
-|---|---|---|
-| 1 | Mayores compradores | Concentración |
-| 2 | Análisis individual | Evolución de la concentración |
+Dos columnas verticales independientes:
 
-- No se fuerzan alturas iguales entre paneles.
-- Si Análisis individual crece al expandir el historial, solo ese panel aumenta su altura; la columna derecha **no** se estira para igualarlo.
+| Columna izquierda (~60%) | Columna derecha (~40%) |
+|---|---|
+| Mayores compradores → Análisis individual | Concentración → Evolución de concentración |
+
+El segundo panel de cada columna comienza inmediatamente debajo del primero, con el gap actual correspondiente, sin esperar la altura del vecino. No forzar alturas iguales ni alineación horizontal entre segundos paneles. Expandir historial solo aumenta su propio panel.
 
 ### Mayores compradores
 
@@ -2023,7 +2015,7 @@ Dos paneles en una fila, relación aprox. **60/40**.
 
 ### General
 
-- **Una sola columna.**
+- **Una sola columna.** En CLIENTES conservar un único orden de lectura: Mayores compradores → Concentración → Análisis individual → Evolución de concentración. No duplicar componentes para obtener el layout desktop/mobile.
 - Orden obligatorio de macrosecciones: 1. FACTURACIÓN, 2. PRODUCTOS, 3. CLIENTES. No se reordenan.
 - Encabezado: `REPORTES` y, debajo, el selector global de año a ancho completo o prácticamente completo.
 - Ningún panel provoca scroll horizontal de toda la página.
@@ -2076,13 +2068,31 @@ Dos paneles en una fila, relación aprox. **60/40**.
 
 - Se mantiene el panel con título y controles si aplican, y un empty state compacto dentro. No se reduce el bloque a una simple línea externa.
 
-## 35.11 Pendientes exclusivamente visuales
+## 35.11 Paleta y theme de gráficos — R1
 
-Quedan para la implementación, reutilizando el sistema visual existente y sin efecto sobre reglas ni comportamiento:
+El dorado `#C38926` queda excluido de todas las series estadísticas, incluidas barras proporcionales de rankings. No cambia ningún cálculo, filtro ni criterio analítico.
 
-- colores de series (dentro de la paleta vigente; sin colores nuevos);
-- tamaños en px, alturas exactas y gaps exactos;
-- estilo definitivo de tooltips, leyendas, skeletons y barras proporcionales.
+| Serie económica | Color |
+|---|---|
+| Facturación | `#0E50A0` |
+| Ganancia | `#008102` |
+| Gastos operativos | `#DD0000` |
+
+Comparaciones por período: seleccionado azul; período anterior gris/neutro. En gráficos cuya serie identifica una métrica económica (Facturación/Ganancia por año), mantener la paleta económica y los años como categorías, sin confundir ambas codificaciones.
+
+| Categoría Top 4 + Otros | Color |
+|---|---|
+| Categoría 1 | `#0E50A0` |
+| Categoría 2 | `#008102` |
+| Categoría 3 | `#DD0000` |
+| Categoría 4 | `#7C3AED` |
+| Otros | `#6B7280` |
+
+La paleta categórica distingue categorías; no implica resultado positivo/negativo salvo significado explícito del gráfico. Concentración utiliza azul para posiciones 1–5, verde para posiciones 6–10 y neutro Otros para Resto. Mantener correspondencia entre geometría, tooltip y leyenda.
+
+Panels y fondo de charts: Surface del tema. Tooltip: Surface + border-section + text-primary. Grid: chart-grid. Ejes/labels: chart-axis. Leyenda: sistema visual compartido del ERP. No usar defaults de Recharts que rompan el tema.
+
+Cada gráfico puede conservar su altura específica por legibilidad; no eliminarlas arbitrariamente. FACTURACIÓN y PRODUCTOS mantienen estructura mientras no genere espacio muerto significativo; CLIENTES sigue §35.5. Solo quedan por calibrar derivados de contraste/soft y detalles locales que no alteren la densidad vigente.
 
 ---
 
@@ -2101,7 +2111,7 @@ Diseño MVP:
 - estilo administrativo y sobrio;
 - fondo blanco (los PDFs no adoptan la interfaz dark de la aplicación);
 - texto negro/gris;
-- uso moderado del dorado Steffen `#C38926` (único dorado normativo; `#B99D22` y `#D2AB68` quedan obsoletos);
+- uso del dorado según el contrato independiente de `PDFS.md`; los PDFs versionados y assets históricos no cambian por Dark/Light;
 - logo Steffen en encabezado;
 - tablas simples y legibles;
 - sin elementos decorativos innecesarios.
@@ -2173,6 +2183,6 @@ Queda pendiente el refinamiento visual no funcional de:
 - animaciones/transiciones no esenciales;
 - detalles estéticos opcionales.
 
-El comportamiento responsive, mobile y tablet final se resuelve en **Fase 18** (ver §3.0); las pautas de §3.2–§3.24 son preliminares.
+R1 conserva el comportamiento responsive actual según §3.0; no abre una nueva fase de rediseño mobile/tablet.
 
 No inventar una identidad visual nueva para los puntos todavía pendientes: se aplica el lenguaje visual del nuevo Figma.

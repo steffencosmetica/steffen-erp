@@ -751,7 +751,8 @@ Resumen consolidado de `DESIGN.md` §35 (aprobado en R3.1–R3.3). Ante discrepa
 
 - **Facturación:** Resumen anual (6 KPIs a lo ancho) → fila ~60/40: Evolución mensual / Facturación y Ganancia por año.
 - **Productos:** fila ~60/40: Ranking de productos / Participación por producto.
-- **Clientes:** fila 1 ~60/40: Mayores compradores / Concentración; fila 2 ~60/40: Análisis individual / Evolución de la concentración.
+- **Clientes:** dos columnas verticales independientes, relación conceptual ~60/40. Columna izquierda: Mayores compradores → Análisis individual. Columna derecha: Concentración → Evolución de concentración.
+- El segundo panel de cada columna comienza inmediatamente después del primero, con el gap correspondiente, sin esperar la altura de la otra columna. No es obligatorio alinear horizontalmente paneles de columnas diferentes; evitar espacios verticales artificiales y no duplicar componentes.
 - No se fuerzan alturas iguales: si Análisis individual crece al expandir historial, solo ese panel crece; la columna derecha no se estira.
 - Proporciones conceptuales; no se fijan píxeles.
 
@@ -779,6 +780,7 @@ Resumen consolidado de `DESIGN.md` §35 (aprobado en R3.1–R3.3). Ante discrepa
 ### 17.6 Mobile (una sola columna)
 
 - Orden obligatorio: FACTURACIÓN → PRODUCTOS → CLIENTES.
+- Dentro de CLIENTES: Mayores compradores → Concentración → Análisis individual → Evolución de concentración, con una sola instancia de cada componente.
 - Selector global de año a ancho completo debajo de `REPORTES`.
 - KPIs (Resumen anual y Análisis individual) en grilla de 2 columnas; última card impar puede ocupar el ancho; sin carrusel.
 - Gráficos mensuales (general e individual): 12 meses preservados; scroll horizontal **interno** del área gráfica si no entran; labels no comprimidos en exceso. Nunca scroll horizontal de la página.

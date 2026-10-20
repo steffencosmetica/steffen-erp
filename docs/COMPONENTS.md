@@ -31,92 +31,61 @@ como controles visualmente diferentes si todos pueden usar el mismo componente `
 
 ---
 
-# 3. Tokens base
+# 3. Tokens base y tematización — R1
 
-Fuente única de verdad: `DESIGN.md` §4–§7 y el frame de estilo `docs/visual-references/figma/Frame 1.png`. Implementación: variables CSS en `src/app/globals.css` (`--steffen-*`) expuestas como utilidades Tailwind (`bg-steffen-*`, `text-steffen-*`, `border-steffen-*`). Los componentes consumen tokens, no hex sueltos.
+Fuente normativa: `DESIGN.md` §4–§7. Un solo sistema de componentes, con `data-theme="dark|light"` y CSS Custom Properties semánticas compartidas; no crear componentes duplicados por tema. Preferencia persistente entre sesiones, DARK por defecto, sin flash incorrecto ni hydration mismatch. Solo proveedor/control de theme requiere estado cliente cuando sea necesario; conservar Server Components.
 
 ## Colores
 
-- Primary: `#C38926` — único dorado normativo
-- Secondary: `#000000` — paneles, sidebar
-- Surface: `#FBFBFB` — texto principal sobre dark
-- Fondo (light, reservado): `#EFEFEF`
-- Fondo Dark: `#101010` — fondo de página
-- Border Button: `#D9D9D9`
-- Border Contenedor: `#393939` — también fondo de encabezado de tabla
-- Tertiary (Blue): `#0E50A0` / hover `#6E96C6`
-- Verde: `#008102` / hover `#015C02`
-- Rojo: `#DD0000` / hover `#B10000`
-- Surface Dark Degrade: `linear-gradient(180deg, #121212, #000000)`
-- Derivados: Text Muted `#9A9A9A`, Alert Row `#6B0000`, Button Hover `#393939`
+Comunes: Primary `#C38926`, Secondary/Black absoluto `#000000`, Info `#0E50A0`, Info hover `#05346E`, Success `#008102`, Danger `#DD0000`.
 
-Obsoletos: `#B99D22`, `#D2AB68`.
+| Rol | DARK | LIGHT |
+|---|---|---|
+| background | `#161616` | `#EFEFEF` |
+| surface | `#0F0F0F` | `#F6F6F6` |
+| border-control | `#D9D9D9` | `#D9D9D9` |
+| border-section/header | `#393939` | `#D9D9D9` |
+| text-primary | `#FFFFFF` | `#212121` |
+| section-title | `#6B6B6B` | `#6B6B6B` |
+| gradiente prescrito | `#121212 → #000000` | `#F3F2F2 → #DEDDDD` |
 
-## Densidad
+Separar background, surface, surface-raised, text-primary, text-secondary, text-on-action, border-section, border-control, selection, hover, overlay, success, danger, info, chart-grid, chart-axis y chart-tooltip. Los tokens soft/derivados no determinados inequívocamente son a calibrar visualmente, sin inventar hexadecimales. `--steffen-surface` histórico mezcla texto y fondo: separar consumidores por rol antes de reutilizarlo; no basta reasignarlo a un fondo Light. Negro absoluto solo en casos prescritos.
 
-Escala nativa equivalente a la densidad de Chrome al 75 % (`DESIGN.md` §5.0): sin `zoom` ni `transform`; `width: 100%`; borders 1 px.
+Dorado: identidad, navegación activa, selección y foco; excluido de series estadísticas. `#D2AB68` y `#B99D22` obsoletos para UI activa, sin modificar PDFs versionados o assets con contrato independiente.
 
-## Tipografía
+Los nombres heredados se interpretan por rol según DESIGN.md §4.1: Blue/Tertiary = Info, Blue Hover = Info hover, Green/Verde = Success, Red/Rojo = Danger, Border Button = border-control y Border Contenedor = border-section. Text Muted equivale a text-secondary salvo títulos de sección (section-title).
 
-`Inter`
+## Densidad y tipografía
 
-- H1 — 22 px Bold
-- H2 — 18 px Semi-bold
-- H3 — 14 px Regular
-- Body semibold — 12 px
-- Body regular — 12 px
-- Auxiliar — 11 px
-
-## Gaps
-
-- 4 px
-- 8 px
-- 15 px
+Conservar exactamente tamaños actuales de fuentes, botones, inputs, tablas, sidebar, cards, gaps y paddings. Inter oficial; body 12 px. Escala: text-xs 11 px, text-sm 12 px, text-base 13 px, text-lg 14 px, text-xl 16 px, text-2xl 18 px, text-3xl 22 px, text-4xl 26 px. Conservar excepciones locales justificadas (encabezados, KPI e importes). `--spacing: 3px` y valores locales actuales permanecen.
 
 ## Superficies
 
-- sin sombras;
-- bordes 1 px;
-- radius: paneles/cards `10 px`; botones/inputs/ítems de lista `5 px`.
-
-## Modo de color
-
-Solo dark (`data-theme="dark"` en `<html>`). El modo light futuro redefine las mismas variables bajo `[data-theme="light"]`; ningún componente debe asumir colores fuera de las variables.
-
----
+Sin sombras decorativas; mantener bordes y radios implementados (panel/card 10 px, control 5 px). Surface y surface-raised son roles distintos. Solo los componentes prescritos usan gradiente; Light mantiene jerarquía entre fondo y surfaces, no blanco plano.
 
 # 4. Button
 
-## 4.1 Variantes
+## 4.1 Variantes oficiales
 
-El rediseño cambia la apariencia de cada variante, no su semántica: un botón existente conserva su acción.
+Misma acción, geometría y componente entre temas; solo cambian tokens. Base: dimensiones actuales, radio 5 px y texto de 12 px donde ya corresponda.
 
-Base común: radius `5 px`, borde 1 px, padding horizontal `~15 px`, texto Body semibold 12 px, íconos plateados/cromados (§63).
+| Variante | Contrato |
+|---|---|
+| Primary | énfasis Primary, texto sobre acción con contraste |
+| PrimaryDark | acción neutra en ambos temas; surface-raised/gradiente prescrito, border-control, text-primary y hover del tema |
+| Success | Success + text-on-action |
+| Danger | Danger + text-on-action |
+| Info | Info + text-on-action; hover `#05346E` |
+| Icon | composición de Button con icono; label accesible obligatorio si no muestra texto |
+| IconText | composición de Button con icono y texto |
+| Menu | navegación, activo Primary e inactivo según tokens del tema (§5) |
+| Lista | selector transparente con hover/selección del tema (§7) |
+| Volver | enlace Info con triángulo; hover Info hover (§8) |
+| IconRojo | Danger con icono y texto sobre acción de contraste |
 
-### PrimaryDark (Secondary / Principal en código)
+No se exige un componente nuevo por variante cuando la composición del Button existente alcanza. Los nombres actuales de API (`principal`, `secundario`, `verde`, `rojo`, `azul`) no cambian por esta especificación; su adaptación se resolverá en implementación. PrimaryDark no es un componente exclusivo de Dark.
 
-Uso: acción principal o alternativa neutra (crear, guardar, cancelar, abrir ventanas).
-
-- Default: fondo `Surface Dark Degrade`, borde `Border Button`, texto `Surface`;
-- Hover / Selected: fondo `Button Hover` `#393939`.
-
-### Success (Verde)
-
-- Default: `Verde` sólido (`REGISTRAR PAGO`, `ACTUALIZAR`, `Generar Remito`, `Pago Clientes`);
-- Hover: `Verde Hover`.
-
-### Danger (Rojo)
-
-- Default: `Rojo` sólido (`Borrar pedido`, `RETIRO CAJA`);
-- Hover: `Rojo Hover`.
-
-### Add (circular)
-
-`+` dentro de colecciones visuales (cards de Pedidos, tiles de granel): círculo `Surface` (~66 px) con `+` oscuro (ícono `boton-mas`). Dispara la misma operación que el botón equivalente del módulo.
-
-### Icon / IconText
-
-PrimaryDark con ícono plateado (± texto). Debe tener label accesible (`aria-label`/tooltip) cuando no muestra texto. Variante **Rojo Foto**: fondo `Rojo` con ícono claro (Retiro caja). El documento PDF usa ícono rojo sobre PrimaryDark.
+El botón circular de agregar conserva dimensiones y función actuales, con icono/texto de contraste del tema. IconButton comparte tokens y estados con Button. No confundir icono PDF rojo con una nueva acción destructiva.
 
 ## 4.2 Tamaños
 
@@ -136,7 +105,7 @@ Botón de la barra lateral (variante Menu).
 - Estructura: ícono (≈21 px) arriba, label 11 px semibold debajo.
 - Default: ícono plateado, label `Text Muted`.
 - Hover / Selected (módulo activo): ícono y label `Primary`.
-- Logout: botón Icon (borde `Border Button`) al pie de la barra, separado de los módulos.
+- Logout: control al pie separado de los módulos; referencia canónica exclusiva: Dashboard nuevo suministrado por el usuario. Las demás maquetas de logout son antiguas. Mismo componente, geometría y comportamiento entre Dark/Light; solo tokens. No modificar `logoutAction` ni sesión.
 
 Conserva las rutas funcionales actuales (`DESIGN.md` §9). No se agregan ítems por aparecer en frames viejos.
 
@@ -146,7 +115,7 @@ No usar para acciones de formulario.
 
 # 6. TabButton
 
-Subpestañas (Productos / Materia Prima / Componentes). Patrón Lista (§7) con ícono: Default transparente; Selected con fondo `Surface Dark Degrade`. Solo una Selected por grupo.
+Subpestañas (Productos / Materia Prima / Componentes). Patrón Lista (§7) con ícono: Default transparente; Selected con fondo surface-raised/gradiente del tema. Solo una Selected por grupo.
 
 ---
 
@@ -154,12 +123,12 @@ Subpestañas (Productos / Materia Prima / Componentes). Patrón Lista (§7) con 
 
 Selector lateral de entidades (Clientes, Proveedores, Fórmulas, Productos Finales) y sub-pestañas.
 
-- Default: transparente, ícono + texto `Surface` (B1);
-- Hover / Selected: fondo `Surface Dark Degrade`, radius `5 px`.
+- Default: transparente, ícono + texto text-primary (B1);
+- Hover / Selected: fondo surface-raised/gradiente del tema, radius `5 px`.
 
 Puede acompañarse por `Ver más`.
 
-**Card de entidad (Pedidos):** card seleccionable con fondo `Surface Dark Degrade`, borde `Border Contenedor`, radius `10 px`; contenido centrado (ícono + código H2, cliente B1, fecha B1, importe). **Selected:** borde `Primary`. Es un selector de entidad, no una Card KPI (§19).
+**Card de entidad (Pedidos):** mantiene cliente, código, fecha e importe, geometría actual y radio 10 px. Default con superficie/gradiente del tema y border-section. Selected DARK: `#000000` + borde `#C38926`, sin gradiente. Selected LIGHT: surface/gradiente claro según diseño + borde `#C38926`. Seleccionar no cambia dimensiones. Es selector de entidad, no KPI.
 
 ---
 
@@ -191,17 +160,14 @@ Estados visuales mínimos:
 - Disabled
 - Error
 
-Visual (rediseño, input dark):
+Visual Dark/Light:
 
-- Default → fondo `Surface Dark Degrade`, borde `Border Button`, texto `Surface`, placeholder `Text Muted`, radius `5 px`;
+- Default → fondo surface-raised/gradiente del tema, borde `Border Button`, texto text-primary, placeholder `Text Muted`, radius `5 px`;
 - Focus → borde `Primary`;
 - Disabled → interacción bloqueada, contraste reducido (manteniendo legibilidad);
 - Error → borde `Red` + mensaje B4 `Red`.
 
-Variante de borde claro (frame de estilo):
-
-- fondo `Secondary`;
-- borde `Surface`.
+Las variantes de contraste usan surface y border-control del tema; no reutilizar el token histórico Surface como texto o borde. Mantener dimensiones y comportamiento nativo, con text-secondary para placeholder y color-scheme correspondiente.
 
 No crear una nueva identidad visual fuera de estos tokens.
 
@@ -332,7 +298,7 @@ Debe admitir contenido compuesto, por ejemplo:
 
 `CLIENTE | SALDO`
 
-Visual: misma familia que los inputs (§9): fondo `Surface Dark Degrade`, borde `Border Button`, flecha ▼ clara, borde `Rojo` en error.
+Visual: misma familia que los inputs (§9): fondo surface-raised/gradiente del tema, borde `Border Button`, flecha ▼ con contraste del tema, borde `Rojo` en error.
 
 ---
 
@@ -359,21 +325,15 @@ Uso exclusivo para:
 - indicador;
 - resumen.
 
-Estructura:
+Estructura: valor principal dominante, label y contexto secundario opcional. Mantener las dimensiones locales implementadas.
 
-1. label;
-2. valor principal;
-3. contexto secundario opcional.
+Variantes semánticas de Card y KpiCard:
 
-Variantes KPI (rediseño):
+- **Neutral:** Surface o surface-raised/gradiente del tema según componente.
+- **Positive:** LIGHT con success-soft y semántica Success; DARK con Surface oscura y énfasis principalmente en texto/valor/borde Success.
+- **Negative:** LIGHT con danger-soft y semántica Danger; DARK con Surface oscura y énfasis principalmente en texto/valor/borde Danger.
 
-- **Default:** fondo `Secondary`, borde 2 px `Primary`, radius `10 px`;
-- **Con ícono:** Default con ícono (§63) junto al numeral;
-- **Destacada positiva:** fondo `Verde` sólido.
-
-Numerales grandes y labels compactos.
-
-No usar Card para reemplazar una tabla de gestión.
+Soft: tokens a calibrar visualmente, sin hexadecimales arbitrarios. Valor numérico dominante sobre etiqueta; conservar tamaños locales. Icono opcional por composición, no nueva identidad visual. No usar Card para reemplazar tablas de gestión ni crear variantes separadas por tema.
 
 ---
 
@@ -393,21 +353,13 @@ Debe soportar:
 
 El componente no decide la lógica de orden.
 
-Visual (rediseño):
+Visual Dark/Light (`DESIGN.md` §12):
 
-- compacta, densidad alta;
-- encabezado gris oscuro (`Gray`) con texto blanco (`Surface`);
-- filas sobre fondo oscuro con texto blanco;
-- separadores horizontales finos;
-- alineación numérica consistente;
-- sin zebra striping decorativo salvo que el diseño lo requiera;
-- valores críticos pueden ir en `Red`; valores positivos en `Green`.
-
-Variantes de encabezado (según el Figma):
-
-- **Default:** fondo `Gray`, texto `Surface`;
-- **Destacada:** fondo `Primary`, texto `Surface` (tabla de líneas del Pedido);
-- **Alerta:** fondo `Red`, texto `Surface` (tablas de la sección `BAJO STOCK`).
+- LIGHT: Surface clara, header gris `#D9D9D9`, texto `#212121`, divisores finos.
+- DARK: Surface `#0F0F0F`, header `#393939`, texto `#FFFFFF`, divisores con contraste suficiente.
+- Success para positivos; Danger para faltantes/alertas; Info para links/acciones.
+- Conservar densidad, alturas de fila, tamaños tipográficos, radios, responsive y scroll actuales, con alineación numérica consistente.
+- Headers especiales solo donde estén prescritos; texto sobre un fondo de acción usa text-on-action. No fijar texto claro para todos los temas ni dorado obligatorio para el header del Pedido.
 
 Una fila `TOTAL` puede cerrar la tabla con el total alineado a su columna y un enlace de navegación secundaria (`IR A …`, `Blue`) en la misma franja.
 
@@ -428,7 +380,7 @@ Aplicaciones:
 
 La fila recibe el estado desde negocio.
 
-Visual: fondo rojo oscuro con texto `Surface`, o valor crítico en `Red` según la pantalla. El rojo oscuro del Figma no está en la paleta: se incorpora como token en `DESIGN.md` §4.1 con su valor exacto; hasta entonces, `Red Hover` `#B10000`.
+Visual: danger-soft y texto de contraste del tema, o valor crítico Danger según pantalla. No imponer relleno rojo oscuro en Light. Los derivados soft se calibran visualmente según DESIGN.md §4.1.
 
 En el Figma se usa en: filas `URG PARA PEDIDOS`, filas de stock bajo el mínimo y fila `SALDO ACTUALIZADO` con deuda.
 
@@ -480,7 +432,7 @@ Semántica visual:
 - urgencia → roja;
 - estado no crítico → token correspondiente definido en diseño.
 
-No inventar nuevos significados por color.
+No inventar nuevos significados por color. StatusBadge conserva contenido, geometría y estado funcional; fondo, texto y borde usan tokens del tema, con text-on-action cuando corresponda.
 
 ---
 
@@ -510,9 +462,9 @@ Footer:
 - Cancelar;
 - Confirmar.
 
-Visual (rediseño): contenedor dark (`Background`), borde fino, sin sombras, título H2/H3, inputs dark.
+Visual: Surface del tema, border-section, overlay semántico, text-primary, sin sombras decorativas; título H2/H3 e inputs del mismo sistema. Mantener dimensiones y scroll. El Pedido abierto con autosave es excepción al footer Cancelar/Confirmar: ver FLOWS.md §14 y DESIGN.md §19.
 
-El comportamiento responsive final se resuelve en Fase 18 (`DESIGN.md` §3.0); §56–§58 de este documento son pautas preliminares.
+Conservar el responsive implementado según DESIGN.md §3.0; las referencias históricas de §56–§58 no autorizan a cambiarlo.
 
 ---
 
@@ -814,7 +766,7 @@ Contenido mínimo:
 - Cancelar;
 - Confirmar.
 
-No usar para acciones normales.
+No usar para acciones normales. ConfirmDialog comparte Surface, border-section/énfasis Danger, text-primary y overlay del tema; no duplicar por tema. Mantener sus acciones Cancelar/Confirmar: no son el Cancelar retirado del editor de Pedido.
 
 ---
 
@@ -960,7 +912,7 @@ Relación visual:
 Estado vacío MVP:
 
 - texto B2/B4 según densidad;
-- color de texto con contraste suficiente sobre fondo oscuro (no `#393939` sobre negro; ver `DESIGN.md` §4.3);
+- color de texto con contraste suficiente sobre la Surface del tema;
 - sin ilustraciones;
 - sin nuevos colores;
 - mensaje específico al contexto;
@@ -1057,7 +1009,7 @@ El MVP ya define comportamiento suficiente para implementar:
 - Empty State;
 - PDFs.
 
-Responsive, navegación mobile y tablas mobile se resuelven en Fase 18; §56–§58 son pautas preliminares.
+Responsive, navegación mobile y tablas mobile conservan su implementación actual; §56–§58 son referencias históricas de planificación.
 
 Quedan como refinamiento visual posterior:
 
@@ -1073,7 +1025,7 @@ Estos refinamientos no deben modificar reglas funcionales ni bloquear el MVP.
 
 # 56. Responsive behavior
 
-> Pautas preliminares, insumo para Fase 18. No son normativas hasta que esa fase las revise contra el nuevo lenguaje visual (`DESIGN.md` §3.0). Desktop es la referencia primaria; los componentes deben construirse sin dimensiones rígidas innecesarias para permitir esta adaptación.
+> Referencia histórica de planificación responsive. R1 conserva breakpoints, dimensiones, targets, navegación y scroll actuales (DESIGN.md §3.0); las pautas de esta sección no autorizan a ampliarlos ni rediseñarlos.
 
 ## Button
 
@@ -1249,34 +1201,7 @@ Contenido:
 1. valor;
 2. label.
 
-Variantes (rediseño; ver Card §19):
-
-### Default (antes NeutralPrimaryBorder)
-
-Uso:
-
-- Ventas del mes;
-- Total facturado;
-- Pedidos abiertos.
-
-Visual:
-
-- fondo negro (`Background`);
-- borde `Primary`;
-- texto `Surface`.
-
-### Positive
-
-Uso:
-
-- Ganancia.
-
-Visual:
-
-- fondo `Green` sólido;
-- texto de alto contraste.
-
-La variante `Dark` anterior (Pedidos abiertos) se integra en Default, como en el bloque `REPORTE MENSUAL` del Dashboard del Figma; puede incluir icono junto al numeral.
+Variantes semánticas: Neutral para Ventas del mes, Total facturado y Pedidos abiertos; Positive/Success para Ganancia; Negative cuando corresponda explícitamente a un resultado negativo. Aplicar Card/KpiCard §19 en ambos temas. El valor domina a la etiqueta; icono opcional, dimensiones actuales. No imponer fondo negro o verde sólido como regla general de KPI.
 
 El Figma rotula la card verde como `MARGEN NETO`: se mantiene el label normativo `GANANCIA`.
 
@@ -1293,7 +1218,7 @@ No utilizar `MARGEN NETO`.
 
 Reglas funcionales: `BUSINESS_RULES.md` §36. Composición: `DESIGN.md` §35.
 
-Estructura, interacción y responsive: `DESIGN.md` §35 (aprobados en R3.1–R3.3). Esta lista fija responsabilidades y comportamiento; no fija colores, px, alturas ni gaps. Reutilizar primero los componentes existentes (§2): `Panel`, `SectionHeader`, `Select`, `Tabs`, `DataTable`, `EmptyState`, `MoneyDisplay`.
+Estructura, interacción y responsive: `DESIGN.md` §35 (aprobados en R3.1–R3.3). Esta lista fija responsabilidades y comportamiento; paleta y theme se fijan en DESIGN.md §35.11, conservando dimensiones actuales y alturas necesarias para legibilidad. Reutilizar primero los componentes existentes (§2): `Panel`, `SectionHeader`, `Select`, `Tabs`, `DataTable`, `EmptyState`, `MoneyDisplay`.
 
 | Componente conceptual | Responsabilidad y comportamiento |
 |---|---|
@@ -1312,7 +1237,21 @@ Estructura, interacción y responsive: `DESIGN.md` §35 (aprobados en R3.1–R3.
 
 Todos los paneles mantienen título, controles y estructura en estado vacío y muestran un empty state interno (§51), también en mobile.
 
-Motor gráfico previsto: Recharts (todavía no instalado). Ningún componente de Reportes ejecuta acciones ni modifica datos.
+Motor gráfico actual: Recharts. Ningún componente de Reportes modifica datos de negocio.
+
+### Paleta y componentes gráficos R1
+
+- Series económicas: Facturación `#0E50A0`, Ganancia `#008102`, Gastos operativos `#DD0000`.
+- Comparación por período: seleccionado azul, anterior gris/neutro; las series que identifican métricas económicas mantienen la paleta económica.
+- Top 4 + Otros: categoría 1 `#0E50A0`, categoría 2 `#008102`, categoría 3 `#DD0000`, categoría 4 `#7C3AED`, Otros `#6B7280`. Es distinción categórica, no juicio positivo/negativo.
+- Concentración: posiciones 1–5 azul, 6–10 verde, Resto neutro Otros. Dorado excluido de todas las series y barras proporcionales.
+- ReportingChartFrame: fondo Surface del tema y altura propia por legibilidad; conservar scroll interno.
+- ReportingChartTooltip: Surface, border-section y text-primary del tema, manteniendo valores exactos del DTO.
+- ReportingLegend: controles del sistema y colores consistentes con cada serie; preservar interacción.
+- chart-grid y chart-axis/labels son tokens específicos; no defaults de Recharts que rompan el theme.
+- ReportingPanel: altura natural, skeleton interno durante carga sin igualar paneles vecinos.
+- CLIENTES desktop: izquierda Mayores compradores → Análisis individual; derecha Concentración → Evolución de concentración, pilas independientes sin esperar altura vecina. Mobile: Mayores compradores → Concentración → Análisis individual → Evolución de concentración. Una instancia de cada componente; no duplicar para responsive.
+- FACTURACIÓN y PRODUCTOS mantienen estructura si no produce espacio muerto significativo. No eliminar arbitrariamente alturas de gráficos.
 
 ---
 
@@ -1320,8 +1259,8 @@ Motor gráfico previsto: Recharts (todavía no instalado). Ningún componente de
 
 Estructura: `Título ———————— línea`.
 
-- título en `Text Muted` (B1, o H3 en secciones grandes), sin forzar mayúsculas: respeta el texto del frame;
-- línea 1 px `Border Contenedor` que ocupa el ancho restante (en fichas de Cuentas el frame usa línea `Surface`);
+- título en section-title `#6B6B6B` (B1, o H3 en secciones grandes), sin forzar mayúsculas: respeta el texto del frame;
+- línea 1 px `Border Contenedor` que ocupa el ancho restante (text-primary solo donde esté prescrito por contraste);
 - controles al extremo (`Buscar`, select, `REGISTRAR PAGO`, `Ver todas ▸`).
 
 Variante **alerta:** título y línea `Rojo` (`Bajo stock`).
@@ -1332,7 +1271,7 @@ Solo presenta: contenido y orden siguen `DESIGN.md` y `BUSINESS_RULES.md`.
 
 # 62. Panel (contenedor)
 
-- fondo `Secondary`;
+- fondo Surface del tema;
 - borde 1 px `Border Contenedor`;
 - radius `10 px`;
 - padding `15 px` lateral, `12 px` vertical;
@@ -1348,9 +1287,9 @@ Preferir pocos Panels grandes antes que muchas cards fragmentadas.
 
 Renderiza los íconos base de `docs/visual-references/iconos/` (copiados a `public/icons/`) sin redibujarlos, aplicando el color por máscara CSS sobre la silueta del PNG:
 
-- `chrome` (default): degradé plateado — íconos dentro de botones y navegación inactiva;
+- `chrome` (default): tratamiento de icono del tema con contraste — conservar silueta y geometría de botones/navegación;
 - `gold`: `Primary` — navegación activa, ícono de cards de pedido y KPI;
-- `light`: `Surface`;
+- `light` (nombre histórico del tono): rol de icono/texto de contraste correspondiente, no fondo Surface;
 - `red`: `Rojo` (documento PDF);
 - `original`: el PNG sin máscara (tile de granel `tanque`).
 
@@ -1360,6 +1299,6 @@ Siempre decorativo (`aria-hidden`); el botón que lo contiene aporta el label ac
 
 # 64. AppShell / PageHeader
 
-- **AppShell:** barra lateral (`Secondary`) con logo, MenuButtons (§5) y logout; contenido sobre `Fondo Dark` con padding `20 px`+.
-- **PageHeader** (pantallas principales): título H1 a la izquierda, chip de sesión `Admin` (PrimaryDark chico, muestra el usuario autenticado; sin acción) a la derecha y línea 1 px `Border Contenedor` debajo.
+- **AppShell/Sidebar:** Surface del tema con logo, MenuButtons (§5) y logout canónico; contenido sobre background del tema. Conservar anchos, paddings y breakpoints actuales.
+- **PageHeader**: título y chip Admin conservan función y geometría; selector global DARK ↔ LIGHT en zona superior derecha, cambio inmediato, misma ruta, sin recarga de datos y preferencia persistida. Línea border-section. Header/mobile navigation ofrecen acceso equivalente sin alterar rutas, drawer, targets ni scroll.
 - **SecondaryHeader** (pantallas secundarias): `Volver` (§8) a la izquierda, título H3 centrado, acción principal a la derecha.
