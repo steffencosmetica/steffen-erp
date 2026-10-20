@@ -96,7 +96,7 @@ export const ProductRanking: React.FC<{
                   {hasNegative && <span className="absolute inset-y-[-2px] w-px bg-steffen-muted" style={{ left: `${geometry(0).left}%` }} />}
                   <span
                     className="absolute inset-y-0 rounded-full"
-                    style={{ left: `${bar.left}%`, width: `${bar.width}%`, backgroundColor: chartPalette.gold }}
+                    style={{ left: `${bar.left}%`, width: `${bar.width}%`, backgroundColor: chartPalette.blue }}
                   />
                 </span>
               </li>

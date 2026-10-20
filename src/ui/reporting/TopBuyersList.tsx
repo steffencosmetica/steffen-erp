@@ -68,7 +68,7 @@ export const TopBuyersList: React.FC<{
                   {formatReportingArs(row.monthlyAverageArs)}/mes · {formatReportingDate(row.lastPurchaseDate)} · {formatReportingDays(row.frequencyDays)}
                 </div>
                 <span aria-hidden className="mt-1.5 block h-2 rounded-full bg-steffen-gray/50">
-                  <span className="block h-full rounded-full" style={{ width: `${width}%`, backgroundColor: chartPalette.gold }} />
+                  <span className="block h-full rounded-full" style={{ width: `${width}%`, backgroundColor: chartPalette.blue }} />
                 </span>
               </div>
               <span role="cell" className="hidden xl:block min-w-0 text-right tabular-nums [overflow-wrap:anywhere] text-steffen-surface">

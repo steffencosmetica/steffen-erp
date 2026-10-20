@@ -22,7 +22,7 @@ export const CONCENTRATION_GROUP_LABELS: Record<ReportingConcentrationSliceDTO['
   REST: 'Resto',
 };
 
-const DONUT_HEIGHT = 220;
+const DONUT_HEIGHT = 260;
 
 function groupOf(payload: unknown): ReportingConcentrationSliceDTO['group'] | null {
   if (typeof payload !== 'object' || payload === null || !('group' in payload)) return null;

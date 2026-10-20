@@ -4,7 +4,7 @@ import React from 'react';
 import type { TooltipContentProps, TooltipPayloadEntry } from 'recharts';
 
 /**
- * Tooltip de Reportes con el estilo del sistema (panel dark, Border Contenedor).
+ * Tooltip de Reportes con superficie, borde y texto semánticos Dark/Light.
  * Muestra categoría/mes y el valor EXACTO formateado: `formatValue` recibe la
  * entrada de Recharts y la etiqueta de la categoría, y debe leer el texto del
  * DTO (no el número de geometría). Devolver `null` omite la entrada (p. ej. un
@@ -23,13 +23,13 @@ export const ReportingChartTooltip: React.FC<ReportingTooltipProps> = ({ active,
     .filter((row): row is { entry: TooltipPayloadEntry; i: number; text: string } => row.text !== null);
   if (rows.length === 0) return null;
   return (
-    <div className="ui-panel !overflow-visible w-max max-w-[min(15rem,calc(100vw-4rem))] break-words px-3 py-2 text-xs text-steffen-surface">
-      <div className="mb-1 font-semibold text-steffen-muted">{formatLabel ? formatLabel(label) : String(label ?? '')}</div>
+    <div className="reporting-tooltip !overflow-visible w-max max-w-[min(15rem,calc(100vw-4rem))] break-words px-3 py-2 text-xs">
+      <div className="mb-1 font-semibold">{formatLabel ? formatLabel(label) : String(label ?? '')}</div>
       <ul className="space-y-0.5">
         {rows.map(({ entry, i, text }) => (
           <li key={`${String(entry.dataKey ?? entry.name ?? i)}`} className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <span aria-hidden className="inline-block h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: entry.color }} />
-            <span className="min-w-0 [overflow-wrap:anywhere] text-steffen-muted">{entry.name}</span>
+            <span className="min-w-0 [overflow-wrap:anywhere] text-[var(--steffen-text-secondary)]">{entry.name}</span>
             <span className="ml-auto min-w-0 [overflow-wrap:anywhere] tabular-nums">{text}</span>
           </li>
         ))}

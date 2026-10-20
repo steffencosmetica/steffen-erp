@@ -15,3 +15,59 @@
   z-index: 10;
   max-width: 100%;
 }
+
+/* Transparent plotting areas inherit the containing Panel's Surface. */
+.reporting-tooltip {
+  background: var(--steffen-chart-tooltip);
+  border: 1px solid var(--steffen-chart-tooltip-border);
+  border-radius: var(--steffen-radius-panel);
+  color: var(--steffen-chart-tooltip-text);
+}
+
+.reporting-legend-item {
+  color: var(--steffen-text-primary);
+  border: 1px solid var(--steffen-border-section);
+  background: transparent;
+}
+
+.reporting-legend-item:hover {
+  background: var(--steffen-hover-neutral);
+}
+
+.reporting-page .recharts-cartesian-grid line {
+  stroke-opacity: 0.6;
+}
+
+/* One instance per panel; mobile keeps the documented reading order. */
+.reporting-customer-columns {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 5);
+}
+
+.reporting-customer-column { display: contents; }
+.reporting-buyers { order: 1; }
+.reporting-concentration { order: 2; }
+.reporting-analysis { order: 3; }
+.reporting-concentration-comparison { order: 4; }
+
+@media (min-width: 768px) {
+  .reporting-customer-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .reporting-customer-column {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 5);
+  }
+}
+
+@media (min-width: 1280px) {
+  .reporting-customer-columns {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  }
+}

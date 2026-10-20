@@ -1,48 +1,44 @@
 /**
- * Tokens visuales de los gráficos de Reportes, tomados EXCLUSIVAMENTE de las
- * variables del sistema (globals.css, DESIGN.md). Sin colores nuevos.
+ * Roles semánticos Dark/Light y paleta estadística aprobada para Reportes.
  */
 export const chartTheme = {
-  axis: 'var(--steffen-text-muted)',
-  grid: 'var(--steffen-gray)',
-  text: 'var(--steffen-surface)',
-  tooltipBackground: 'var(--steffen-bg)',
-  tooltipBorder: 'var(--steffen-gray)',
-  cursor: 'var(--steffen-gray-tint)',
+  axis: 'var(--steffen-chart-axis)',
+  grid: 'var(--steffen-chart-grid)',
+  text: 'var(--steffen-text-primary)',
+  tooltipBackground: 'var(--steffen-chart-tooltip)',
+  tooltipBorder: 'var(--steffen-chart-tooltip-border)',
+  cursor: 'var(--steffen-hover-neutral)',
   fontSize: 11,
 } as const;
 
 /** Colores por serie económica (confirmado R5.1). */
 export const seriesColors = {
-  billed: 'var(--steffen-gold)',
+  billed: 'var(--steffen-info)',
   gain: 'var(--steffen-green)',
   expenses: 'var(--steffen-red)',
 } as const;
 
 /**
- * Porciones de participación (Top 4 + Otros): 4 tokens bien diferenciados
- * sobre fondo negro y "Otros" en el gris neutro del sistema. El rojo queda
- * reservado (gastos / alertas) y no se usa para productos.
+ * Top 4 + Otros: colores categóricos; no expresan un juicio de valor.
  */
-export const shareSliceColors = ['var(--steffen-gold)', 'var(--steffen-blue-hover)', 'var(--steffen-green)', 'var(--steffen-blue)'] as const;
-export const shareOthersColor = 'var(--steffen-text-muted)';
+export const shareSliceColors = ['var(--steffen-info)', 'var(--steffen-success)', 'var(--steffen-danger)', '#7C3AED'] as const;
+export const shareOthersColor = '#6B7280';
 
 /** Grupos de concentración: 1–5 y 6–10 diferenciados; Resto el más neutro. */
 export const concentrationColors = {
-  POS_1_5: 'var(--steffen-gold)',
-  POS_6_10: 'var(--steffen-blue-hover)',
-  REST: 'var(--steffen-text-muted)',
+  POS_1_5: 'var(--steffen-info)',
+  POS_6_10: 'var(--steffen-success)',
+  REST: shareOthersColor,
 } as const;
 
 /** Comparación interanual de concentración: año seleccionado vs año anterior. */
 export const yearComparisonColors = {
-  selected: 'var(--steffen-gold)',
+  selected: 'var(--steffen-info)',
   previous: 'var(--steffen-silver)',
 } as const;
 
 /** Paleta disponible (tokens existentes); el orden no implica asignación. */
 export const chartPalette = {
-  gold: 'var(--steffen-gold)',
   blue: 'var(--steffen-blue)',
   blueSoft: 'var(--steffen-blue-hover)',
   green: 'var(--steffen-green)',

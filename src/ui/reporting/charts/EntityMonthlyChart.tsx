@@ -22,7 +22,7 @@ interface EntityMonthRow {
 }
 
 const MIN_CHART_WIDTH = 520;
-const CHART_HEIGHT = 220;
+const CHART_HEIGHT = 260;
 
 export const EntityMonthlyChart: React.FC<{ monthly: readonly ReportingEntityMonthlyPointDTO[]; year: number; entityLabel: string }> = ({
   monthly,

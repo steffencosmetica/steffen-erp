@@ -29,7 +29,7 @@ interface SliceRow {
 }
 
 const OTHERS_KEY = 'OTHERS';
-const DONUT_HEIGHT = 240;
+const DONUT_HEIGHT = 280;
 const BAR_ROW_HEIGHT = 44;
 
 function formatShareValue(value: string, metric: ShareMetric): string {

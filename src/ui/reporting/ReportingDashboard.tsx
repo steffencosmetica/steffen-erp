@@ -142,25 +142,26 @@ export const ReportingDashboard: React.FC<ReportingDashboardProps> = ({ years, b
       <section aria-label="Clientes" className="space-y-5">
         <SectionHeader title="CLIENTES" variant="strong" className="!mb-0" />
 
-        <div className={ROW}>
-          <TopBuyersList customers={customers} year={year} loading={pending} error={customers ? null : LOAD_ERROR} className={WIDE} />
+        <div className="reporting-customer-columns">
+          <div className="reporting-customer-column">
+          <TopBuyersList customers={customers} year={year} loading={pending} error={customers ? null : LOAD_ERROR} className="reporting-buyers" />
+          <CustomerAnalysis key={year} customers={customers} year={year} loading={pending} error={customers ? null : LOAD_ERROR} initialAnalysis={initialAnalysis} className="reporting-analysis" />
+          </div>
+          <div className="reporting-customer-column">
           <CustomerConcentration
             concentration={customers?.concentration ?? null}
             loading={pending}
             error={customers ? null : LOAD_ERROR}
-            className={NARROW}
+            className="reporting-concentration"
           />
-        </div>
-
-        <div className={ROW}>
-          <CustomerAnalysis key={year} customers={customers} year={year} loading={pending} error={customers ? null : LOAD_ERROR} initialAnalysis={initialAnalysis} className={WIDE} />
           <ConcentrationComparison
             current={customers?.concentration ?? null}
             previous={customers?.concentrationPrevious ?? null}
             loading={pending}
             error={customers ? null : LOAD_ERROR}
-            className={NARROW}
+            className="reporting-concentration-comparison"
           />
+          </div>
         </div>
       </section>
     </div>
