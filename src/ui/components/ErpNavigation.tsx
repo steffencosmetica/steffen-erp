@@ -5,6 +5,7 @@ import { LogOut, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ErpIcon, type ErpIconName } from './ErpIcon';
+import { ThemeToggle } from './ThemeToggle';
 
 interface NavItem {
   name: string;
@@ -173,6 +174,7 @@ export const ErpNavMobile: React.FC<{ logo: React.ReactNode; logoutAction: () =>
           {logo}
         </Link>
         <span className="text-sm font-semibold text-steffen-gold truncate">{current}</span>
+        <div className="ml-auto shrink-0"><ThemeToggle /></div>
       </div>
 
       {open && (
@@ -255,17 +257,26 @@ export const ErpPageHeader: React.FC<{ sessionLabel: string; sessionTitle?: stri
 }) => {
   const pathname = usePathname();
   const item = navItems.find((it) => (it.href === '/' ? pathname === '/' : pathname === it.href));
-  if (!item) return null;
+  if (!item) {
+    return (
+      <div className="hidden xl:flex justify-end mb-3">
+        <ThemeToggle />
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-between gap-4 pb-4 mb-6 border-b border-steffen-gray">
       <h1 className="text-[22px] leading-tight font-bold text-steffen-surface">{item.pageTitle}</h1>
-      <span
-        title={sessionTitle}
-        className="ui-btn-dark inline-flex items-center h-[26px] px-5 rounded-[5px] text-sm font-semibold"
-      >
-        {sessionLabel}
-      </span>
+      <div className="flex items-center gap-3 shrink-0">
+        <div className="hidden xl:block"><ThemeToggle /></div>
+        <span
+          title={sessionTitle}
+          className="ui-btn-dark inline-flex items-center h-[26px] px-5 rounded-[5px] text-sm font-semibold"
+        >
+          {sessionLabel}
+        </span>
+      </div>
     </div>
   );
 };

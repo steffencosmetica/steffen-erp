@@ -1,61 +1,104 @@
 @import "tailwindcss";
 
-/* ==========================================================================
-   Steffen ERP — sistema visual dark definitivo
-   Fuente: docs/DESIGN.md §4–§13, docs/COMPONENTS.md §3, frame de estilo
-   docs/visual-references/figma/Frame 1.png.
-   Dorado normativo único: #C38926. Obsoletos: #D2AB68, #B99D22, #FFA8A8.
-
-   Los colores viven en variables por tema (`data-theme` en <html>). Hoy solo
-   existe dark; el modo light futuro redefine estas mismas variables bajo
-   [data-theme="light"] (Fondo #EFEFEF, superficies Surface) sin tocar
-   componentes.
-   ========================================================================== */
-
-:root,
-[data-theme="dark"] {
-  /* Paleta (DESIGN.md §4.1) */
-  --steffen-gold: #C38926;            /* Primary */
-  --steffen-bg: #000000;              /* Secondary: paneles, sidebar */
-  --steffen-page: #101010;            /* Fondo Dark: fondo de página */
-  --steffen-surface: #FBFBFB;         /* Surface: texto principal */
-  --steffen-border: #D9D9D9;          /* Border Button */
-  --steffen-gray: #393939;            /* Border Contenedor / header de tabla */
-  --steffen-blue: #0E50A0;            /* Tertiary */
-  --steffen-blue-hover: #6E96C6;
-  --steffen-green: #008102;
-  --steffen-green-hover: #015C02;
-  --steffen-red: #DD0000;
-  --steffen-red-hover: #B10000;
-  --steffen-degrade: linear-gradient(180deg, #121212 0%, #000000 100%); /* Surface Dark Degrade */
-
-  /* Derivados documentados (DESIGN.md §4.1) */
-  --steffen-text-muted: #9A9A9A;      /* Text Muted */
-  --steffen-alert: #6B0000;           /* Alert Row */
-  --steffen-button-hover: #393939;    /* Button Hover */
-  --steffen-text-soft: rgb(251 251 251 / 0.8);
-  --steffen-chrome: linear-gradient(180deg, #FFFFFF 0%, #C9C9C9 45%, #8E8E8E 70%, #E6E6E6 100%); /* íconos cromados */
-  --steffen-silver: #C9C9C9;          /* plateado para íconos lineales (SVG) sin máscara */
-  --steffen-gold-chrome: linear-gradient(180deg, #F5DCA0 0%, #C38926 45%, #8C5F14 70%, #E8C177 100%); /* dorado cromado (hover de navegación) */
-
-  /* Tintes (tokens con alfa) para estados de fondo heredados */
-  --steffen-gray-tint: rgb(57 57 57 / 0.55);
-  --steffen-red-tint: rgb(177 0 0 / 0.28);
-  --steffen-green-tint: rgb(0 129 2 / 0.22);
-  --steffen-gold-tint: rgb(195 137 38 / 0.16);
-  --steffen-blue-tint: rgb(14 80 160 / 0.22);
-
-  /* Radius (DESIGN.md §4.3) */
+/* R2: tokens semánticos compartidos. Los aliases al final de :root conservan
+   utilidades de la UI existente; su migración por módulos queda para R3+. */
+:root {
+  --steffen-primary: #C38926;
+  --steffen-black: #000000;
+  --steffen-info: #0E50A0;
+  --steffen-info-hover: #05346E;
+  --steffen-success: #008102;
+  --steffen-danger: #DD0000;
+  --steffen-text-on-action: #FFFFFF;
+  --steffen-selection: var(--steffen-primary);
+  --steffen-border-control: #D9D9D9;
+  --steffen-section-title: #6B6B6B;
   --steffen-radius-control: 5px;
   --steffen-radius-panel: 10px;
 
+  /* Aliases transitorios con rol único. Surface ahora solo significa fondo. */
+  --steffen-gold: var(--steffen-primary);
+  --steffen-bg: var(--steffen-surface);
+  --steffen-page: var(--steffen-background);
+  --steffen-border: var(--steffen-border-control);
+  --steffen-gray: var(--steffen-border-section);
+  --steffen-blue: var(--steffen-info);
+  --steffen-blue-hover: var(--steffen-info-hover);
+  --steffen-green: var(--steffen-success);
+  --steffen-green-hover: #015C02;
+  --steffen-red: var(--steffen-danger);
+  --steffen-red-hover: #B10000;
+  --steffen-degrade: var(--steffen-gradient);
+  --steffen-button-hover: var(--steffen-hover);
+  --steffen-alert: var(--steffen-danger-soft);
+  --steffen-red-tint: var(--steffen-danger-soft);
+  --steffen-green-tint: var(--steffen-success-soft);
+  --steffen-gold-chrome: linear-gradient(180deg, #F5DCA0 0%, #C38926 45%, #8C5F14 70%, #E8C177 100%);
+}
+
+:root,
+[data-theme="dark"] {
+  --steffen-background: #161616;
+  --steffen-surface: #0F0F0F;
+  --steffen-surface-raised: #121212;
+  --steffen-gradient: linear-gradient(180deg, #121212 0%, #000000 100%);
+  --steffen-text-primary: #FFFFFF;
+  /* Secundario más claro que section-title para preservar lectura en Dark. */
+  --steffen-text-secondary: #9A9A9A;
+  --steffen-text-muted: #6B6B6B;
+  --steffen-text-soft: rgb(255 255 255 / 0.8);
+  --steffen-border-section: #393939;
+  --steffen-hover: #393939;
+  --steffen-surface-selected: #000000;
+  --steffen-overlay: rgb(0 0 0 / 0.75);
+  /* Derivados mínimos: se conservan tintes Dark y se calibrarán en R3+. */
+  --steffen-success-soft: rgb(0 129 2 / 0.22);
+  --steffen-danger-soft: #6B0000;
+  --steffen-red-tint: rgb(177 0 0 / 0.28);
+  --steffen-gray-tint: rgb(57 57 57 / 0.55);
+  --steffen-gold-tint: rgb(195 137 38 / 0.16);
+  --steffen-blue-tint: rgb(14 80 160 / 0.22);
+  --steffen-chrome: linear-gradient(180deg, #FFFFFF 0%, #C9C9C9 45%, #8E8E8E 70%, #E6E6E6 100%);
+  --steffen-silver: #C9C9C9;
+  --steffen-chart-grid: var(--steffen-border-section);
+  --steffen-chart-axis: var(--steffen-text-secondary);
+  --steffen-chart-tooltip: var(--steffen-surface);
+  --steffen-chart-tooltip-border: var(--steffen-border-section);
+  --steffen-chart-tooltip-text: var(--steffen-text-primary);
   color-scheme: dark;
 }
 
-/* Densidad del sistema (DESIGN.md §5–§7): escala nativa equivalente a la densidad
-   visual de Chrome al 75 %, sin zoom ni transform. --spacing 3px reduce padding y
-   gaps ~25 % (p-5 = 15px, gap-3 = 9px); la escala text-* sigue la tipografía
-   compacta (H1 22 · H2 18 · H3 14 · body 12 · auxiliar 11). Borders: 1px. */
+[data-theme="light"] {
+  --steffen-background: #EFEFEF;
+  --steffen-surface: #F6F6F6;
+  --steffen-surface-raised: #F3F2F2;
+  --steffen-gradient: linear-gradient(180deg, #F3F2F2 0%, #DEDDDD 100%);
+  --steffen-text-primary: #212121;
+  --steffen-text-secondary: #6B6B6B;
+  --steffen-text-muted: #6B6B6B;
+  --steffen-text-soft: rgb(33 33 33 / 0.8);
+  --steffen-border-section: #D9D9D9;
+  /* Light: derivados de los grises y colores comunes, sin otra paleta.
+     Calibración visual fina pendiente para R3+. Overlay conserva contraste. */
+  --steffen-hover: #DEDDDD;
+  --steffen-surface-selected: #F3F2F2;
+  --steffen-overlay: rgb(0 0 0 / 0.5);
+  --steffen-success-soft: rgb(0 129 2 / 0.1);
+  --steffen-danger-soft: rgb(221 0 0 / 0.08);
+  --steffen-gray-tint: rgb(57 57 57 / 0.08);
+  --steffen-gold-tint: rgb(195 137 38 / 0.12);
+  --steffen-blue-tint: rgb(14 80 160 / 0.1);
+  --steffen-chrome: linear-gradient(180deg, #6B6B6B 0%, #393939 100%);
+  --steffen-silver: #6B6B6B;
+  --steffen-chart-grid: var(--steffen-border-section);
+  --steffen-chart-axis: var(--steffen-text-secondary);
+  --steffen-chart-tooltip: var(--steffen-surface);
+  --steffen-chart-tooltip-border: var(--steffen-border-section);
+  --steffen-chart-tooltip-text: var(--steffen-text-primary);
+  color-scheme: light;
+}
+
+/* Densidad canónica: conservar spacing, escala tipográfica y tamaños locales. */
 @theme {
   --spacing: 3px;
   --text-xs: 11px;
@@ -70,10 +113,29 @@
 
 /* Utilidades Tailwind enlazadas a las variables (bg-steffen-*, text-steffen-*, border-steffen-*). */
 @theme inline {
+  --color-steffen-background: var(--steffen-background);
+  --color-steffen-panel: var(--steffen-surface);
+  --color-steffen-raised: var(--steffen-surface-raised);
+  --color-steffen-text-primary: var(--steffen-text-primary);
+  --color-steffen-text-secondary: var(--steffen-text-secondary);
+  --color-steffen-on-action: var(--steffen-text-on-action);
+  --color-steffen-section-title: var(--steffen-section-title);
+  --color-steffen-border-section: var(--steffen-border-section);
+  --color-steffen-border-control: var(--steffen-border-control);
+  --color-steffen-primary: var(--steffen-primary);
+  --color-steffen-info: var(--steffen-info);
+  --color-steffen-info-hover: var(--steffen-info-hover);
+  --color-steffen-success: var(--steffen-success);
+  --color-steffen-danger: var(--steffen-danger);
+  --color-steffen-selection: var(--steffen-selection);
+  --color-steffen-overlay: var(--steffen-overlay);
+  --color-steffen-success-soft: var(--steffen-success-soft);
+  --color-steffen-danger-soft: var(--steffen-danger-soft);
   --color-steffen-gold: var(--steffen-gold);
   --color-steffen-bg: var(--steffen-bg);
   --color-steffen-page: var(--steffen-page);
-  --color-steffen-surface: var(--steffen-surface);
+  /* Alias de utilidad heredada para contraste; no es el token CSS Surface. */
+  --color-steffen-surface: var(--steffen-text-primary);
   --color-steffen-border: var(--steffen-border);
   --color-steffen-gray: var(--steffen-gray);
   --color-steffen-blue: var(--steffen-blue);
@@ -82,7 +144,7 @@
   --color-steffen-green-hover: var(--steffen-green-hover);
   --color-steffen-red: var(--steffen-red);
   --color-steffen-red-hover: var(--steffen-red-hover);
-  --color-steffen-muted: var(--steffen-text-muted);
+  --color-steffen-muted: var(--steffen-text-secondary);
   --color-steffen-alert: var(--steffen-alert);
   --color-steffen-silver: var(--steffen-silver);
   --font-sans: var(--font-inter), "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -94,7 +156,7 @@ html {
 
 body {
   background-color: var(--steffen-page);
-  color: var(--steffen-surface);
+  color: var(--steffen-text-primary);
   font-family: var(--font-sans);
   font-size: 12px;
   margin: 0;
@@ -121,7 +183,7 @@ body {
   background-color: var(--steffen-bg);
   background-image: var(--steffen-degrade);
   border: 1px solid var(--steffen-border);
-  color: var(--steffen-surface);
+  color: var(--steffen-text-primary);
 }
 .ui-btn-dark:hover:not(:disabled) {
   background-image: none;
@@ -131,7 +193,7 @@ body {
 /* Ítem de lista: transparente; hover/seleccionado con degradé. */
 .ui-list-item {
   background: transparent;
-  color: var(--steffen-surface);
+  color: var(--steffen-text-primary);
   border: 1px solid transparent;
 }
 .ui-list-item:hover,
@@ -161,228 +223,228 @@ body {
 }
 .ui-icon--chrome { background-image: var(--steffen-chrome); }
 .ui-icon--gold { background-color: var(--steffen-gold); }
-.ui-icon--light { background-color: var(--steffen-surface); }
-.ui-icon--muted { background-color: var(--steffen-text-muted); }
+.ui-icon--light { background-color: var(--steffen-text-primary); }
+.ui-icon--muted { background-color: var(--steffen-text-secondary); }
 .ui-icon--red { background-color: var(--steffen-red); }
 .ui-icon--dark { background-color: var(--steffen-bg); }
 
 /* Fila de alerta (DESIGN.md §13). */
 .ui-row-alert {
   background-color: var(--steffen-alert);
-  color: var(--steffen-surface);
+  color: var(--steffen-text-primary);
 }
 
 /* ==========================================================================
-   Capa de compatibilidad dark (Fase 15, primera pasada global).
+   Capa transitoria de compatibilidad por roles para ambos temas (R2).
    Las vistas existentes usan utilidades de la identidad clara anterior
    (bg-white, text-black, grises, header #D9D9D9...). Esta capa, acotada a
-   .erp-dark, las reinterpreta con los tokens dark sin tocar la lógica de
+   :root[data-theme], las reinterpreta con tokens semánticos sin tocar la lógica de
    ninguna pantalla. Se irá retirando a medida que cada pantalla adopte los
    componentes base (SectionHeader, Panel, KpiCard, ...).
    Estas reglas están fuera de @layer para prevalecer sobre las utilidades.
    ========================================================================== */
 
 /* --- Superficies ---------------------------------------------------------- */
-.erp-dark .bg-white,
-.erp-dark .bg-gray-50,
-.erp-dark .bg-\[\#FBFBFB\],
-.erp-dark .bg-\[\#F5F5F5\],
-.erp-dark .bg-\[\#FAFAFA\],
-.erp-dark .bg-slate-50,
-.erp-dark .bg-neutral-50 {
+:root[data-theme] .bg-white,
+:root[data-theme] .bg-gray-50,
+:root[data-theme] .bg-\[\#FBFBFB\],
+:root[data-theme] .bg-\[\#F5F5F5\],
+:root[data-theme] .bg-\[\#FAFAFA\],
+:root[data-theme] .bg-slate-50,
+:root[data-theme] .bg-neutral-50 {
   background-color: var(--steffen-bg);
 }
 
-.erp-dark .bg-gray-100,
-.erp-dark .bg-gray-200,
-.erp-dark .bg-neutral-100,
-.erp-dark .bg-gray-50\/50,
-.erp-dark .bg-gray-50\/80 {
+:root[data-theme] .bg-gray-100,
+:root[data-theme] .bg-gray-200,
+:root[data-theme] .bg-neutral-100,
+:root[data-theme] .bg-gray-50\/50,
+:root[data-theme] .bg-gray-50\/80 {
   background-color: var(--steffen-gray-tint);
 }
 
 /* Header de tabla: gris oscuro con texto claro (DESIGN.md §12). */
-.erp-dark .bg-\[\#D9D9D9\],
-.erp-dark .bg-gray-300 {
+:root[data-theme] .bg-\[\#D9D9D9\],
+:root[data-theme] .bg-gray-300 {
   background-color: var(--steffen-gray);
-  color: var(--steffen-surface);
+  color: var(--steffen-text-primary);
 }
 
 /* Fila de alerta (antes salmón / #B10000): Alert Row definitivo. */
-.erp-dark .bg-\[\#B10000\] {
+:root[data-theme] .bg-\[\#B10000\] {
   background-color: var(--steffen-alert);
-  color: var(--steffen-surface);
+  color: var(--steffen-text-primary);
 }
 
-.erp-dark .bg-red-50,
-.erp-dark .bg-red-100 {
+:root[data-theme] .bg-red-50,
+:root[data-theme] .bg-red-100 {
   background-color: var(--steffen-red-tint);
 }
 
-.erp-dark .bg-green-50,
-.erp-dark .bg-green-100,
-.erp-dark .bg-emerald-50 {
+:root[data-theme] .bg-green-50,
+:root[data-theme] .bg-green-100,
+:root[data-theme] .bg-emerald-50 {
   background-color: var(--steffen-green-tint);
 }
 
-.erp-dark .bg-amber-50,
-.erp-dark .bg-amber-100,
-.erp-dark .bg-yellow-50,
-.erp-dark .bg-orange-50 {
+:root[data-theme] .bg-amber-50,
+:root[data-theme] .bg-amber-100,
+:root[data-theme] .bg-yellow-50,
+:root[data-theme] .bg-orange-50 {
   background-color: var(--steffen-gold-tint);
 }
 
-.erp-dark .bg-blue-50,
-.erp-dark .bg-sky-50,
-.erp-dark .bg-\[\#0E50A0\]\/10 {
+:root[data-theme] .bg-blue-50,
+:root[data-theme] .bg-sky-50,
+:root[data-theme] .bg-\[\#0E50A0\]\/10 {
   background-color: var(--steffen-blue-tint);
 }
 
 /* --- Hover de superficies --------------------------------------------------- */
-.erp-dark .hover\:bg-gray-50:hover,
-.erp-dark .hover\:bg-gray-100:hover,
-.erp-dark .hover\:bg-gray-200:hover,
-.erp-dark .hover\:bg-gray-50\/50:hover,
-.erp-dark .hover\:bg-gray-50\/80:hover,
-.erp-dark .hover\:bg-neutral-50:hover,
-.erp-dark .hover\:bg-neutral-100:hover,
-.erp-dark .hover\:bg-black\/10:hover {
+:root[data-theme] .hover\:bg-gray-50:hover,
+:root[data-theme] .hover\:bg-gray-100:hover,
+:root[data-theme] .hover\:bg-gray-200:hover,
+:root[data-theme] .hover\:bg-gray-50\/50:hover,
+:root[data-theme] .hover\:bg-gray-50\/80:hover,
+:root[data-theme] .hover\:bg-neutral-50:hover,
+:root[data-theme] .hover\:bg-neutral-100:hover,
+:root[data-theme] .hover\:bg-black\/10:hover {
   background-color: var(--steffen-gray-tint);
 }
 
-.erp-dark .hover\:bg-gray-300:hover,
-.erp-dark .hover\:bg-neutral-800:hover,
-.erp-dark .hover\:bg-neutral-900:hover,
-.erp-dark .hover\:bg-gray-800:hover {
+:root[data-theme] .hover\:bg-gray-300:hover,
+:root[data-theme] .hover\:bg-neutral-800:hover,
+:root[data-theme] .hover\:bg-neutral-900:hover,
+:root[data-theme] .hover\:bg-gray-800:hover {
   background-color: var(--steffen-gray);
 }
 
-.erp-dark .hover\:bg-red-50:hover,
-.erp-dark .hover\:bg-red-100:hover {
+:root[data-theme] .hover\:bg-red-50:hover,
+:root[data-theme] .hover\:bg-red-100:hover {
   background-color: var(--steffen-red-tint);
 }
 
-.erp-dark .hover\:bg-blue-50:hover {
+:root[data-theme] .hover\:bg-blue-50:hover {
   background-color: var(--steffen-blue-tint);
 }
 
 /* --- Texto ---------------------------------------------------------------- */
-.erp-dark .text-black,
-.erp-dark .text-\[\#000\],
-.erp-dark .text-\[\#000000\],
-.erp-dark .text-slate-900,
-.erp-dark .text-gray-900,
-.erp-dark .hover\:text-black:hover {
-  color: var(--steffen-surface);
+:root[data-theme] .text-black,
+:root[data-theme] .text-\[\#000\],
+:root[data-theme] .text-\[\#000000\],
+:root[data-theme] .text-slate-900,
+:root[data-theme] .text-gray-900,
+:root[data-theme] .hover\:text-black:hover {
+  color: var(--steffen-text-primary);
 }
 
-.erp-dark .text-gray-800,
-.erp-dark .text-gray-700,
-.erp-dark .text-\[\#393939\],
-.erp-dark .text-neutral-700 {
+:root[data-theme] .text-gray-800,
+:root[data-theme] .text-gray-700,
+:root[data-theme] .text-\[\#393939\],
+:root[data-theme] .text-neutral-700 {
   color: var(--steffen-text-soft);
 }
 
-.erp-dark .text-gray-600,
-.erp-dark .text-gray-500,
-.erp-dark .text-gray-400,
-.erp-dark .text-gray-300,
-.erp-dark .text-neutral-400,
-.erp-dark .text-neutral-500,
-.erp-dark .text-slate-500 {
-  color: var(--steffen-text-muted);
+:root[data-theme] .text-gray-600,
+:root[data-theme] .text-gray-500,
+:root[data-theme] .text-gray-400,
+:root[data-theme] .text-gray-300,
+:root[data-theme] .text-neutral-400,
+:root[data-theme] .text-neutral-500,
+:root[data-theme] .text-slate-500 {
+  color: var(--steffen-text-secondary);
 }
 
-.erp-dark .text-red-500,
-.erp-dark .text-red-600,
-.erp-dark .text-red-700,
-.erp-dark .text-red-800,
-.erp-dark .hover\:text-red-600:hover,
-.erp-dark .hover\:text-red-700:hover {
+:root[data-theme] .text-red-500,
+:root[data-theme] .text-red-600,
+:root[data-theme] .text-red-700,
+:root[data-theme] .text-red-800,
+:root[data-theme] .hover\:text-red-600:hover,
+:root[data-theme] .hover\:text-red-700:hover {
   color: var(--steffen-red);
 }
 
-.erp-dark .text-green-600,
-.erp-dark .text-green-700,
-.erp-dark .text-emerald-700 {
+:root[data-theme] .text-green-600,
+:root[data-theme] .text-green-700,
+:root[data-theme] .text-emerald-700 {
   color: var(--steffen-green);
 }
 
-.erp-dark .text-amber-600,
-.erp-dark .text-amber-700,
-.erp-dark .text-amber-800,
-.erp-dark .text-amber-900,
-.erp-dark .text-yellow-800 {
+:root[data-theme] .text-amber-600,
+:root[data-theme] .text-amber-700,
+:root[data-theme] .text-amber-800,
+:root[data-theme] .text-amber-900,
+:root[data-theme] .text-yellow-800 {
   color: var(--steffen-gold);
 }
 
-.erp-dark .text-blue-600,
-.erp-dark .text-blue-700,
-.erp-dark .text-blue-800 {
+:root[data-theme] .text-blue-600,
+:root[data-theme] .text-blue-700,
+:root[data-theme] .text-blue-800 {
   color: var(--steffen-blue-hover);
 }
 
 /* --- Bordes y divisores ----------------------------------------------------- */
-.erp-dark .border-black {
+:root[data-theme] .border-black {
   border-color: var(--steffen-border);
 }
 
-.erp-dark .border-gray-100,
-.erp-dark .border-gray-200,
-.erp-dark .border-gray-300,
-.erp-dark .border-\[\#E5E5E5\],
-.erp-dark .border-slate-200,
-.erp-dark .border-neutral-200 {
+:root[data-theme] .border-gray-100,
+:root[data-theme] .border-gray-200,
+:root[data-theme] .border-gray-300,
+:root[data-theme] .border-\[\#E5E5E5\],
+:root[data-theme] .border-slate-200,
+:root[data-theme] .border-neutral-200 {
   border-color: var(--steffen-gray);
 }
 
-.erp-dark .divide-gray-100 > :not(:last-child),
-.erp-dark .divide-gray-200 > :not(:last-child),
-.erp-dark .divide-\[\#E5E5E5\] > :not(:last-child),
-.erp-dark .divide-\[\#D9D9D9\] > :not(:last-child) {
+:root[data-theme] .divide-gray-100 > :not(:last-child),
+:root[data-theme] .divide-gray-200 > :not(:last-child),
+:root[data-theme] .divide-\[\#E5E5E5\] > :not(:last-child),
+:root[data-theme] .divide-\[\#D9D9D9\] > :not(:last-child) {
   border-color: var(--steffen-gray);
 }
 
-.erp-dark .border-red-100,
-.erp-dark .border-red-200,
-.erp-dark .border-red-300 {
+:root[data-theme] .border-red-100,
+:root[data-theme] .border-red-200,
+:root[data-theme] .border-red-300 {
   border-color: var(--steffen-red-hover);
 }
 
-.erp-dark .border-green-200,
-.erp-dark .border-green-300 {
+:root[data-theme] .border-green-200,
+:root[data-theme] .border-green-300 {
   border-color: var(--steffen-green);
 }
 
-.erp-dark .border-amber-200,
-.erp-dark .border-amber-300 {
+:root[data-theme] .border-amber-200,
+:root[data-theme] .border-amber-300 {
   border-color: var(--steffen-gold);
 }
 
-.erp-dark .border-blue-200 {
+:root[data-theme] .border-blue-200 {
   border-color: var(--steffen-blue);
 }
 
 /* --- Sin sombras decorativas (DESIGN.md §4.2) -------------------------------- */
-.erp-dark .shadow-sm,
-.erp-dark .shadow,
-.erp-dark .shadow-md,
-.erp-dark .shadow-lg,
-.erp-dark .shadow-xl,
-.erp-dark .shadow-2xl {
+:root[data-theme] .shadow-sm,
+:root[data-theme] .shadow,
+:root[data-theme] .shadow-md,
+:root[data-theme] .shadow-lg,
+:root[data-theme] .shadow-xl,
+:root[data-theme] .shadow-2xl {
   box-shadow: none;
 }
 
 /* --- Títulos de sección: TÍTULO ———— línea (DESIGN.md §10.1) ---------------- */
-.erp-dark h2.uppercase {
+:root[data-theme] h2.uppercase {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: var(--steffen-text-muted);
+  color: var(--steffen-section-title);
   font-size: 12px;
 }
 
-.erp-dark h2.uppercase::after {
+:root[data-theme] h2.uppercase::after {
   content: "";
   flex: 1 1 auto;
   min-width: 24px;
@@ -390,73 +452,73 @@ body {
   background-color: var(--steffen-gray);
 }
 
-/* --- Inputs / selects dark (DESIGN.md §11.1) --------------------------------- */
-.erp-dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-.erp-dark select,
-.erp-dark textarea {
+/* --- Inputs / selects por tema (DESIGN.md §11.1) ---------------------------- */
+:root[data-theme] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+:root[data-theme] select,
+:root[data-theme] textarea {
   background-color: var(--steffen-bg);
   background-image: var(--steffen-degrade);
-  color: var(--steffen-surface);
+  color: var(--steffen-text-primary);
   border-color: var(--steffen-border);
   border-radius: var(--steffen-radius-control);
-  color-scheme: dark;
+  color-scheme: inherit;
 }
 
-.erp-dark select option {
+:root[data-theme] select option {
   background-color: var(--steffen-bg);
-  color: var(--steffen-surface);
+  color: var(--steffen-text-primary);
 }
 
-.erp-dark input:disabled,
-.erp-dark select:disabled,
-.erp-dark textarea:disabled,
-.erp-dark input[readonly] {
+:root[data-theme] input:disabled,
+:root[data-theme] select:disabled,
+:root[data-theme] textarea:disabled,
+:root[data-theme] input[readonly] {
   background-image: none;
   background-color: var(--steffen-gray-tint);
   color: var(--steffen-text-soft);
 }
 
-.erp-dark input::placeholder,
-.erp-dark textarea::placeholder {
-  color: var(--steffen-text-muted);
+:root[data-theme] input::placeholder,
+:root[data-theme] textarea::placeholder {
+  color: var(--steffen-text-secondary);
 }
 
-.erp-dark input:focus,
-.erp-dark select:focus,
-.erp-dark textarea:focus {
+:root[data-theme] input:focus,
+:root[data-theme] select:focus,
+:root[data-theme] textarea:focus {
   border-color: var(--steffen-gold);
   outline: none;
 }
 
-.erp-dark input[aria-invalid="true"],
-.erp-dark select[aria-invalid="true"] {
+:root[data-theme] input[aria-invalid="true"],
+:root[data-theme] select[aria-invalid="true"] {
   border-color: var(--steffen-red);
 }
 
-.erp-dark input[type="checkbox"],
-.erp-dark input[type="radio"] {
+:root[data-theme] input[type="checkbox"],
+:root[data-theme] input[type="radio"] {
   accent-color: var(--steffen-gold);
 }
 
 /* --- Superficie invertida (compatibilidad; la selección vigente usa .ui-list-item / borde Primary) --- */
-.erp-dark .ui-inverted {
-  background-color: var(--steffen-surface);
+:root[data-theme] .ui-inverted {
+  background-color: var(--steffen-text-primary);
   color: var(--steffen-bg);
 }
 
-.erp-dark .ui-inverted .text-black,
-.erp-dark .ui-inverted .text-\[\#000\],
-.erp-dark .ui-inverted .text-\[\#000000\],
-.erp-dark .ui-inverted .text-gray-800,
-.erp-dark .ui-inverted .text-gray-700,
-.erp-dark .ui-inverted .text-gray-600,
-.erp-dark .ui-inverted .text-gray-500 {
+:root[data-theme] .ui-inverted .text-black,
+:root[data-theme] .ui-inverted .text-\[\#000\],
+:root[data-theme] .ui-inverted .text-\[\#000000\],
+:root[data-theme] .ui-inverted .text-gray-800,
+:root[data-theme] .ui-inverted .text-gray-700,
+:root[data-theme] .ui-inverted .text-gray-600,
+:root[data-theme] .ui-inverted .text-gray-500 {
   color: var(--steffen-bg);
 }
 
 /* Fila/caja de alerta tokenizada: texto Surface sobre Alert Row (antes reinterpretado vía bg-[#B10000]). */
-.erp-dark .bg-steffen-alert {
-  color: var(--steffen-surface);
+:root[data-theme] .bg-steffen-alert {
+  color: var(--steffen-text-primary);
 }
 
 /* Tipografía única: números, códigos y textos técnicos usan la familia del sistema (sin monospace). */
@@ -469,20 +531,20 @@ pre {
 
 /* Encabezados de tabla con radius 5px (Figma). En border-collapse el fondo del tr no se
    recorta: el fondo se traslada a cada th y se redondean la primera y la última celda. */
-.erp-dark thead th:first-child {
+:root[data-theme] thead th:first-child {
   border-top-left-radius: var(--steffen-radius-control);
   border-bottom-left-radius: var(--steffen-radius-control);
 }
-.erp-dark thead th:last-child {
+:root[data-theme] thead th:last-child {
   border-top-right-radius: var(--steffen-radius-control);
   border-bottom-right-radius: var(--steffen-radius-control);
 }
-.erp-dark thead.bg-steffen-gray,
-.erp-dark thead > tr.bg-steffen-gray {
+:root[data-theme] thead.bg-steffen-gray,
+:root[data-theme] thead > tr.bg-steffen-gray {
   background-color: transparent;
 }
-.erp-dark thead.bg-steffen-gray th:not([class*="bg-"]),
-.erp-dark thead > tr.bg-steffen-gray > th:not([class*="bg-"]) {
+:root[data-theme] thead.bg-steffen-gray th:not([class*="bg-"]),
+:root[data-theme] thead > tr.bg-steffen-gray > th:not([class*="bg-"]) {
   background-color: var(--steffen-gray);
 }
 
@@ -502,8 +564,8 @@ pre {
    Excepciones con énfasis semántico: filas de total (tr font-semibold/bold), valores en
    rojo/verde (alertas, faltantes, ganancias) y badges de estado (con fondo). Encabezados
    (thead) sin cambios. */
-.erp-dark tbody > tr:not(.font-semibold):not(.font-bold):not(.font-extrabold) > td:not(.text-steffen-red):not(.text-steffen-green),
-.erp-dark tbody > tr:not(.font-semibold):not(.font-bold):not(.font-extrabold) > td :is(span, div, a, button, p, strong, b, label):not(.text-steffen-red):not(.text-steffen-green):not([class*="bg-"]) {
+:root[data-theme] tbody > tr:not(.font-semibold):not(.font-bold):not(.font-extrabold) > td:not(.text-steffen-red):not(.text-steffen-green),
+:root[data-theme] tbody > tr:not(.font-semibold):not(.font-bold):not(.font-extrabold) > td :is(span, div, a, button, p, strong, b, label):not(.text-steffen-red):not(.text-steffen-green):not([class*="bg-"]) {
   font-weight: 400;
 }
 
@@ -515,7 +577,7 @@ pre {
 
 /* Hijos de grilla y paneles pueden encogerse (evita que una tabla ensanche la página). */
 @layer base {
-  .erp-dark .grid > * {
+  :root[data-theme] .grid > * {
     min-width: 0;
   }
 }
@@ -530,11 +592,11 @@ pre {
 
   /* Modales / ventanas operativas: siempre dentro del viewport, con scroll interno.
      El ancho lo define cada modal (max-w-md … max-w-5xl); tope de respaldo 900px. */
-  .erp-dark .fixed.inset-0 {
+  :root[data-theme] .fixed.inset-0 {
     overflow-y: auto;
     overscroll-behavior: contain;
   }
-  .erp-dark .fixed.inset-0 > div {
+  :root[data-theme] .fixed.inset-0 > div {
     max-width: min(100%, 900px);
     max-height: calc(100dvh - 2rem);
     overflow-y: auto;
@@ -542,8 +604,8 @@ pre {
 }
 
 /* Importes / cantidades en tablas: nunca partir "$" del número (la tabla scrollea en su panel). */
-.erp-dark td.tabular-nums,
-.erp-dark td .tabular-nums {
+:root[data-theme] td.tabular-nums,
+:root[data-theme] td .tabular-nums {
   white-space: nowrap;
 }
 
@@ -553,4 +615,28 @@ pre {
   font-weight: 200;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
+}
+
+/* Excepciones acotadas de compatibilidad Light: superficies negras opacas de
+   paneles/filas sticky. Las clases con alfa son overlays y NO se convierten. */
+[data-theme="light"] .bg-black {
+  background-color: var(--steffen-surface);
+}
+[data-theme="light"] .hover\:bg-black\/40:hover {
+  background-color: var(--steffen-hover);
+}
+
+/* Acciones sólidas heredadas conservan texto claro en ambos temas. Los tintes
+   con alfa no coinciden con estos selectores; usan texto normal/semántico. */
+:root[data-theme] :is(.bg-steffen-green, .bg-steffen-red, .bg-steffen-blue, .bg-steffen-gold) {
+  color: var(--steffen-text-on-action);
+}
+:root[data-theme] :is(.bg-steffen-green, .bg-steffen-red, .bg-steffen-blue, .bg-steffen-gold) :is(.text-steffen-surface, .text-black) {
+  color: var(--steffen-text-on-action);
+}
+
+/* chartTheme mantiene su paleta hasta R6. Su antiguo token Surface de texto
+   se reconcilia en los labels SVG, sin reasignar colores de datos. */
+:root[data-theme] .recharts-text {
+  fill: var(--steffen-chart-axis);
 }

@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { cookies } from 'next/headers';
+import { normalizeTheme, THEME_COOKIE_NAME } from '@/lib/theme';
+import { ThemeProvider } from '@/ui/components/ThemeProvider';
 import './globals.css';
 
 // Tipografía del sistema (DESIGN.md §5): Inter.
@@ -14,16 +17,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Tema activo: solo dark (DESIGN.md §4.2). El modo light futuro cambia este atributo.
+  const cookieStore = await cookies();
+  const initialTheme = normalizeTheme(cookieStore.get(THEME_COOKIE_NAME)?.value);
   return (
-    <html lang="es" data-theme="dark" className={inter.variable}>
-      <body className="erp-dark min-h-screen bg-steffen-page text-steffen-surface antialiased">
-        {children}
+    <html lang="es" data-theme={initialTheme} className={inter.variable}>
+      <body className="min-h-screen bg-steffen-background text-steffen-text-primary antialiased">
+        <ThemeProvider initialTheme={initialTheme}>{children}</ThemeProvider>
       </body>
     </html>
   );

@@ -36,13 +36,13 @@ export const Button: React.FC<ButtonProps> = ({
       variantClasses = 'ui-btn-dark';
       break;
     case 'verde':
-      variantClasses = 'border border-steffen-green bg-steffen-green text-steffen-surface hover:bg-steffen-green-hover hover:border-steffen-green-hover';
+      variantClasses = 'border border-steffen-green bg-steffen-green text-steffen-on-action hover:bg-steffen-green-hover hover:border-steffen-green-hover';
       break;
     case 'rojo':
-      variantClasses = 'border border-steffen-red bg-steffen-red text-steffen-surface hover:bg-steffen-red-hover hover:border-steffen-red-hover';
+      variantClasses = 'border border-steffen-red bg-steffen-red text-steffen-on-action hover:bg-steffen-red-hover hover:border-steffen-red-hover';
       break;
     case 'azul':
-      variantClasses = 'border border-steffen-blue bg-steffen-blue text-steffen-surface hover:bg-steffen-blue-hover hover:border-steffen-blue-hover';
+      variantClasses = 'border border-steffen-blue bg-steffen-blue text-steffen-on-action hover:bg-steffen-blue-hover hover:border-steffen-blue-hover';
       break;
   }
 
@@ -60,7 +60,7 @@ export const StatusBadge: React.FC<{ type: 'URG' | 'POCO_STOCK' | 'OPEN' | 'CLOS
 }) => {
   const base = 'inline-flex items-center px-2 py-0.5 rounded-[5px] text-xs';
   if (type === 'URG') {
-    return <span className={`${base} font-semibold bg-steffen-red text-steffen-surface`}>URG PARA PEDIDOS</span>;
+    return <span className={`${base} font-semibold bg-steffen-red text-steffen-on-action`}>URG PARA PEDIDOS</span>;
   }
   if (type === 'POCO_STOCK') {
     return <span className={`${base} font-semibold text-steffen-gold border border-steffen-gold`}>POCO STOCK</span>;
@@ -148,7 +148,7 @@ export const Modal: React.FC<{
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-steffen-overlay overflow-y-auto">
       <div className={`ui-panel w-full ${maxWidth} my-6 max-h-[92vh] flex flex-col`}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-steffen-gray">
           <h2 className="text-2xl font-semibold text-steffen-surface">{title}</h2>
@@ -177,8 +177,8 @@ export const ConfirmDialog: React.FC<{
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75">
-      <div className="bg-steffen-bg rounded-[10px] p-5 max-w-md w-full border border-steffen-red">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-steffen-overlay">
+      <div className="bg-steffen-panel rounded-[10px] p-5 max-w-md w-full border border-steffen-red">
         <div className="flex items-center gap-3 text-steffen-red mb-3">
           <AlertCircle className="w-6 h-6" />
           <h3 className="text-lg font-semibold text-steffen-surface">{title}</h3>
@@ -209,7 +209,7 @@ export const SectionHeader: React.FC<{
   className?: string;
 }> = ({ title, variant = 'default', actions, className = '' }) => {
   const titleColor =
-    variant === 'alert' ? 'text-steffen-red' : variant === 'strong' ? 'text-steffen-surface' : 'text-steffen-muted';
+    variant === 'alert' ? 'text-steffen-red' : variant === 'strong' ? 'text-steffen-surface' : 'text-steffen-section-title';
   const lineColor = variant === 'alert' ? 'bg-steffen-red' : variant === 'strong' ? 'bg-steffen-surface' : 'bg-steffen-gray';
   return (
     <div className={`flex flex-wrap items-center gap-x-5 gap-y-2 mb-3 ${className}`}>
@@ -241,8 +241,8 @@ export const KpiCard: React.FC<{
 }> = ({ label, value, variant = 'default', icon, className = '', labelClassName = '' }) => {
   const variantClasses =
     variant === 'positive'
-      ? 'bg-steffen-green border-steffen-green text-steffen-surface'
-      : 'bg-steffen-bg border-steffen-gold text-steffen-surface';
+      ? 'bg-steffen-green border-steffen-green text-steffen-on-action'
+      : 'bg-steffen-panel border-steffen-gold text-steffen-surface';
   return (
     <div
       className={`rounded-[10px] border-2 px-4 py-3 flex flex-col items-center justify-center text-center ${variantClasses} ${className}`}
@@ -274,9 +274,9 @@ export const IconButton: React.FC<IconButtonProps> = ({
 }) => {
   const variantClasses =
     variant === 'rojo'
-      ? 'border border-steffen-red bg-steffen-red hover:bg-steffen-red-hover'
+      ? 'border border-steffen-red bg-steffen-red text-steffen-on-action hover:bg-steffen-red-hover'
       : variant === 'verde'
-      ? 'border border-steffen-green bg-steffen-green hover:bg-steffen-green-hover'
+      ? 'border border-steffen-green bg-steffen-green text-steffen-on-action hover:bg-steffen-green-hover'
       : 'ui-btn-dark';
   const sizeClasses = size === 'large' ? 'w-[50px] h-[50px]' : 'w-[30px] h-[30px]';
   return (
@@ -374,8 +374,8 @@ export const SecondaryHeader: React.FC<{
 export const tableStyles = {
   table: 'w-full text-sm text-steffen-surface border-collapse',
   headRow: 'text-steffen-surface font-semibold text-sm [&>th]:bg-steffen-gray [&>th:first-child]:rounded-l-[5px] [&>th:last-child]:rounded-r-[5px]',
-  headRowHighlight: 'text-steffen-surface font-semibold text-sm [&>th]:bg-steffen-gold [&>th:first-child]:rounded-l-[5px] [&>th:last-child]:rounded-r-[5px]',
-  headRowAlert: 'text-steffen-surface font-semibold text-sm [&>th]:bg-steffen-red [&>th:first-child]:rounded-l-[5px] [&>th:last-child]:rounded-r-[5px]',
+  headRowHighlight: 'text-steffen-on-action font-semibold text-sm [&>th]:bg-steffen-gold [&>th:first-child]:rounded-l-[5px] [&>th:last-child]:rounded-r-[5px]',
+  headRowAlert: 'text-steffen-on-action font-semibold text-sm [&>th]:bg-steffen-red [&>th:first-child]:rounded-l-[5px] [&>th:last-child]:rounded-r-[5px]',
   headCell: 'px-5 py-2 text-left',
   row: 'border-b border-steffen-surface/70',
   rowAlert: 'ui-row-alert border-b border-steffen-surface/70',
