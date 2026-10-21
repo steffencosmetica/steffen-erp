@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition, useEffect } from 'react';
+import React, { useState, useTransition, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertCircle } from 'lucide-react';
 import { PlanningMatrixTable } from '@/ui/components/PlanningMatrixTable';
@@ -11,7 +11,7 @@ import type { PlanningMatrixDTO } from '@/actions/planning.dto';
 import type { PendingRtmBannerDTO } from '@/actions/remittance.dto';
 import { reorderProductPrioritiesAction, reorderOrderPrioritiesAction } from '@/actions/planning.actions';
 import { NuevoPedidoModal } from '@/ui/modals/NuevoPedidoModal';
-import { VerPedidoModal } from '@/ui/modals/VerPedidoModal';
+import { VerPedidoModal, type OrderEditorHandle } from '@/ui/modals/VerPedidoModal';
 import { CompletarRtmModal } from '@/ui/modals/CompletarRtmModal';
 
 interface PedidosViewProps {
@@ -25,9 +25,15 @@ export const PedidosView: React.FC<PedidosViewProps> = ({ orders, initialPlannin
   const [isPending, startTransition] = useTransition();
   const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  // El editor conserva la decisión y ejecuta el destino solo al resolverla.
+  const orderEditorRef = useRef<OrderEditorHandle>(null);
   const [isRtmModalOpen, setIsRtmModalOpen] = useState(false);
   const [planning, setPlanning] = useState<PlanningMatrixDTO>(initialPlanning);
   const [errorMsg, setErrorMsg] = useState<string>('');
+  const requestEditorAction = (run: () => void, variant: 'abandon' | 'continue' = 'continue') => {
+    if (selectedOrderId && orderEditorRef.current) orderEditorRef.current.requestAction(run, variant);
+    else run();
+  };
 
   // Sincronizar estado local de planificación si cambia desde el servidor
   useEffect(() => {
@@ -114,7 +120,7 @@ export const PedidosView: React.FC<PedidosViewProps> = ({ orders, initialPlannin
               </p>
             </div>
           </div>
-          <Button variant="principal" onClick={() => setIsRtmModalOpen(true)} className="self-start sm:self-center shrink-0">
+          <Button variant="principal" onClick={() => requestEditorAction(() => setIsRtmModalOpen(true))} className="self-start sm:self-center shrink-0">
             Completar RTM
           </Button>
         </div>
@@ -132,7 +138,7 @@ export const PedidosView: React.FC<PedidosViewProps> = ({ orders, initialPlannin
               <button
                 key={o.id}
                 type="button"
-                onClick={() => setSelectedOrderId(isSelected ? null : o.id)}
+                onClick={() => requestEditorAction(() => setSelectedOrderId(isSelected ? null : o.id), isSelected ? 'abandon' : 'continue')}
                 aria-pressed={isSelected}
                 title={`Ver o editar pedido ${o.code}`}
                 className="ui-order-card shrink-0 text-steffen-surface transition-colors cursor-pointer"
@@ -152,13 +158,14 @@ export const PedidosView: React.FC<PedidosViewProps> = ({ orders, initialPlannin
             );
           })}
           <div className="shrink-0 px-2">
-            <CreateButton label="Nuevo pedido" onClick={() => setIsNewOrderOpen(true)} />
+            <CreateButton label="Nuevo pedido" onClick={() => requestEditorAction(() => setIsNewOrderOpen(true))} />
           </div>
         </div>
       </div>
 
       {/* Detalle del PED seleccionado: panel debajo de las cards (Figma Pedidos) */}
       <VerPedidoModal
+        editorRef={orderEditorRef}
         variant="inline"
         orderId={selectedOrderId}
         isOpen={selectedOrderId !== null}

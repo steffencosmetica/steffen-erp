@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useProtectedRouter as useRouter } from '@/ui/navigation/NavigationProtectionProvider';
 import { BackLink, KpiCard, SectionHeader } from '@/ui/components/UIComponents';
 import type {
   ReportingYearsDTO,

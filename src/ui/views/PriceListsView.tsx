@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useProtectedRouter as useRouter } from '@/ui/navigation/NavigationProtectionProvider';
 import {
   ChevronLeft,
   Search,

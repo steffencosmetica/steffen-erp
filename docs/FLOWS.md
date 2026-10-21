@@ -645,15 +645,15 @@ No genera movimientos.
 
 ## 13.2 Ejecución
 
-1. Buscar precio histórico vigente en `price_snapshot_at`.
-2. Guardar ese precio en `order_items`.
-3. Guardar cantidad.
-4. Recalcular:
+1. Confirmar Agregar incorpora el producto y su cantidad al borrador del Pedido; no persiste todavía.
+2. Al pulsar Guardar, buscar en backend el precio histórico vigente en `price_snapshot_at` y persistir precio y cantidad en `order_items`.
+3. No presentar un precio preliminar vigente como confirmación del precio histórico.
+4. Recalcular el potencial en el borrador y confirmar los valores persistidos al guardar:
    - subtotal;
    - descuentos;
    - Total pedido;
    - peso potencial.
-5. Persistir automáticamente al confirmar Agregar producto, según §14; no requiere botón Guardar.
+5. Aplicar el guardado manual y la protección de borradores de §14.
 
 No genera movimientos.
 
@@ -676,61 +676,77 @@ No se permite:
 - cambiar el snapshot de lista;
 - cambiar descuentos congelados de Cliente registrado.
 
-Toda modificación recalcula el potencial del pedido. El autosave siguiente solo cubre campos y operaciones actualmente editables; no agrega controles ni campos nuevos. Las reglas de BUSINESS_RULES.md permanecen intactas.
+Toda modificación recalcula el potencial del pedido. El guardado es manual y solo cubre campos y operaciones actualmente editables; no agrega controles ni campos nuevos. Las reglas de BUSINESS_RULES.md permanecen intactas.
 
-## 14.1 Persistencia automática del Pedido abierto — R1
+## 14.1 Guardado manual — R5
 
-Todo cambio editable que antes dependía de Guardar se persiste automáticamente: AG, cantidad solicitada cuando sea editable, bultos, agregar/eliminar producto y cualquier otro campo actualmente editable. Eliminar Guardar y Cancelar del editor cuando se implemente este contrato; no dejar huecos visuales reservados. No eliminar las acciones de cancelar formularios auxiliares o confirmaciones vigentes.
+El botón Guardar persiste las modificaciones después de las validaciones vigentes. No existe persistencia por cambios de input, pérdida de foco o tecla de confirmación, ni colas automáticas de escritura.
 
-## 14.2 Inputs: blur y Enter
+Un guardado exitoso actualiza la referencia confirmada y, por sí solo, mantiene abierto el editor. Si pertenece a una navegación o continuación pendiente elegida explícitamente, ejecutar ese destino únicamente después del éxito y de resolver los borradores pendientes. Un error conserva el borrador, muestra el problema y mantiene al usuario en el pedido; no ejecutar el destino ni asumir éxito ante un fallo de comunicación.
 
-Inputs numéricos y textuales guardan al perder foco (blur) o al presionar Enter. No guardar cada tecla. Enter seguido de blur no produce dos escrituras equivalentes; tampoco se escribe si no cambió el valor confirmado. Validar según el contrato vigente antes de enviar. No hace falta debounce para estos eventos.
+## 14.2 Detección semántica de cambios
 
-## 14.3 Acciones discretas
+Comparar el estado editable actual con una copia independiente del estado originalmente cargado o del último guardado confirmado. Incluir productos y su orden, cantidades solicitadas, AG, bultos y cualquier otro campo editable existente. Respetar la distinción funcional entre AG vacío/null y cero.
 
-Agregar producto persiste al confirmar la acción; eliminar producto persiste al confirmar la acción según el flujo actual, sin inventar un nuevo diálogo. Mantener las validaciones de producto, precio histórico, cantidades y mínimo de una línea. Borrar pedido conserva su confirmación propia (§15) y no equivale a eliminar una línea.
+No comparar identidades temporales de líneas, valores derivados (precios totales, peso, formatos) ni estado puramente visual. Revertir manualmente todos los valores a los confirmados limpia el estado de cambios pendientes. Refrescar cards o planificación no debe sobrescribir un borrador vigente ni sustituir su referencia sin una confirmación pertinente del servidor.
 
-## 14.4 Borrador, confirmación y errores
+## 14.3 Agregar/eliminar producto y borrador auxiliar
 
-Separar estado borrador del último estado confirmado por el servidor. Solo considerar definitivo un cambio después de confirmación exitosa. Si falla:
+Abrir el formulario Agregar producto no modifica el pedido. Los datos escritos pero todavía no agregados constituyen un borrador independiente: proteger su abandono cuando una acción vaya a descartarlo. No confundirlo con una línea ya incorporada ni persistirlo mediante Guardar sin confirmar antes Agregar.
 
-1. mostrar error visible;
-2. restaurar el último valor confirmado del campo o la operación afectada;
-3. no presentar el valor fallido como válido ni incorporarlo a payloads posteriores.
+Confirmar Agregar incorpora el producto al borrador del pedido, sin persistirlo hasta Guardar. Eliminar una línea también modifica ese borrador y se persiste al guardar. Mantener las validaciones de producto activo, precio histórico, cantidad positiva y mínimo de una línea; no inventar un nuevo diálogo para eliminar una línea. Borrar pedido conserva su confirmación propia (§15) y no equivale a eliminar una línea.
 
-Un error no resuelto bloquea Generar remito aunque la UI ya haya restaurado el valor. Resolverlo requiere reconciliar explícitamente el estado confirmado o confirmar con éxito una corrección/reintento pertinente; no basta ocultar el mensaje. Los fallos inesperados de comunicación también deben llevar al estado de error y reconciliación, sin asumir persistencia exitosa.
+## 14.4 Cancelar y X
 
-## 14.5 Serialización por pedido
+Cancelar y X tienen el mismo comportamiento: sin cambios ni borrador auxiliar pendiente, cerrar normalmente. Si se perderían modificaciones o el borrador auxiliar, ofrecer **Descartar cambios** o **Seguir editando**. Descartar abandona los cambios locales afectados y cierra; seguir editando conserva el estado y la vista. Ninguna de estas acciones guarda automáticamente.
 
-Una sola petición activa por pedido; serializar cambios rápidos. Construir cada payload desde el último estado confirmado y las operaciones pendientes correspondientes al ejecutarlo, no desde un snapshot antiguo capturado al escribir. Identificar respuestas por pedido/operación para impedir que una respuesta antigua sobrescriba un cambio posterior o afecte otro pedido seleccionado.
+La misma protección se aplica a cerrar el detalle pulsando la tarjeta del pedido ya seleccionado. Las cancelaciones de formularios auxiliares y confirmaciones conservan su función; si descartan un borrador auxiliar escrito, proteger ese abandono.
 
-Ante fallo, detener/reconciliar operaciones dependientes antes de continuar; conservar cambios ya confirmados. La cola no debe reintroducir un valor fallido. Refrescar cards y planificación tras confirmación sin reinicializar borradores vigentes.
+## 14.5 Seleccionar otro pedido o navegar
 
-## 14.6 Cierre mediante X
+Si no existen borradores pendientes, ejecutar el destino normalmente. Si existen, ofrecer:
 
-La X simplemente cierra la vista: no cancela, no revierte, no pregunta si guardar ni descarta cambios confirmados. El blur correspondiente confirma el borrador activo conforme §14.2; cerrar no debe abortar esa operación. Si hay guardado activo o en cola, su ciclo de vida debe sobrevivir al cierre visual, por ejemplo mediante coordinación en un padre estable por pedido. Un error posterior debe seguir siendo visible y conservarse al reabrir el pedido.
+- **Guardar y continuar:** resolver el borrador auxiliar si existe, guardar las modificaciones del pedido y ejecutar el destino solo después de persistencia exitosa, sin cambios posteriores todavía pendientes;
+- **Descartar cambios:** abandonar los borradores locales afectados y ejecutar el destino;
+- **Seguir editando:** cancelar la navegación pendiente y conservar todos los borradores.
 
-## 14.7 Generar remito como barrera
+No cambiar el pedido seleccionado, desmontar el editor ni ejecutar la navegación mientras no se resuelva la decisión. Si falla el guardado, permanecer en el pedido con su borrador y error visibles. Si solo existe un borrador auxiliar, resolverlo incorporándolo explícitamente al pedido o descartándolo; no omitirlo silenciosamente bajo Guardar y continuar.
 
-Antes de continuar:
+## 14.6 Cobertura de navegación y límites del navegador
 
-1. confirmar cualquier borrador activo;
-2. esperar todos los guardados pendientes;
-3. comprobar que no exista error sin resolver.
+El cierre del editor, la selección de otro pedido y la navegación mediante controles internos (sidebar, accesos secundarios, logos y navegación mobile) están protegidos con el diálogo propio de §14.5. Logout se protege antes de ejecutar su acción.
 
-Si todo fue confirmado, continuar con las validaciones y confirmación vigentes. Si algún guardado falló, bloquear la generación y mostrar error. La barrera debe coordinar blur/Enter y click para no adelantarse al último cambio ni duplicar escrituras. El RTO se previsualiza y genera siempre desde el último estado persistido, no desde un borrador local. Se mantiene el bloqueo por RTM pendiente y toda validación vigente de remito.
+**Limitación conocida de Back/Forward — R5.4.1:** Atrás/Adelante nativos dentro de la SPA no cuentan con protección garantizada y pueden abandonar el editor con borradores pendientes. La protección de controles internos no equivale a proteger el historial del navegador. No se implementan workarounds de historial ni `precommitHandler`; esta cobertura queda pendiente de una futura mejora. No presentar Back/Forward como prueba aprobada de protección.
 
-## 14.8 AG y alcance de concurrencia
+Para refresh, cierre de pestaña y otras salidas del documento, registrar `beforeunload` cuando existan borradores pendientes y retirarlo cuando no los haya. El aviso es nativo: el navegador determina texto, botones y disponibilidad; no ofrece las tres opciones del diálogo propio ni permite prometer un guardado asíncrono antes de salir. No garantizar protección ante cierre forzado, terminación del navegador o de la aplicación, especialmente en mobile.
 
-AG admite entero >= 0 o vacío/null durante la edición según contrato vigente; puede ser menor, igual o **mayor** que la cantidad solicitada. Para generar remito se mantienen AG completo y al menos un AG positivo según las validaciones existentes. Autosave no cambia esta regla.
+Abrir/cerrar el menú, cambiar tema o modificar otros estados visuales no marca el pedido como modificado. Las salidas intencionales tras guardar, borrar el pedido o confirmar el RTO correctamente no deben producir una segunda advertencia de descarte por el estado ya resuelto.
 
-Fuera de alcance: detectar/resolver conflictos entre dos pestañas o usuarios que editan simultáneamente el mismo pedido. Conservar comportamiento actual: última escritura válida prevalece. No agregar versionado ni migración para este alcance.
+## 14.7 Generar remito desde información persistida
+
+Previsualización y generación usan exclusivamente información persistida. Si existen borradores pendientes, resolverlos antes de solicitar la previsualización:
+
+- **Guardar y continuar:** resolver el borrador auxiliar, persistir el pedido y continuar únicamente después del éxito, sin cambios posteriores sin guardar;
+- **Descartar cambios:** restaurar el último estado confirmado, descartar el borrador auxiliar afectado y continuar usando ese estado persistido;
+- **Seguir editando:** cancelar la generación y conservar los borradores.
+
+No guardar implícitamente al pulsar Generar remito. Mientras haya un guardado sin resolver, no adelantar la previsualización ni la confirmación. Ante error, conservar el borrador y permanecer en el pedido. Conservar el bloqueo por RTM pendiente, las validaciones de AG, stock y toda validación y confirmación vigente del remito; sus controles de cancelar permanecen.
+
+## 14.8 Guardado en curso, errores y concurrencia
+
+Impedir dos guardados concurrentes del mismo editor, sin introducir colas automáticas. Asociar la respuesta al pedido y a la versión del borrador enviada. Un éxito confirma únicamente los valores incluidos en esa solicitud: no considerar confirmado un cambio realizado después de su inicio ni sobrescribirlo con una respuesta anterior. Si se permite seguir editando durante el guardado, preservar esos cambios y mantenerlos pendientes; alternativamente se pueden bloquear temporalmente los controles afectados.
+
+No continuar a otro destino ni generar el RTO con cambios posteriores todavía sin resolver. Los errores de validación o comunicación conservan el borrador y no actualizan la referencia como si hubiera éxito; reconciliar con el servidor cuando el resultado de persistencia sea incierto. No descartar automáticamente los cambios ante errores.
+
+AG admite entero >= 0 o vacío/null durante la edición; puede ser menor, igual o **mayor** que la cantidad solicitada. Cantidad solicitada sigue siendo entera > 0. Para generar remito se mantienen AG completo y al menos un AG positivo. Bultos mantiene su validación vigente de entero no negativo o null. No cambian reglas comerciales.
+
+Fuera de alcance: detectar/resolver conflictos entre dos pestañas o usuarios que editan simultáneamente el mismo pedido. Conservar comportamiento actual: última escritura válida prevalece. No agregar versionado de DB ni migración para este alcance.
 
 ## 14.9 Reutilización del contrato existente
 
-Reutilizar `updateOrderAction` → OrderService.updateOrder → OrderRepository.updateOrderAtomic → `update_order_atomic(p_order_id, p_update_json)`. No hace falta una Server Action nueva ni cambios de backend/DB para este alcance.
+Reutilizar `updateOrderAction` → OrderDomainService.updateOrder → OrderRepository.updateOrderAtomic → `update_order_atomic(p_order_id, p_update_json)`. No hace falta una Server Action nueva ni cambios de backend/DB para este alcance.
 
-La RPC admite campos opcionales de cabecera; si recibe `items`, reemplaza la lista completa de renglones, no aplica deltas por línea. Bloquea el pedido y exige OPEN; los precios se resuelven a `price_snapshot_at` de su lista original. La cola construye ese reemplazo completo desde estado confirmado más operaciones pendientes. Reconciliar el detalle devuelto por lectura cuando haga falta para precios/normalizaciones; no presentar precios preliminares vigentes como confirmación del precio histórico.
+La RPC admite campos opcionales de cabecera; si recibe `items`, reemplaza la lista completa de renglones, no aplica deltas por línea. Bloquea el pedido y exige OPEN; los precios se resuelven a `price_snapshot_at` de su lista original. Construir el payload del guardado manual con el borrador que el usuario decidió persistir. Reconciliar el detalle mediante lectura cuando haga falta para precios/normalizaciones, preservando cambios posteriores a la solicitud; no presentar precios preliminares vigentes como confirmación del precio histórico.
 
 La atomicidad de la RPC no detecta snapshots obsoletos de otras pestañas; esa limitación sigue fuera de alcance. **No hace falta migración.**
 

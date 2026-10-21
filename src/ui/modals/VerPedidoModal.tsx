@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useTransition } from 'react';
+import React, { useState, useEffect, useTransition, useRef, useSyncExternalStore, useImperativeHandle, useLayoutEffect } from 'react';
 import { X, Plus, Trash2, Edit2, AlertCircle } from 'lucide-react';
 import {
   getOrderDetailAction,
@@ -17,6 +17,22 @@ import type { RtoPreviewDTO } from '@/actions/remittance.dto';
 import { Decimal, toWholePesos, toKgPrecision } from '@/domain/decimal';
 import { formatArs, formatKg } from '@/lib/format';
 import { Button, tableStyles } from '@/ui/components/UIComponents';
+import { OrderManualSaveController, draftFromOrder, isOrderDirty, isAddProductDirty, type OrderEditorDraft, type OrderSaveResult } from '@/ui/orders/orderEditorState';
+import { OrderContinuation } from '@/ui/orders/orderContinuation';
+import { UnsavedOrderDialog } from '@/ui/orders/UnsavedOrderDialog';
+import { preparePersistedRto } from '@/ui/orders/orderRtoPreview';
+import { useNavigationProtection } from '@/ui/navigation/NavigationProtectionProvider';
+
+/** Protección del editor compartida por sus acciones locales y la navegación global. */
+export interface OrderEditorHandle {
+  requestAction: (run: () => void, variant?: 'abandon' | 'continue') => void;
+  orderId: string | null;
+  dirty: boolean;
+  addProductDirty: boolean;
+  saving: boolean;
+  result: OrderSaveResult | null;
+  save: () => Promise<OrderSaveResult>;
+}
 
 interface VerPedidoModalProps {
   orderId: string | null;
@@ -28,6 +44,7 @@ interface VerPedidoModalProps {
   pendingRtmCode?: string | null;
   /** 'inline': panel dentro de la pantalla Pedidos (Figma); 'modal': ventana (default). */
   variant?: 'modal' | 'inline';
+  editorRef?: React.Ref<OrderEditorHandle>;
 }
 
 interface EditableLine {
@@ -50,12 +67,21 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
   hasPendingRtm,
   pendingRtmCode,
   variant = 'modal',
+  editorRef,
 }) => {
   const isInline = variant === 'inline';
+  const navigationProtection = useNavigationProtection();
+  const departing = useRef(false);
   const [isPending, startTransition] = useTransition();
   const [loading, setLoading] = useState(false);
+  const [reconciling, setReconciling] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [order, setOrder] = useState<OrderDetailDTO | null>(null);
+  const confirmedDetail = useRef<OrderDetailDTO | null>(null);
+  const [manualSave] = useState(() => new OrderManualSaveController({ persist: updateOrderAction, reload: getOrderDetailAction }));
+  const saveState = useSyncExternalStore(manualSave.subscribe, manualSave.getSnapshot, manualSave.getSnapshot);
+  const visibleOrder = useRef<string | null>(null);
+  visibleOrder.current = isOpen ? orderId : null;
 
   // Editable fields
   const [packageCount, setPackageCount] = useState<string>('');
@@ -85,11 +111,18 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
 
   // Load order data
   useEffect(() => {
+    let cancelled = false;
+    manualSave.clear();
     if (isOpen && orderId) {
+      departing.current = false;
+      setOrder(null);
       setErrorMsg('');
       setLoading(true);
       setShowDeleteConfirm(false);
       setShowAddProduct(false);
+      setSelectedNewProdId('');
+      setNewProdQty('1');
+      setNewProdAg('');
       setShowRtoConfirm(false);
       setRtoPreview(null);
       setRtoErrorMsg('');
@@ -99,9 +132,16 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
         getOrderDetailAction(orderId),
         getOrderFormDataAction(),
       ]).then(([orderRes, formRes]) => {
+        if (cancelled) return;
         setLoading(false);
         if (orderRes.success && orderRes.data) {
           const ord = orderRes.data;
+          if (ord.id !== orderId) {
+            setErrorMsg('El detalle recibido no corresponde al pedido seleccionado.');
+            return;
+          }
+          manualSave.load(ord);
+          confirmedDetail.current = ord;
           setOrder(ord);
           setPackageCount(ord.packageCount !== null ? String(ord.packageCount) : '');
           setRecipientName(ord.recipientName || '');
@@ -130,11 +170,70 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
         if (formRes.success && formRes.data) {
           setAvailableProducts(formRes.data.products);
         }
+      }).catch((error: unknown) => {
+        if (cancelled) return;
+        setLoading(false);
+        setErrorMsg(error instanceof Error ? error.message : 'Error cargando pedido.');
       });
     }
-  }, [isOpen, orderId]);
+    return () => {
+      cancelled = true;
+      manualSave.clear();
+    };
+  }, [isOpen, orderId, manualSave]);
 
-  if (!isOpen) return null;
+  const draft: OrderEditorDraft = {
+    customerSource: order?.customerSource ?? 'CONSUMER_FINAL',
+    packageCount, recipientName, address, locality, province, phone, transportName,
+    items: lines,
+  };
+  const dirty = isOpen && order?.id === orderId && saveState.orderId === orderId && isOrderDirty(draft, saveState.confirmed);
+  const addProductDirty = isOpen && order?.id === orderId && isAddProductDirty(selectedNewProdId, newProdQty, newProdAg);
+  const saving = saveState.orderId === orderId && saveState.saving;
+  const latest = useRef({ draft, addProductDirty });
+  latest.current = { draft, addProductDirty };
+  const [, renderDecision] = useState(0);
+  const operations = useRef<{ save: () => Promise<boolean>; discard: (auxiliary: boolean, refresh: boolean) => Promise<boolean>; blocked: () => boolean }>({ save: async () => false, discard: async () => false, blocked: () => false });
+  const [continuation] = useState(() => new OrderContinuation({
+    dirty: () => manualSave.requiresReconciliation() || isOrderDirty(latest.current.draft, manualSave.getSnapshot().confirmed),
+    auxiliaryDirty: () => latest.current.addProductDirty,
+    blocked: () => operations.current.blocked(),
+    save: () => operations.current.save(),
+    discard: (auxiliary, refresh) => operations.current.discard(auxiliary, refresh),
+    changed: () => renderDecision((value) => value + 1),
+    error: setErrorMsg,
+  }));
+  useEffect(() => () => continuation.cancel(), [continuation, orderId, isOpen]);
+  const globalProtection = useRef<{ hasPending: () => boolean; intercepts: () => boolean }>({ hasPending: () => false, intercepts: () => false });
+  globalProtection.current = {
+    hasPending: () => !departing.current && isOpen && order?.id === orderId &&
+      (latest.current.addProductDirty || manualSave.requiresReconciliation() || isOrderDirty(latest.current.draft, manualSave.getSnapshot().confirmed)),
+    intercepts: () => !departing.current && (globalProtection.current.hasPending() || manualSave.getSnapshot().saving || continuation.resolving || !!continuation.decision || operations.current.blocked()),
+  };
+  useLayoutEffect(() => {
+    if (!navigationProtection || !isOpen || !orderId) return;
+    return navigationProtection.register({
+      hasPending: () => globalProtection.current.hasPending(),
+      intercepts: () => globalProtection.current.intercepts(),
+      request: (run, purpose) => continuation.request(run, 'continue', false, false, purpose),
+      cancel: continuation.cancel,
+    });
+  }, [navigationProtection, continuation, isOpen, orderId]);
+  useLayoutEffect(() => { navigationProtection?.notify(); }, [navigationProtection, dirty, addProductDirty, saving, saveState.result, reconciling, loading]);
+  const resetAuxiliary = () => {
+    setSelectedNewProdId(''); setNewProdQty('1'); setNewProdAg(''); setShowAddProduct(false);
+    latest.current = { ...latest.current, addProductDirty: false };
+  };
+  const restorePersisted = (detail: OrderDetailDTO) => {
+    latest.current = { ...latest.current, draft: draftFromOrder(detail) };
+    setOrder(detail);
+    setPackageCount(detail.packageCount === null ? '' : String(detail.packageCount));
+    setRecipientName(detail.recipientName ?? ''); setAddress(detail.address ?? '');
+    setLocality(detail.locality ?? ''); setProvince(detail.province ?? '');
+    setPhone(detail.phone ?? ''); setTransportName(detail.transportName ?? '');
+    setLines(detail.items.map((item) => ({ ...item, weightKg: new Decimal(item.weightKg || 0), unitPriceArs: new Decimal(item.unitPriceArsSnapshot) })));
+  };
+  const requestClose = () => continuation.request(onClose, 'abandon');
 
   // Recalculate live totals
   let subtotal = new Decimal(0);
@@ -223,10 +322,11 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
 
     const existingIndex = lines.findIndex((l) => l.productId === prod.productId);
     if (existingIndex >= 0) {
-      const updated = [...lines];
-      updated[existingIndex].requestedQuantity += qty;
-      if (ag !== null) updated[existingIndex].agQuantity = ag;
-      setLines(updated);
+      setLines(lines.map((line, index) => index === existingIndex ? {
+        ...line,
+        requestedQuantity: line.requestedQuantity + qty,
+        agQuantity: ag !== null ? ag : line.agQuantity,
+      } : line));
     } else {
       setLines([
         ...lines,
@@ -250,36 +350,74 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
     setShowAddProduct(false);
   };
 
-  // Save changes
-  const handleSave = () => {
-    if (!order) return;
+  // Persistencia única compartida por Guardar y las continuaciones explícitas.
+  const saveOrder = async (): Promise<OrderSaveResult> => {
+    if (!isOpen || !order || order.id !== orderId || loading || saveState.orderId !== orderId) {
+      return { success: false, orderId, reason: 'not-loaded', error: 'El pedido todavía no está cargado.' };
+    }
+    if (manualSave.getSnapshot().saving) {
+      return { success: false, orderId, reason: 'busy', error: 'El pedido ya se está guardando.' };
+    }
     setErrorMsg('');
-
-    const payload = {
-      packageCount: packageCount.trim() !== '' ? parseInt(packageCount, 10) : null,
-      recipientName: order.customerSource === 'CONSUMER_FINAL' ? recipientName : undefined,
-      address: order.customerSource === 'CONSUMER_FINAL' ? address : undefined,
-      locality: order.customerSource === 'CONSUMER_FINAL' ? locality : undefined,
-      province: order.customerSource === 'CONSUMER_FINAL' ? province : undefined,
-      phone: order.customerSource === 'CONSUMER_FINAL' ? phone : undefined,
-      transportName: order.customerSource === 'CONSUMER_FINAL' ? transportName : undefined,
-      items: lines.map((l) => ({
-        productId: l.productId,
-        requestedQuantity: l.requestedQuantity,
-        agQuantity: l.agQuantity,
-      })),
-    };
-
-    startTransition(async () => {
-      const res = await updateOrderAction(order.id, payload);
-      if (res.success) {
-        if (onOrderUpdated) onOrderUpdated();
-        onClose();
-      } else {
-        setErrorMsg(res.error || 'Error al guardar pedido.');
-      }
-    });
+    const result = await manualSave.save(draft);
+    if (visibleOrder.current !== order.id || (!result.success && result.reason === 'stale')) return result;
+    if (result.success) {
+      confirmedDetail.current = result.detail;
+      setOrder(result.detail);
+      const persisted = new Map(result.detail.items.map((item) => [item.productId, item]));
+      // Reconciliar solo metadatos/precios históricos; preservar cantidades, AG,
+      // productos, orden e IDs locales del borrador más reciente (también el foco).
+      setLines((current) => current.map((line) => {
+        const item = persisted.get(line.productId);
+        return item ? {
+          ...line,
+          productCode: item.productCode,
+          productName: item.productName,
+          weightKg: new Decimal(item.weightKg || 0),
+          unitPriceArs: new Decimal(item.unitPriceArsSnapshot),
+        } : line;
+      }));
+      onOrderUpdated?.();
+    } else {
+      setErrorMsg(result.error);
+    }
+    return result;
   };
+
+  const handleSave = () => {
+    startTransition(async () => { await saveOrder(); });
+  };
+
+  operations.current = {
+    blocked: () => manualSave.getSnapshot().saving || reconciling || loading || isPending || isConfirmingRto || showRtoConfirm || showDeleteConfirm,
+    save: async () => (await saveOrder()).success,
+    discard: async (auxiliary, refresh) => {
+      if (auxiliary) { resetAuxiliary(); return true; }
+      if (!refresh && !manualSave.requiresReconciliation() && confirmedDetail.current?.id === orderId) {
+        restorePersisted(confirmedDetail.current); resetAuxiliary(); return true;
+      }
+      setReconciling(true);
+      try {
+        const result = await manualSave.save(latest.current.draft, true);
+        if (!result.success) { setErrorMsg(result.error); return false; }
+        if (visibleOrder.current !== result.orderId) return false;
+        confirmedDetail.current = result.detail;
+        restorePersisted(result.detail);
+        resetAuxiliary();
+        return true;
+      } finally { setReconciling(false); }
+    },
+  };
+
+  useImperativeHandle(editorRef, () => ({
+    requestAction: (run, variant = 'continue') => continuation.request(run, variant),
+    orderId: isOpen ? orderId : null,
+    dirty,
+    addProductDirty,
+    saving,
+    result: saveState.result,
+    save: saveOrder,
+  }));
 
   // Delete Order
   const handleDeleteOrder = () => {
@@ -287,6 +425,8 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
     startTransition(async () => {
       const res = await cancelOrderAction(order.id);
       if (res.success) {
+        departing.current = true;
+        navigationProtection?.notify();
         if (onOrderDeleted) onOrderDeleted();
         onClose();
       } else {
@@ -296,8 +436,9 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
   };
 
   // Open RTO preview / confirm
-  const handleOpenRtoPreview = async () => {
+  const openPersistedRtoPreview = async () => {
     if (!order) return;
+    const intention = continuation.generation;
     setErrorMsg('');
     setRtoErrorMsg('');
 
@@ -308,53 +449,23 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
       return;
     }
 
-    for (const l of lines) {
-      if (l.agQuantity === null || isNaN(l.agQuantity) || l.agQuantity < 0) {
-        setErrorMsg('Todos los productos deben tener cantidad AG asignada (número entero ≥ 0).');
-        return;
-      }
-    }
-
-    const hasPositiveAg = lines.some((l) => (l.agQuantity || 0) > 0);
-    if (!hasPositiveAg) {
-      setErrorMsg('Al menos un producto debe tener cantidad AG mayor a 0 para generar el remito.');
-      return;
-    }
-
-    const payload = {
-      packageCount: packageCount.trim() !== '' ? parseInt(packageCount, 10) : null,
-      recipientName: order.customerSource === 'CONSUMER_FINAL' ? recipientName : undefined,
-      address: order.customerSource === 'CONSUMER_FINAL' ? address : undefined,
-      locality: order.customerSource === 'CONSUMER_FINAL' ? locality : undefined,
-      province: order.customerSource === 'CONSUMER_FINAL' ? province : undefined,
-      phone: order.customerSource === 'CONSUMER_FINAL' ? phone : undefined,
-      transportName: order.customerSource === 'CONSUMER_FINAL' ? transportName : undefined,
-      items: lines.map((l) => ({
-        productId: l.productId,
-        requestedQuantity: l.requestedQuantity,
-        agQuantity: l.agQuantity,
-      })),
-    };
-
     setLoading(true);
-    const saveRes = await updateOrderAction(order.id, payload);
-    if (!saveRes.success) {
-      setLoading(false);
-      setErrorMsg(saveRes.error || 'Error guardando datos del pedido.');
-      return;
-    }
-
-    const previewRes = await previewRtoAction(order.id);
-    setLoading(false);
-
-    if (!previewRes.success || !previewRes.data) {
-      setErrorMsg(previewRes.error || 'Error al calcular previsualización del remito.');
-      return;
-    }
-
-    setRtoPreview(previewRes.data);
-    setShowRtoConfirm(true);
+    try {
+      const prepared = await preparePersistedRto({
+        read: () => manualSave.save(latest.current.draft, true),
+        current: () => visibleOrder.current === order.id && continuation.generation === intention,
+        preview: previewRtoAction,
+      });
+      if (!prepared.success) { if (prepared.error) setErrorMsg(prepared.error); return; }
+      confirmedDetail.current = prepared.detail;
+      setRtoPreview(prepared.preview);
+      restorePersisted(prepared.detail);
+      setShowRtoConfirm(true);
+    } catch (error) {
+      setErrorMsg(error instanceof Error ? error.message : 'Error al previsualizar el remito.');
+    } finally { if (visibleOrder.current === order.id) setLoading(false); }
   };
+  const handleOpenRtoPreview = () => continuation.request(openPersistedRtoPreview, 'continue', false, true);
 
   // Confirm RTO
   const handleConfirmRto = async () => {
@@ -372,6 +483,8 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
 
       setIsConfirmingRto(false);
       setShowRtoConfirm(false);
+      departing.current = true;
+      navigationProtection?.notify();
       if (onOrderUpdated) onOrderUpdated();
       onClose();
     } catch (err: any) {
@@ -379,6 +492,8 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
       setIsConfirmingRto(false);
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div
@@ -400,7 +515,7 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
           </h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             aria-label="Cerrar pedido"
             className="p-1 rounded-[5px] text-steffen-surface/70 hover:text-steffen-surface hover:bg-steffen-gray transition-colors"
           >
@@ -418,7 +533,7 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
         {loading ? (
           <div className="py-16 text-center text-gray-500 text-sm">Cargando pedido...</div>
         ) : order ? (
-          <div className={`${isInline ? '' : 'overflow-y-auto flex-1 pr-1'} space-y-4 mt-2`}>
+          <div inert={reconciling || showRtoConfirm || showDeleteConfirm || !!continuation.decision} className={`${isInline ? '' : 'overflow-y-auto flex-1 pr-1'} space-y-4 mt-2`}>
             {/* Cabecera en grilla de pares label/valor (Figma Pedido) */}
             <div className="text-sm space-y-3 text-steffen-surface">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -607,7 +722,7 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setShowAddProduct(false)}
+                    onClick={() => continuation.request(resetAuxiliary, 'abandon', true)}
                     className="h-[24px] px-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-[5px] transition-colors"
                   >
                     Cancelar
@@ -684,20 +799,20 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
         {/* Footer Buttons Exactos a Figma PEDIDO.png */}
         {/* Footer: Borrar (Danger) · Cancelar / Guardar (Secondary) · Generar Remito (Success) — Figma Pedido */}
         <div className="flex flex-wrap items-center gap-3 pt-4 mt-4">
-          <Button variant="rojo" onClick={() => setShowDeleteConfirm(true)} disabled={isPending || !order}>
+          <Button variant="rojo" onClick={() => { continuation.cancel(); setShowDeleteConfirm(true); }} disabled={isPending || saving || continuation.resolving || !order}>
             Borrar pedido
           </Button>
-          <Button variant="secundario" onClick={onClose} disabled={isPending}>
+          <Button variant="secundario" onClick={requestClose} disabled={isPending}>
             Cancelar
           </Button>
-          <Button variant="secundario" onClick={handleSave} disabled={isPending || !order}>
-            {isPending ? 'Guardando...' : 'Guardar'}
+          <Button variant="secundario" onClick={handleSave} disabled={isPending || saving || continuation.resolving || loading || !order}>
+            {isPending || saving ? 'Guardando...' : 'Guardar'}
           </Button>
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={handleOpenRtoPreview}
-              disabled={isPending || loading || hasPendingRtm || !order}
+              disabled={isPending || saving || loading || hasPendingRtm || !order}
               title={
                 hasPendingRtm
                   ? `Bloqueado: Existe un remito pendiente de transporte (${pendingRtmCode || ''}). Debe procesarse en Fase 13.`
@@ -913,6 +1028,10 @@ export const VerPedidoModal: React.FC<VerPedidoModalProps> = ({
           </div>
         )}
       </div>
+      {continuation.decision && <UnsavedOrderDialog variant={continuation.decision.variant}
+        purpose={continuation.decision.purpose}
+        onSave={() => { void continuation.resolve('save'); }}
+        onDiscard={() => { void continuation.resolve('discard'); }} onKeep={continuation.cancel} />}
     </div>
   );
 };

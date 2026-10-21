@@ -469,6 +469,8 @@ Implementar:
 
 `cancelOpenOrder(...)`
 
+La protección de cambios sin guardar y el comportamiento definitivo del guardado manual de Pedido abierto se detallan en R5 (§22.3) y `FLOWS.md` §14; no modifican las reglas comerciales de esta fase.
+
 ## Reglas
 
 - PED OPEN no genera stock/patrimonio;
@@ -773,6 +775,28 @@ Subfases:
   Nueva UI de `/reportes` implementada con Recharts en `feat/reportes-analytics`; todavía **NO mergeada a main** y **NO desplegada a producción**.
 - **R6 — integración y pruebas finales.** COMPLETADO. Auditoría de alcance, contrato, arquitectura, seguridad y performance; precarga del primer análisis individual en el Server Component (sin fetch inicial cliente); suite completa de 679 tests aprobados (0 fallos, 0 omitidos), TypeScript y build aprobados; dry-run contra DEV sin migraciones pendientes. Cleanup contrastado con conteos de 48 tablas y saldos previos; deudas heredadas de lint y teardowns documentadas en `REPORTES.md` §15.4.
 - **R7 — merge / producción.** SIGUIENTE; NO iniciada. La feature continúa en `feat/reportes-analytics`, NO mergeada a main ni desplegada a producción; migración 36 aplicada solo en DEV, producción pendiente.
+
+---
+
+## 22.3 R5 — Pedido abierto: guardado manual y protección de cambios
+
+Contrato vigente: `FLOWS.md` §13–14, `DESIGN.md` §19 y `COMPONENTS.md` §25/§43. Mantener Guardar y Cancelar. Sin persistencia automática por inputs, pérdida de foco o tecla de confirmación; sin colas automáticas de escritura.
+
+Estado: **R5.1–R5.5 implementadas y validadas.** Guardado manual conservado y protección contra pérdida de cambios implementada para las salidas controladas; autosave cancelado. Tests aislados aprobados **53/53**, TypeScript y build aprobados. Smoke manual aprobado **19/19**, con Dark/Light y responsive en 390 px, 768 px y ≥1280 px aprobados. Back/Forward nativo dentro de la SPA permanece como limitación conocida pendiente de una futura mejora, sin protección garantizada ni workarounds de historial o `precommitHandler`.
+
+Alcance de implementación:
+
+1. Comparación semántica contra una referencia independiente cargada o guardada con éxito: productos y orden, cantidades solicitadas, AG, bultos y demás campos editables existentes. Excluir IDs temporales, derivados y estado visual; revertir todo limpia cambios pendientes.
+2. Guardar persiste y mantiene abierto el editor; un éxito actualiza solo lo confirmado. Error conserva borrador y pedido. Evitar doble guardado y pérdida de modificaciones posteriores al inicio de una solicitud.
+3. Agregar producto tiene borrador auxiliar independiente: abrir no modifica; proteger datos escritos; confirmar Agregar incorpora al borrador del pedido sin persistir hasta Guardar.
+4. Cancelar/X y cierre por tarjeta seleccionada: sin cambios, cerrar; con borradores pendientes, Descartar cambios o Seguir editando.
+5. Otro pedido o navegación: Guardar y continuar / Descartar cambios / Seguir editando. No ejecutar el destino antes de resolver; guardar requiere éxito y ningún borrador pendiente sin resolver.
+6. Generar remito desde datos persistidos: resolver borradores antes de previsualizar; guardar requiere éxito, descartar usa último estado confirmado y seguir editando cancela generación. Conservar validaciones y bloqueo por RTM pendiente.
+7. La navegación mediante controles internos (sidebar, accesos secundarios, logos, mobile y logout) está protegida. **Limitación conocida de Back/Forward (R5.4.1):** Atrás/Adelante nativos dentro de la SPA no cuentan con protección garantizada y quedan pendientes de una futura mejora; no se implementan workarounds de historial ni `precommitHandler`. Refresh, cierre de pestaña y otras salidas del documento usan aviso nativo `beforeunload` cuando el navegador lo permite, sin prometer opciones propias ni protección ante cierre forzado.
+
+Validación completada mediante tests aislados y smoke manual: reversión a estado limpio, borrador auxiliar, errores de guardado, cambios durante una solicitud, doble envío, destino pendiente, generación de RTO desde persistido, navegación interna, refresh/cierre y Dark/Light desktop/mobile. Back/Forward figura como limitación conocida pendiente de mejora, no como prueba aprobada. No se ejecutaron tests contra DB en esta validación; cualquier futura suite con DB exige verificar el entorno autorizado, nunca producción por defecto.
+
+Reutilizar las acciones y el backend existentes. No cambiar snapshots, precios, descuentos, cálculos comerciales, stock, patrimonio, DTO, SQL ni modelo de datos; no requiere migraciones. No implementar recuperación automática ni persistencia de borradores fuera del contrato.
 
 ---
 

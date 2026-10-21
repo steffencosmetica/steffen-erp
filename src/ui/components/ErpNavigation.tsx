@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { ErpIcon, type ErpIconName } from './ErpIcon';
 import { ThemeToggle } from './ThemeToggle';
 import { LogoutButton } from './LogoutButton';
+import { ProtectedLogoutForm } from '@/ui/navigation/ProtectedLogoutForm';
 
 interface NavItem {
   name: string;
@@ -231,9 +232,9 @@ export const ErpNavMobile: React.FC<{ logo: React.ReactNode; logoutAction: () =>
               })}
             </div>
 
-            <form action={logoutAction} className="mt-auto pt-4">
+            <ProtectedLogoutForm action={logoutAction} className="mt-auto pt-4">
               <LogoutButton layout="inline" />
-            </form>
+            </ProtectedLogoutForm>
           </nav>
         </div>
       )}

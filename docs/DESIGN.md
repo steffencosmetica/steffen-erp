@@ -25,7 +25,7 @@ La lógica funcional no se modifica para coincidir con un diseño desactualizado
 - `PDFS.md` manda sobre el **contrato documental/histórico** de los PDFs.
 - La implementación actual conserva **todas** sus funcionalidades existentes.
 
-Dark/Light es exclusivamente visual. La única modificación de persistencia de R1 es el autosave del Pedido abierto definido en `FLOWS.md` §14; no cambia reglas de negocio, rutas ni modelo de datos.
+Dark/Light es exclusivamente visual. El Pedido abierto conserva guardado manual y protección de cambios sin guardar según `FLOWS.md` §14 (contrato R5); no cambia reglas comerciales, rutas ni modelo de datos.
 
 Referencias visuales del repositorio (supeditadas al contrato R1 y a las imágenes nuevas suministradas por el usuario): `docs/visual-references/figma/` — `Frame 1.png` (guía de estilo: paleta, tipografía, márgenes, botones, inputs, cards), Dashboard, Mi Fábrica, Fórmulas, Pedidos, Pedido, Productos Finales, Stock, Ventas, Administración, Cuentas Clientes, Cuentas Proveedores, y el tablero completo en `Pdf.pdf`.
 
@@ -1368,10 +1368,16 @@ Tratamiento visual Dark/Light:
 - Importes preferentemente en una línea cuando el ancho lo permita, por ejemplo `$ 7.032.190,00`; evitar separar verticalmente símbolo y número si hay espacio horizontal. Esto no modifica precisión, cálculo ni formato monetario funcional vigente.
 - Peso, cantidades, labels e importes se adaptan horizontalmente al contenido cuando sea posible, sin apilados artificiales.
 - Totales alineados y jerarquía actual, sin alterar cálculos.
-- Al implementar autosave (`FLOWS.md` §14), eliminar Guardar y Cancelar de la edición del Pedido; redistribuir el footer sin huecos reservados. Conservar Borrar pedido con confirmación y Generar remito (Success).
-- La X simplemente cierra; no pregunta si guardar ni cancela persistencia. Estados de guardado/error visibles sin ampliar globalmente controles.
+- Conservar Guardar y Cancelar en el editor. Guardar persiste manualmente y mantiene el editor abierto; un éxito actualiza la referencia confirmada. Ante error, conservar el borrador y permanecer en el pedido. Estados de guardado/error visibles sin ampliar globalmente controles.
+- Cancelar y X cierran normalmente si no hay borradores pendientes. Si los hay, ofrecer **Descartar cambios / Seguir editando**, sin guardado automático. Aplicar también al cierre mediante la tarjeta seleccionada.
+- Seleccionar otro pedido o navegar por sidebar, logos, navegación mobile o logout con cambios pendientes ofrece **Guardar y continuar / Descartar cambios / Seguir editando**. Mantener el editor y el destino en espera; continuar solo tras decisión resuelta y, si se guarda, persistencia exitosa sin cambios posteriores pendientes.
+- Detectar cambios por comparación semántica de productos y orden, cantidades solicitadas, AG, bultos y otros campos editables existentes. Excluir identidades temporales, valores derivados y estado visual. Revertir todos los valores limpia el estado pendiente.
+- Abrir Agregar producto no modifica el pedido. Proteger su borrador escrito independiente; confirmar Agregar solo lo incorpora al borrador del pedido, que se persiste mediante Guardar. No perder ese borrador silenciosamente al cerrar o continuar.
+- Generar remito usa información persistida. Ante borradores pendientes, pedir resolverlos con **Guardar y continuar / Descartar cambios / Seguir editando** antes de previsualizar; descartar usa el último estado confirmado. Conservar Borrar pedido con confirmación y Generar remito (Success), sin guardar implícitamente desde ese botón.
+- La navegación mediante controles internos está protegida. **Limitación conocida de Back/Forward (R5.4.1):** Atrás/Adelante nativos dentro de la SPA no cuentan con protección garantizada; esta cobertura queda pendiente de una futura mejora, sin workarounds de historial ni `precommitHandler`. Refresh, cierre de pestaña y otras salidas del documento usan `beforeunload` cuando el navegador lo permite: aviso nativo sin texto/opciones personalizados ni garantía ante cierre forzado. El cambio de tema no modifica el estado pendiente.
+- Impedir doble guardado concurrente; no dar por confirmadas modificaciones posteriores al inicio de una solicitud ni sobrescribirlas. No introducir persistencia automática ni colas de escritura. Contrato funcional completo: `FLOWS.md` §14.
 
-El flujo de confirmación del RTO conserva su función y sus propios controles; la eliminación de Cancelar del editor no elimina cancelar una confirmación o descartar el formulario de agregar producto.
+El flujo de confirmación del RTO conserva su función, validaciones y controles propios. Cancelar una confirmación o descartar el formulario de agregar producto conserva su función, con protección del borrador auxiliar cuando corresponda.
 
 ---
 

@@ -464,7 +464,7 @@ Footer:
 - Cancelar;
 - Confirmar.
 
-Visual: Surface del tema, border-section, overlay semántico, text-primary, sin sombras decorativas; título H2/H3 e inputs del mismo sistema. Mantener dimensiones y scroll. El Pedido abierto con autosave es excepción al footer Cancelar/Confirmar: ver FLOWS.md §14 y DESIGN.md §19.
+Visual: Surface del tema, border-section, overlay semántico, text-primary, sin sombras decorativas; título H2/H3 e inputs del mismo sistema. Mantener dimensiones y scroll. Pedido abierto conserva Guardar y Cancelar: Guardar mantiene el editor abierto tras éxito y Cancelar/X protegen borradores pendientes, según FLOWS.md §14 y DESIGN.md §19. No introducir persistencia automática.
 
 Conservar el responsive implementado según DESIGN.md §3.0; las referencias históricas de §56–§58 no autorizan a cambiarlo.
 
@@ -768,7 +768,19 @@ Contenido mínimo:
 - Cancelar;
 - Confirmar.
 
-No usar para acciones normales. ConfirmDialog comparte Surface, border-section/énfasis Danger, text-primary y overlay del tema; no duplicar por tema. Mantener sus acciones Cancelar/Confirmar: no son el Cancelar retirado del editor de Pedido.
+No usar para acciones normales. ConfirmDialog comparte Surface, border-section/énfasis Danger, text-primary y overlay del tema; no duplicar por tema. Mantener sus acciones Cancelar/Confirmar para Borrar PED y las demás confirmaciones destructivas vigentes.
+
+### Protección de cambios sin guardar — Pedido abierto
+
+El diálogo de cambios pendientes es una confirmación de abandono específica (`FLOWS.md` §14), distinta de borrar el Pedido. Reutilizar las primitivas visuales y el comportamiento accesible del sistema; no imponer el par fijo Cancelar/Confirmar ni tratar Guardar como acción destructiva.
+
+- Cancelar, X o cierre por tarjeta seleccionada: **Descartar cambios / Seguir editando** cuando se perderían borradores; sin cambios, cerrar directamente.
+- Otro pedido, navegación interna (sidebar, logos, mobile, logout), o Generar remito: **Guardar y continuar / Descartar cambios / Seguir editando** si existen borradores pendientes. Suspender el destino; ante fallo de guardado, mostrar error y conservar borrador y pedido actual. Para RTO, descartar continúa con el último estado persistido y conserva todas sus validaciones.
+- Guardar sin destino pendiente persiste y mantiene abierto el editor; actualizar la referencia solo con éxito. Impedir doble guardado y no dar por guardados cambios posteriores a la solicitud.
+- La detección semántica incluye productos y orden, cantidades, AG, bultos y otros campos editables existentes; excluye identidades temporales, derivados y cambios visuales. Revertir todos los valores limpia el estado pendiente.
+- Abrir Agregar producto no marca cambios. Los datos escritos sin agregar son un borrador auxiliar independiente cuyo abandono se protege; Agregar solo incorpora al borrador del pedido, sin persistir.
+- Diálogo propio con foco contenido, nombres de acciones explícitos y retorno de foco al seguir editando. Escape o cierre del diálogo equivalen a **Seguir editando**; no descartan ni ejecutan destinos.
+- La navegación mediante controles internos está protegida. **Limitación conocida de Back/Forward (R5.4.1):** Atrás/Adelante nativos dentro de la SPA no cuentan con protección garantizada; su cobertura queda pendiente de una futura mejora. No se implementan workarounds de historial ni `precommitHandler`. Salidas del documento, refresh y cierre de pestaña usan `beforeunload` cuando el navegador lo permite; su aviso es nativo, con texto y botones del navegador. No prometer diálogo propio, guardado asíncrono al salir ni protección garantizada ante cierre forzado.
 
 ---
 

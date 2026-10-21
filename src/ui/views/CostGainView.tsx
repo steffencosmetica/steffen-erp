@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useTransition, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useProtectedRouter as useRouter } from '@/ui/navigation/NavigationProtectionProvider';
 import { Search } from 'lucide-react';
 import {
   type CostGainAnalysisDTO,

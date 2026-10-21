@@ -318,6 +318,18 @@ simulación pura.
 
 No persistir reservas.
 
+Pedido abierto conserva **guardado manual** según `FLOWS.md` §14 (R5). No implementar persistencia por cambios de input, pérdida de foco o tecla de confirmación, ni colas automáticas. Mantener Guardar y Cancelar.
+
+- Guardar exitoso actualiza la referencia confirmada y mantiene el editor abierto, salvo continuación pendiente explícitamente elegida; el destino espera éxito y resolución de todos los borradores. Error conserva borrador y pedido actual.
+- Comparar semánticamente productos y orden, cantidades solicitadas, AG, bultos y demás campos editables existentes. Excluir IDs temporales, derivados y estado visual. Revertir todo limpia cambios pendientes; no compartir objetos mutables entre referencia y borrador.
+- Cancelar/X o cierre por tarjeta seleccionada con cambios: Descartar cambios / Seguir editando. Otro pedido o navegación: Guardar y continuar / Descartar cambios / Seguir editando. No cerrar, cambiar pedido ni navegar antes de resolver.
+- Abrir Agregar producto no modifica el pedido; proteger el borrador auxiliar escrito independiente. Confirmar Agregar solo incorpora al borrador del pedido, sin persistir hasta Guardar.
+- Generar remito usa información persistida y exige resolver los borradores antes de previsualizar: guardar requiere éxito, descartar usa último estado confirmado, seguir editando cancela generación. Conservar todas las validaciones de RTO/RTM.
+- Impedir guardados concurrentes y no considerar confirmados cambios posteriores al inicio de una solicitud; conservarlos pendientes sin sobrescribirlos. No perder borradores ante errores o refresh interno.
+- La navegación mediante controles internos (sidebar, accesos secundarios, logos, mobile y logout) está protegida. **Limitación conocida de Back/Forward (R5.4.1):** Atrás/Adelante nativos dentro de la SPA no cuentan con protección garantizada; queda pendiente una futura mejora. No se implementan workarounds de historial ni `precommitHandler`, ni se presenta esa cobertura como aprobada. Refresh/cierre de pestaña y otras salidas del documento usan `beforeunload` cuando el navegador lo permite: aviso nativo, sin opciones personalizadas ni garantía ante cierre forzado.
+
+La protección es una responsabilidad de UI; no modificar reglas comerciales, snapshots, backend/DB ni migraciones para este alcance. No confundir Descartar cambios con Borrar pedido; conservar su confirmación destructiva propia.
+
 ---
 
 # 20. RTO
