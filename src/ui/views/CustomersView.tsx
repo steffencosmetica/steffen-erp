@@ -155,7 +155,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
   };
 
   // Lista lateral (Figma Cuentas Clientes): primeros clientes como ListItem + "Ver más".
-  const SIDEBAR_LIMIT = 7;
+  const SIDEBAR_LIMIT = 16;
   const sidebarCustomers = initialCustomers.slice(0, SIDEBAR_LIMIT);
   const moreCustomers = initialCustomers.slice(SIDEBAR_LIMIT);
   const isSelectedInMore = moreCustomers.some((c) => c.id === selectedCustomer?.id);

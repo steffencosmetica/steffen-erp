@@ -217,7 +217,7 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({
   };
 
   // Lista lateral (Figma Cuentas Proveedores): primeros proveedores como ListItem + "Ver más".
-  const SIDEBAR_LIMIT = 8;
+  const SIDEBAR_LIMIT = 16;
   const sidebarSuppliers = initialSuppliers.slice(0, SIDEBAR_LIMIT);
   const moreSuppliers = initialSuppliers.slice(SIDEBAR_LIMIT);
   const isSelectedInMore = moreSuppliers.some((s) => s.id === selectedSupplier?.id);
